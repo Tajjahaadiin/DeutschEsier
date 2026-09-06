@@ -1,0 +1,179 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - button "Beranda" [ref=f1e6] [cursor=pointer]
+    - generic [ref=f1e9]:
+      - generic [ref=f1e10]:
+        - generic [ref=f1e11]:
+          - generic [ref=f1e12]: Level B1
+          - generic [ref=f1e13]: Mode Guru (Akses Penuh)
+        - heading "Umweltschutz im Alltag" [level=1] [ref=f1e17]
+        - paragraph [ref=f1e18]: Dua kawan berbincang di kantin kampus mengenai kebiasaan ramah lingkungan yang dapat diterapkan sehari-hari.
+      - generic [ref=f1e19]:
+        - button "Kunci Akses Siswa" [ref=f1e20] [cursor=pointer]
+        - button "Analitik & Kuis (1)" [ref=f1e26] [cursor=pointer]
+        - button "Edit Skenario" [ref=f1e30] [cursor=pointer]
+        - button "Bagikan Link" [ref=f1e35] [cursor=pointer]
+  - generic [ref=f1e45]:
+    - button "💬 Dialog Percakapan" [ref=f1e46] [cursor=pointer]
+    - button "🃏 Flashcard Kata 6" [ref=f1e48] [cursor=pointer]:
+      - generic [ref=f1e49]: 🃏 Flashcard Kata
+      - generic [ref=f1e50]: "6"
+    - button "📝 Kuis Pemahaman" [ref=f1e51] [cursor=pointer]
+  - generic [ref=f1e53]:
+    - generic [ref=f1e54]:
+      - generic [ref=f1e55]:
+        - heading "Dialog" [level=2] [ref=f1e56]
+        - generic [ref=f1e57]: (8 Baris)
+      - generic [ref=f1e58]:
+        - generic "Kecepatan Audio" [ref=f1e59]:
+          - button "1x" [ref=f1e60] [cursor=pointer]
+          - button "0.8x" [ref=f1e61] [cursor=pointer]
+          - button "0.75x" [ref=f1e62] [cursor=pointer]
+          - button "0.5x" [ref=f1e63] [cursor=pointer]
+        - button "Putar Seluruh Dialog" [ref=f1e64] [cursor=pointer]
+    - generic [ref=f1e69]:
+      - generic [ref=f1e70]:
+        - generic [ref=f1e71]: Sprecher A
+        - generic [ref=f1e72]: 👩 Wanita
+      - paragraph [ref=f1e73]: Sag mal, kaufst du eigentlich immer dein Gemüse auf dem Wochenmarkt?
+      - paragraph [ref=f1e74]: Omong-omong, apakah kamu selalu membeli sayuranmu di pasar mingguan?
+      - button "Putar" [ref=f1e75] [cursor=pointer]
+    - generic [ref=f1e81]:
+      - generic [ref=f1e82]:
+        - generic [ref=f1e83]: Sprecher B
+        - generic [ref=f1e84]: 👨 Pria
+      - paragraph [ref=f1e85]: Ja, meistens. Dort kann man Plastikmüll vermeiden, weil alles unverpackt verkauft wird.
+      - paragraph [ref=f1e86]: Ya, biasanya. Di sana kita bisa menghindari sampah plastik karena semuanya dijual tanpa kemasan.
+      - button "Putar" [ref=f1e87] [cursor=pointer]
+    - generic [ref=f1e93]:
+      - generic [ref=f1e94]:
+        - generic [ref=f1e95]: Sprecher A
+        - generic [ref=f1e96]: 👩 Wanita
+      - paragraph [ref=f1e97]: Das ist eine gute Idee! Ich versuche auch, umweltfreundlicher zu leben, aber es fällt mir manchmal schwer.
+      - paragraph [ref=f1e98]: Itu ide yang bagus! Aku juga mencoba hidup lebih ramah lingkungan, tapi terkadang terasa sulit bagiku.
+      - button "Putar" [ref=f1e99] [cursor=pointer]
+    - generic [ref=f1e105]:
+      - generic [ref=f1e106]:
+        - generic [ref=f1e107]: Sprecher B
+        - generic [ref=f1e108]: 👨 Pria
+      - paragraph [ref=f1e109]: Man muss ja nicht alles auf einmal ändern. Ich fahre zum Beispiel öfter mit dem Fahrrad statt mit dem Auto.
+      - paragraph [ref=f1e110]: Kita tidak harus mengubah semuanya sekaligus. Contohnya, aku lebih sering naik sepeda daripada naik mobil.
+      - button "Putar" [ref=f1e111] [cursor=pointer]
+    - generic [ref=f1e117]:
+      - generic [ref=f1e118]:
+        - generic [ref=f1e119]: Sprecher A
+        - generic [ref=f1e120]: 👩 Wanita
+      - paragraph [ref=f1e121]: Stimmt. Außerdem trenne ich jetzt meinen Müll viel sorgfältiger als früher.
+      - paragraph [ref=f1e122]: Benar. Selain itu, sekarang aku memilah sampahku jauh lebih teliti daripada dulu.
+      - button "Putar" [ref=f1e123] [cursor=pointer]
+    - generic [ref=f1e129]:
+      - generic [ref=f1e130]:
+        - generic [ref=f1e131]: Sprecher B
+        - generic [ref=f1e132]: 👨 Pria
+      - paragraph [ref=f1e133]: Sehr gut! Wenn jeder kleine Schritte macht, können wir gemeinsam den CO2-Ausstoß reduzieren.
+      - paragraph [ref=f1e134]: Bagus sekali! Jika setiap orang mengambil langkah-langkah kecil, kita bersama dapat mengurangi emisi CO2.
+      - button "Putar" [ref=f1e135] [cursor=pointer]
+    - generic [ref=f1e141]:
+      - generic [ref=f1e142]:
+        - generic [ref=f1e143]: Sprecher A
+        - generic [ref=f1e144]: 👩 Wanita
+      - paragraph [ref=f1e145]: Hast du noch einen Tipp für mich, wie ich Energie sparen kann?
+      - paragraph [ref=f1e146]: Apakah kamu punya tips lain untukku tentang cara menghemat energi?
+      - button "Putar" [ref=f1e147] [cursor=pointer]
+    - generic [ref=f1e153]:
+      - generic [ref=f1e154]:
+        - generic [ref=f1e155]: Sprecher B
+        - generic [ref=f1e156]: 👨 Pria
+      - paragraph [ref=f1e157]: Schalte einfach alle elektronischen Geräte komplett aus, anstatt sie im Standby-Modus zu lassen.
+      - paragraph [ref=f1e158]: Matikan saja semua perangkat elektronik secara total, alih-alih membiarkannya dalam mode standby.
+      - button "Putar" [ref=f1e159] [cursor=pointer]
+  - generic [ref=f1e165]:
+    - heading "Vocab Clues" [level=2] [ref=f1e166]
+    - generic [ref=f1e167]:
+      - generic [ref=f1e169]:
+        - generic [ref=f1e170]:
+          - paragraph [ref=f1e171]: vermeiden
+          - paragraph [ref=f1e172]: menghindari
+          - paragraph [ref=f1e173]: Kata kerja kuat (vermeidet - vermied - hat vermieden). Membutuhkan objek dalam kasus Akkusativ.
+        - button "Putar pengucapan" [ref=f1e174] [cursor=pointer]
+      - generic [ref=f1e180]:
+        - generic [ref=f1e181]:
+          - paragraph [ref=f1e182]: unverpackt
+          - paragraph [ref=f1e183]: tanpa kemasan
+          - paragraph [ref=f1e184]: Kata sifat yang dibentuk dari awalan negasi 'un-' dan Partizip II 'verpackt'.
+        - button "Putar pengucapan" [ref=f1e185] [cursor=pointer]
+      - generic [ref=f1e191]:
+        - generic [ref=f1e192]:
+          - paragraph [ref=f1e193]: schwerfallen
+          - paragraph [ref=f1e194]: terasa sulit (bagi seseorang)
+          - paragraph [ref=f1e195]: "Trennbares Verb (fällt schwer - fiel schwer - ist schwergefallen). Menggunakan kata ganti Dativ (misal: 'es fällt mir schwer')."
+        - button "Putar pengucapan" [ref=f1e196] [cursor=pointer]
+      - generic [ref=f1e202]:
+        - generic [ref=f1e203]:
+          - paragraph [ref=f1e204]: statt / anstatt ... zu
+          - paragraph [ref=f1e205]: daripada / alih-alih
+          - paragraph [ref=f1e206]: Konstruksi Infinitivsatz yang digunakan untuk menunjukkan alternatif. Kata kerja utama berada di akhir dalam bentuk 'zu + Infinitiv'.
+        - button "Putar pengucapan" [ref=f1e207] [cursor=pointer]
+      - generic [ref=f1e213]:
+        - generic [ref=f1e214]:
+          - paragraph [ref=f1e215]: Müll trennen
+          - paragraph [ref=f1e216]: memilah sampah
+          - paragraph [ref=f1e217]: "'Trennen' adalah kata kerja reguler. 'Müll' bergender maskulin (der Müll) dan berfungsi sebagai objek Akkusativ (meinen Müll)."
+        - button "Putar pengucapan" [ref=f1e218] [cursor=pointer]
+      - generic [ref=f1e224]:
+        - generic [ref=f1e225]:
+          - paragraph [ref=f1e226]: der CO2-Ausstoß
+          - paragraph [ref=f1e227]: emisi CO2 / pelepasan karbon
+          - paragraph [ref=f1e228]: Kata benda komposit bergender maskulin. Bentuk jamaknya adalah 'die CO2-Ausstöße'.
+        - button "Putar pengucapan" [ref=f1e229] [cursor=pointer]
+    - generic [ref=f1e234]:
+      - paragraph [ref=f1e235]: Bagikan skenario ini ke siswa
+      - button "Salin Link" [ref=f1e236] [cursor=pointer]
+  - generic [ref=f1e244]:
+    - generic [ref=f1e245]:
+      - generic [ref=f1e246]:
+        - heading "Dashboard Analitik & Hasil Kuis" [level=2] [ref=f1e251]
+        - paragraph [ref=f1e252]: "Skenario: Umweltschutz im Alltag"
+      - button [ref=f1e253] [cursor=pointer]
+    - generic [ref=f1e375]:
+      - generic [ref=f1e376]:
+        - button "Kembali ke Daftar Siswa" [ref=f1e377] [cursor=pointer]
+        - generic [ref=f1e381]: 6 Sep 2026, 19.10
+      - generic [ref=f1e382]:
+        - generic [ref=f1e383]:
+          - heading "Budi Santoso" [level=3] [ref=f1e384]
+          - generic [ref=f1e385]:
+            - generic [ref=f1e386]: DE-1GV4P
+            - generic [ref=f1e391]:
+              - text: "Soal Benar:"
+              - strong [ref=f1e392]: "3"
+              - text: dari
+              - strong [ref=f1e393]: "4"
+        - generic [ref=f1e394]:
+          - generic [ref=f1e395]:
+            - generic [ref=f1e396]: Nilai Siswa
+            - generic [ref=f1e397]: 85/100
+          - generic [ref=f1e398]: Lulus
+      - generic [ref=f1e399]:
+        - heading "Rincian Jawaban Soal (2)" [level=4] [ref=f1e400]
+        - generic [ref=f1e401]:
+          - generic [ref=f1e402]: "Soal #1 (Diktat)"
+          - paragraph
+          - generic [ref=f1e409]:
+            - generic [ref=f1e410]:
+              - generic [ref=f1e411]: "Jawaban Siswa:"
+              - text: Guten Tag!
+            - generic [ref=f1e412]:
+              - generic [ref=f1e413]: "Kunci Jawaban Benar:"
+              - text: Guten Tag!
+        - generic [ref=f1e414]:
+          - generic [ref=f1e415]: "Soal #2 (Lückentext)"
+          - paragraph
+          - generic [ref=f1e422]:
+            - generic [ref=f1e423]:
+              - generic [ref=f1e424]: "Jawaban Siswa:"
+              - text: Kaffee
+            - generic [ref=f1e425]:
+              - generic [ref=f1e426]: "Kunci Jawaban Benar:"
+              - text: Kaffee
+    - button "Tutup" [ref=f1e374] [cursor=pointer]

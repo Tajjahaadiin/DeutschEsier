@@ -1,0 +1,59 @@
+- generic [ref=e33]:
+  - banner [ref=e34]:
+    - generic [ref=e35]:
+      - heading "DeutschEasier" [level=1] [ref=e39]
+      - generic [ref=e40]:
+        - button "🔤 Das Alphabet (30)" [ref=e41] [cursor=pointer]
+        - button "Buat Skenario" [ref=e43] [cursor=pointer]
+        - generic [ref=e46]: 👨‍🏫 Guru
+        - button "Keluar" [ref=e48] [cursor=pointer]
+  - main [ref=e53]:
+    - generic [ref=e54]:
+      - button "Bank Kata (105)" [ref=e55] [cursor=pointer]
+      - button "Skenario (4)" [active] [ref=e56] [cursor=pointer]
+      - button "Das Alphabet (30)" [ref=e57] [cursor=pointer]
+    - generic [ref=e1955]:
+      - generic [ref=e1957] [cursor=pointer]:
+        - generic [ref=e1958]:
+          - generic [ref=e1959]: B1
+          - heading "Umweltschutz im Alltag" [level=3] [ref=e1961]
+          - paragraph [ref=e1962]: Buat percakapan dengan topik ramah lingkungan
+          - generic [ref=e1963]: 6 Sep 2026
+        - generic [ref=e1967]:
+          - button "Buka" [ref=e1968]
+          - button "Kelola Kunci Akses Murid" [ref=e1973]
+          - button "Edit Skenario" [ref=e1978]
+          - button "Hapus" [ref=e1982]
+      - generic [ref=e1987] [cursor=pointer]:
+        - generic [ref=e1988]:
+          - generic [ref=e1989]: A1
+          - heading "Sich im Büro vorstellen (Perkenalan Diri di Kantor)" [level=3] [ref=e1991]
+          - paragraph [ref=e1992]: di sebuah kantor ada dua orang sedang memperkenalkan diri secara bergantian. Mereka adalah seorang rekan kerja. dalam percakapan tersebut berisi salam perkenalan, nama, alamat, asal, nomer handphone, dan bahasa yang dikuasai.
+          - generic [ref=e1993]: 6 Sep 2026
+        - generic [ref=e1997]:
+          - button "Buka" [ref=e1998]
+          - button "Kelola Kunci Akses Murid" [ref=e2003]
+          - button "Edit Skenario" [ref=e2008]
+          - button "Hapus" [ref=e2012]
+      - generic [ref=e2017] [cursor=pointer]:
+        - generic [ref=e2018]:
+          - generic [ref=e2019]: A1
+          - heading "Ein Gespräch an der Bushaltestelle (Percakapan di Halte Bus)" [level=3] [ref=e2021]
+          - paragraph [ref=e2022]: singkat buat percakapan bertemu di halte basa basi membahas
+          - generic [ref=e2023]: 6 Sep 2026
+        - generic [ref=e2027]:
+          - button "Buka" [ref=e2028]
+          - button "Kelola Kunci Akses Murid" [ref=e2033]
+          - button "Edit Skenario" [ref=e2038]
+          - button "Hapus" [ref=e2042]
+      - generic [ref=e2047] [cursor=pointer]:
+        - generic [ref=e2048]:
+          - generic [ref=e2049]: A1
+          - heading "Ein Kaffee in Berlin" [level=3] [ref=e2051]
+          - paragraph [ref=e2052]: Di sebuah kafe di Berlin, memesan kopi dan kue.
+          - generic [ref=e2053]: 6 Sep 2026
+        - generic [ref=e2057]:
+          - button "Buka" [ref=e2058]
+          - button "Kelola Kunci Akses Murid" [ref=e2063]
+          - button "Edit Skenario" [ref=e2068]
+          - button "Hapus" [ref=e2072]

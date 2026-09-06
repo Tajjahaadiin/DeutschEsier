@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+.env.local
+sqlite.db
+sqlite.db-wal
+sqlite.db-shm
+deutsch_easier.db
+public/audio/cache/*.mp3
+!public/audio/cache/.gitkeep
+.DS_Store
+

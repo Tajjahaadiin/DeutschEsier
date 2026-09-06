@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788683522517,
+      "tag": "0000_amazing_ares",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788683799452,
+      "tag": "0001_overrated_silver_centurion",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788684543321,
+      "tag": "0002_mushy_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1788695759449,
+      "tag": "0003_goofy_maria_hill",
+      "breakpoints": true
+    }
+  ]
+}

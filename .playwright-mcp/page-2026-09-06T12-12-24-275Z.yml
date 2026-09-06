@@ -1,0 +1,56 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - button "Beranda" [ref=f1e6] [cursor=pointer]
+    - generic [ref=f1e9]:
+      - generic [ref=f1e10]:
+        - generic [ref=f1e11]:
+          - generic [ref=f1e12]: Level B1
+          - generic [ref=f1e13]: Mode Guru (Akses Penuh)
+        - heading "Umweltschutz im Alltag" [level=1] [ref=f1e17]
+        - paragraph [ref=f1e18]: Dua kawan berbincang di kantin kampus mengenai kebiasaan ramah lingkungan yang dapat diterapkan sehari-hari.
+      - generic [ref=f1e19]:
+        - button "Kunci Akses Siswa" [ref=f1e20] [cursor=pointer]
+        - button "Analitik & Kuis (1)" [ref=f1e26] [cursor=pointer]
+        - button "Edit Skenario" [ref=f1e30] [cursor=pointer]
+        - button "Bagikan Link" [ref=f1e35] [cursor=pointer]
+  - generic [ref=f1e45]:
+    - button "💬 Dialog Percakapan" [ref=f1e46] [cursor=pointer]
+    - button "🃏 Flashcard Kata 6" [active] [ref=f1e48] [cursor=pointer]:
+      - generic [ref=f1e49]: 🃏 Flashcard Kata
+      - generic [ref=f1e50]: "6"
+    - button "📝 Kuis Pemahaman" [ref=f1e51] [cursor=pointer]
+  - generic [ref=f1e428]:
+    - generic [ref=f1e429]:
+      - generic [ref=f1e430]:
+        - text: 🃏 Flashcard Kosakata
+        - paragraph [ref=f1e431]: Kartu 1 dari 6
+      - generic [ref=f1e432]:
+        - button "Acak" [ref=f1e433] [cursor=pointer]
+        - button "Tandai Paham" [ref=f1e441] [cursor=pointer]
+    - generic [ref=f1e448] [cursor=pointer]:
+      - generic [ref=f1e449]:
+        - generic [ref=f1e450]: Vorderseite (Jerman)
+        - generic [ref=f1e452]:
+          - heading "vermeiden" [level=3] [ref=f1e453]
+          - button "Dengarkan Audio" [ref=f1e455]
+        - paragraph [ref=f1e462]: 👆 Klik untuk membalik kartu (Klick zum Umdrehen)
+      - generic [ref=f1e466]:
+        - generic [ref=f1e467]:
+          - generic [ref=f1e468]: Rückseite (Arti & Tata Bahasa)
+          - button "Dengarkan pengucapan kata" [ref=f1e469]
+        - generic [ref=f1e474]:
+          - generic [ref=f1e475]: "Arti Bahasa Indonesia:"
+          - heading "menghindari" [level=4] [ref=f1e476]
+          - generic [ref=f1e477]:
+            - generic [ref=f1e478]: "💡 Catatan Tata Bahasa / Kognat:"
+            - paragraph [ref=f1e479]: Kata kerja kuat (vermeidet - vermied - hat vermieden). Membutuhkan objek dalam kasus Akkusativ.
+        - paragraph [ref=f1e481]: 👆 Klik untuk membalik kartu kembali
+    - generic [ref=f1e485]:
+      - button "Sebelumnya (Zurück)" [disabled] [ref=f1e486]
+      - button "Berikutnya (Weiter)" [ref=f1e490] [cursor=pointer]
+    - generic [ref=f1e494]:
+      - generic [ref=f1e499]:
+        - text: "Kosakata dikuasai:"
+        - strong [ref=f1e500]: 0 dari 6 kata
+        - text: (0%)
+      - generic [ref=f1e501]: "Tip: Gunakan tombol panah keyboard ← → dan Spasi"

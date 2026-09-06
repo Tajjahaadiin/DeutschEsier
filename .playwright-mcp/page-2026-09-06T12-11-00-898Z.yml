@@ -1,0 +1,1396 @@
+- generic [ref=e33]:
+  - banner [ref=e34]:
+    - generic [ref=e35]:
+      - heading "DeutschEasier" [level=1] [ref=e39]
+      - generic [ref=e40]:
+        - button "🔤 Das Alphabet (30)" [ref=e41] [cursor=pointer]
+        - button "Buat Skenario" [ref=e43] [cursor=pointer]
+        - generic [ref=e46]: 👨‍🏫 Guru
+        - button "Keluar" [ref=e48] [cursor=pointer]
+  - main [ref=e53]:
+    - generic [ref=e54]:
+      - button "Bank Kata (105)" [ref=e55] [cursor=pointer]
+      - button "Skenario (4)" [ref=e56] [cursor=pointer]
+      - button "Das Alphabet (30)" [ref=e57] [cursor=pointer]
+    - generic [ref=e58]:
+      - textbox "Cari kata Jerman atau Indonesia..." [ref=e59]
+      - combobox [ref=e60]:
+        - option "Semua Kategori" [selected]
+        - option "Administrasi & Hukum"
+        - option "Finansial & Bisnis"
+        - option "Makanan & Minuman"
+        - option "Medis & Kesehatan"
+        - option "Pendidikan & Sains"
+        - option "Rumah & Benda"
+        - option "Sosial & Komunikasi"
+        - option "Tempat & Bangunan"
+        - option "Transportasi & Teknik"
+      - generic [ref=e61]:
+        - generic [ref=e62]: "Suara:"
+        - button "👩 Wanita" [ref=e63] [cursor=pointer]
+        - button "👨 Pria" [ref=e64] [cursor=pointer]
+    - generic [ref=e65]:
+      - generic [ref=e66]:
+        - checkbox [ref=e68]
+        - generic [ref=e69]:
+          - generic [ref=e70]: die
+          - heading "Akte" [level=3] [ref=e71]
+          - button "Putar pengucapan Akte" [ref=e72] [cursor=pointer]
+        - paragraph [ref=e77]: akta
+        - generic [ref=e78]:
+          - generic [ref=e79]: "Fonetik:"
+          - generic [ref=e80]: ★★★★☆
+        - generic [ref=e81]:
+          - paragraph [ref=e82]: "\"Die Akte ist geschlossen.\""
+          - paragraph [ref=e83]: "\"Aktanya ditutup.\""
+      - generic [ref=e84]:
+        - checkbox [ref=e86]
+        - generic [ref=e87]:
+          - generic [ref=e88]: das
+          - heading "Alphabet" [level=3] [ref=e89]
+          - button "Putar pengucapan Alphabet" [ref=e90] [cursor=pointer]
+        - paragraph [ref=e95]: alfabet
+        - generic [ref=e96]:
+          - generic [ref=e97]: "Fonetik:"
+          - generic [ref=e98]: ★★★★★
+        - generic [ref=e99]:
+          - paragraph [ref=e100]: "\"Wir lernen das Alphabet.\""
+          - paragraph [ref=e101]: "\"Kita belajar alfabet.\""
+      - generic [ref=e102]:
+        - checkbox [ref=e104]
+        - generic [ref=e105]:
+          - generic [ref=e106]: die
+          - heading "Apotheke" [level=3] [ref=e107]
+          - button "Putar pengucapan Apotheke" [ref=e108] [cursor=pointer]
+        - paragraph [ref=e113]: apotek
+        - generic [ref=e114]:
+          - generic [ref=e115]: "Fonetik:"
+          - generic [ref=e116]: ★★★★★
+        - generic [ref=e117]:
+          - paragraph [ref=e118]: "\"Wo ist die Apotheke?\""
+          - paragraph [ref=e119]: "\"Di mana apotek?\""
+      - generic [ref=e120]:
+        - checkbox [ref=e122]
+        - generic [ref=e123]:
+          - generic [ref=e124]: das
+          - heading "Auto" [level=3] [ref=e125]
+          - button "Putar pengucapan Auto" [ref=e126] [cursor=pointer]
+        - paragraph [ref=e131]: oto
+        - generic [ref=e132]:
+          - generic [ref=e133]: "Fonetik:"
+          - generic [ref=e134]: ★★★★☆
+        - generic [ref=e135]:
+          - paragraph [ref=e136]: "\"Ich fahre mit dem Auto.\""
+          - paragraph [ref=e137]: "\"Saya pergi dengan oto (mobil).\""
+      - generic [ref=e138]:
+        - checkbox [ref=e140]
+        - generic [ref=e141]:
+          - generic [ref=e142]: die
+          - heading "Bakterie" [level=3] [ref=e143]
+          - button "Putar pengucapan Bakterie" [ref=e144] [cursor=pointer]
+        - paragraph [ref=e149]: bakteri
+        - generic [ref=e150]:
+          - generic [ref=e151]: "Fonetik:"
+          - generic [ref=e152]: ★★★★★
+        - generic [ref=e153]:
+          - paragraph [ref=e154]: "\"Bakterien sind überall.\""
+          - paragraph [ref=e155]: "\"Bakteri ada di mana-mana.\""
+      - generic [ref=e156]:
+        - checkbox [ref=e158]
+        - generic [ref=e159]:
+          - generic [ref=e160]: der
+          - heading "Balkon" [level=3] [ref=e161]
+          - button "Putar pengucapan Balkon" [ref=e162] [cursor=pointer]
+        - paragraph [ref=e167]: balkon
+        - generic [ref=e168]:
+          - generic [ref=e169]: "Fonetik:"
+          - generic [ref=e170]: ★★★★★
+        - generic [ref=e171]:
+          - paragraph [ref=e172]: "\"Wir sitzen auf dem Balkon.\""
+          - paragraph [ref=e173]: "\"Kita duduk di balkon.\""
+      - generic [ref=e174]:
+        - checkbox [ref=e176]
+        - generic [ref=e177]:
+          - generic [ref=e178]: die
+          - heading "Bank" [level=3] [ref=e179]
+          - button "Putar pengucapan Bank" [ref=e180] [cursor=pointer]
+        - paragraph [ref=e185]: bank
+        - generic [ref=e186]:
+          - generic [ref=e187]: "Fonetik:"
+          - generic [ref=e188]: ★★★★★
+        - generic [ref=e189]:
+          - paragraph [ref=e190]: "\"Die Bank schließt bald.\""
+          - paragraph [ref=e191]: "\"Banknya akan segera tutup.\""
+      - generic [ref=e192]:
+        - checkbox [ref=e194]
+        - generic [ref=e195]:
+          - generic [ref=e196]: der
+          - heading "Bankrott" [level=3] [ref=e197]
+          - button "Putar pengucapan Bankrott" [ref=e198] [cursor=pointer]
+        - paragraph [ref=e203]: bangkrut
+        - generic [ref=e204]:
+          - generic [ref=e205]: "Fonetik:"
+          - generic [ref=e206]: ★★★★☆
+        - generic [ref=e207]:
+          - paragraph [ref=e208]: "\"Die Firma ist bankrott.\""
+          - paragraph [ref=e209]: "\"Perusahaannya bangkrut.\""
+      - generic [ref=e210]:
+        - checkbox [ref=e212]
+        - generic [ref=e213]:
+          - generic [ref=e214]: das
+          - heading "Bier" [level=3] [ref=e215]
+          - button "Putar pengucapan Bier" [ref=e216] [cursor=pointer]
+        - paragraph [ref=e221]: bir
+        - generic [ref=e222]:
+          - generic [ref=e223]: "Fonetik:"
+          - generic [ref=e224]: ★★★★★
+        - generic [ref=e225]:
+          - paragraph [ref=e226]: "\"Ein kaltes Bier, bitte.\""
+          - paragraph [ref=e227]: "\"Minta satu bir dingin.\""
+      - generic [ref=e228]:
+        - checkbox [ref=e230]
+        - generic [ref=e231]:
+          - generic [ref=e232]: die
+          - heading "Biologie" [level=3] [ref=e233]
+          - button "Putar pengucapan Biologie" [ref=e234] [cursor=pointer]
+        - paragraph [ref=e239]: biologi
+        - generic [ref=e240]:
+          - generic [ref=e241]: "Fonetik:"
+          - generic [ref=e242]: ★★★★★
+        - generic [ref=e243]:
+          - paragraph [ref=e244]: "\"Ich mag Biologie.\""
+          - paragraph [ref=e245]: "\"Saya suka biologi.\""
+      - generic [ref=e246]:
+        - checkbox [ref=e248]
+        - generic [ref=e249]:
+          - generic [ref=e250]: der
+          - heading "Bohrer" [level=3] [ref=e251]
+          - button "Putar pengucapan Bohrer" [ref=e252] [cursor=pointer]
+        - paragraph [ref=e257]: bor
+        - generic [ref=e258]:
+          - generic [ref=e259]: "Fonetik:"
+          - generic [ref=e260]: ★★★★☆
+        - generic [ref=e261]:
+          - paragraph [ref=e262]: "\"Er benutzt einen Bohrer.\""
+          - paragraph [ref=e263]: "\"Dia menggunakan bor.\""
+      - generic [ref=e264]:
+        - checkbox [ref=e266]
+        - generic [ref=e267]:
+          - generic [ref=e268]: das
+          - heading "Bonbon" [level=3] [ref=e269]
+          - button "Putar pengucapan Bonbon" [ref=e270] [cursor=pointer]
+        - paragraph [ref=e275]: bonbon
+        - generic [ref=e276]:
+          - generic [ref=e277]: "Fonetik:"
+          - generic [ref=e278]: ★★★★★
+        - generic [ref=e279]:
+          - paragraph [ref=e280]: "\"Möchtest du ein Bonbon?\""
+          - paragraph [ref=e281]: "\"Mau permen (bonbon)?\""
+      - generic [ref=e282]:
+        - checkbox [ref=e284]
+        - generic [ref=e285]:
+          - generic [ref=e286]: die
+          - heading "Bremse" [level=3] [ref=e287]
+          - button "Putar pengucapan Bremse" [ref=e288] [cursor=pointer]
+        - paragraph [ref=e293]: rem
+        - generic [ref=e294]:
+          - generic [ref=e295]: "Fonetik:"
+          - generic [ref=e296]: ★★★☆☆
+        - generic [ref=e297]:
+          - paragraph [ref=e298]: "\"Die Bremse ist defekt.\""
+          - paragraph [ref=e299]: "\"Remnya rusak.\""
+      - generic [ref=e300]:
+        - checkbox [ref=e302]
+        - generic [ref=e303]:
+          - generic [ref=e304]: das
+          - heading "Buch" [level=3] [ref=e305]
+          - button "Putar pengucapan Buch" [ref=e306] [cursor=pointer]
+        - paragraph [ref=e311]: buku
+        - generic [ref=e312]:
+          - generic [ref=e313]: "Fonetik:"
+          - generic [ref=e314]: ★★★★☆
+        - generic [ref=e315]:
+          - paragraph [ref=e316]: "\"Ich lese ein Buch.\""
+          - paragraph [ref=e317]: "\"Saya membaca buku.\""
+      - generic [ref=e318]:
+        - checkbox [ref=e320]
+        - generic [ref=e321]:
+          - generic [ref=e322]: der
+          - heading "Bus" [level=3] [ref=e323]
+          - button "Putar pengucapan Bus" [ref=e324] [cursor=pointer]
+        - paragraph [ref=e329]: bus
+        - generic [ref=e330]:
+          - generic [ref=e331]: "Fonetik:"
+          - generic [ref=e332]: ★★★★★
+        - generic [ref=e333]:
+          - paragraph [ref=e334]: "\"Der Bus kommt.\""
+          - paragraph [ref=e335]: "\"Busnya datang.\""
+      - generic [ref=e336]:
+        - checkbox [ref=e338]
+        - generic [ref=e339]:
+          - generic [ref=e340]: das
+          - heading "Büro" [level=3] [ref=e341]
+          - button "Putar pengucapan Büro" [ref=e342] [cursor=pointer]
+        - paragraph [ref=e347]: biro
+        - generic [ref=e348]:
+          - generic [ref=e349]: "Fonetik:"
+          - generic [ref=e350]: ★★★★☆
+        - generic [ref=e351]:
+          - paragraph [ref=e352]: "\"Mein Büro ist im Zentrum.\""
+          - paragraph [ref=e353]: "\"Biro (kantor) saya ada di pusat.\""
+      - generic [ref=e354]:
+        - checkbox [ref=e356]
+        - generic [ref=e357]:
+          - generic [ref=e358]: das
+          - heading "Datum" [level=3] [ref=e359]
+          - button "Putar pengucapan Datum" [ref=e360] [cursor=pointer]
+        - paragraph [ref=e365]: datum
+        - generic [ref=e366]:
+          - generic [ref=e367]: "Fonetik:"
+          - generic [ref=e368]: ★★★★★
+        - generic [ref=e369]:
+          - paragraph [ref=e370]: "\"Welches Datum haben wir heute?\""
+          - paragraph [ref=e371]: "\"Datum (tanggal) berapa hari ini?\""
+      - generic [ref=e372]:
+        - checkbox [ref=e374]
+        - generic [ref=e375]:
+          - generic [ref=e376]: der
+          - heading "Doktor" [level=3] [ref=e377]
+          - button "Putar pengucapan Doktor" [ref=e378] [cursor=pointer]
+        - paragraph [ref=e383]: dokter
+        - generic [ref=e384]:
+          - generic [ref=e385]: "Fonetik:"
+          - generic [ref=e386]: ★★★★★
+        - generic [ref=e387]:
+          - paragraph [ref=e388]: "\"Der Doktor kommt gleich.\""
+          - paragraph [ref=e389]: "\"Dokternya segera datang.\""
+      - generic [ref=e390]:
+        - checkbox [ref=e392]
+        - generic [ref=e393]:
+          - generic [ref=e394]: das
+          - heading "Dokument" [level=3] [ref=e395]
+          - button "Putar pengucapan Dokument" [ref=e396] [cursor=pointer]
+        - paragraph [ref=e401]: dokumen
+        - generic [ref=e402]:
+          - generic [ref=e403]: "Fonetik:"
+          - generic [ref=e404]: ★★★★★
+        - generic [ref=e405]:
+          - paragraph [ref=e406]: "\"Ein wichtiges Dokument.\""
+          - paragraph [ref=e407]: "\"Dokumen yang penting.\""
+      - generic [ref=e408]:
+        - checkbox [ref=e410]
+        - generic [ref=e411]:
+          - generic [ref=e412]: der
+          - heading "Eimer" [level=3] [ref=e413]
+          - button "Putar pengucapan Eimer" [ref=e414] [cursor=pointer]
+        - paragraph [ref=e419]: ember
+        - generic [ref=e420]:
+          - generic [ref=e421]: "Fonetik:"
+          - generic [ref=e422]: ★★★★☆
+        - generic [ref=e423]:
+          - paragraph [ref=e424]: "\"Der Eimer ist voll.\""
+          - paragraph [ref=e425]: "\"Embernya penuh.\""
+      - generic [ref=e426]:
+        - checkbox [ref=e428]
+        - generic [ref=e429]:
+          - generic [ref=e430]: das
+          - heading "Experiment" [level=3] [ref=e431]
+          - button "Putar pengucapan Experiment" [ref=e432] [cursor=pointer]
+        - paragraph [ref=e437]: eksperimen
+        - generic [ref=e438]:
+          - generic [ref=e439]: "Fonetik:"
+          - generic [ref=e440]: ★★★★★
+        - generic [ref=e441]:
+          - paragraph [ref=e442]: "\"Wir machen ein Experiment.\""
+          - paragraph [ref=e443]: "\"Kita membuat eksperimen.\""
+      - generic [ref=e444]:
+        - checkbox [ref=e446]
+        - generic [ref=e447]:
+          - generic [ref=e448]: die
+          - heading "Fabrik" [level=3] [ref=e449]
+          - button "Putar pengucapan Fabrik" [ref=e450] [cursor=pointer]
+        - paragraph [ref=e455]: pabrik
+        - generic [ref=e456]:
+          - generic [ref=e457]: "Fonetik:"
+          - generic [ref=e458]: ★★★★☆
+        - generic [ref=e459]:
+          - paragraph [ref=e460]: "\"Er arbeitet in der Fabrik.\""
+          - paragraph [ref=e461]: "\"Dia bekerja di pabrik.\""
+      - generic [ref=e462]:
+        - checkbox [ref=e464]
+        - generic [ref=e465]:
+          - generic [ref=e466]: die
+          - heading "Familie" [level=3] [ref=e467]
+          - button "Putar pengucapan Familie" [ref=e468] [cursor=pointer]
+        - paragraph [ref=e473]: famili
+        - generic [ref=e474]:
+          - generic [ref=e475]: "Fonetik:"
+          - generic [ref=e476]: ★★★★★
+        - generic [ref=e477]:
+          - paragraph [ref=e478]: "\"Meine Familie ist groß.\""
+          - paragraph [ref=e479]: "\"Famili (Keluarga) saya besar.\""
+      - generic [ref=e480]:
+        - checkbox [ref=e482]
+        - generic [ref=e483]:
+          - generic [ref=e484]: das
+          - heading "Formular" [level=3] [ref=e485]
+          - button "Putar pengucapan Formular" [ref=e486] [cursor=pointer]
+        - paragraph [ref=e491]: formulir
+        - generic [ref=e492]:
+          - generic [ref=e493]: "Fonetik:"
+          - generic [ref=e494]: ★★★★★
+        - generic [ref=e495]:
+          - paragraph [ref=e496]: "\"Füllen Sie das Formular aus.\""
+          - paragraph [ref=e497]: "\"Isilah formulir ini.\""
+      - generic [ref=e498]:
+        - checkbox [ref=e500]
+        - generic [ref=e501]:
+          - generic [ref=e502]: die
+          - heading "Garantie" [level=3] [ref=e503]
+          - button "Putar pengucapan Garantie" [ref=e504] [cursor=pointer]
+        - paragraph [ref=e509]: garansi
+        - generic [ref=e510]:
+          - generic [ref=e511]: "Fonetik:"
+          - generic [ref=e512]: ★★★★★
+        - generic [ref=e513]:
+          - paragraph [ref=e514]: "\"Wir geben ein Jahr Garantie.\""
+          - paragraph [ref=e515]: "\"Kami memberi satu tahun garansi.\""
+      - generic [ref=e516]:
+        - checkbox [ref=e518]
+        - generic [ref=e519]:
+          - generic [ref=e520]: die
+          - heading "Gitarre" [level=3] [ref=e521]
+          - button "Putar pengucapan Gitarre" [ref=e522] [cursor=pointer]
+        - paragraph [ref=e527]: gitar
+        - generic [ref=e528]:
+          - generic [ref=e529]: "Fonetik:"
+          - generic [ref=e530]: ★★★★★
+        - generic [ref=e531]:
+          - paragraph [ref=e532]: "\"Er spielt Gitarre.\""
+          - paragraph [ref=e533]: "\"Dia bermain gitar.\""
+      - generic [ref=e534]:
+        - checkbox [ref=e536]
+        - generic [ref=e537]:
+          - generic [ref=e538]: das
+          - heading "Glas" [level=3] [ref=e539]
+          - button "Putar pengucapan Glas" [ref=e540] [cursor=pointer]
+        - paragraph [ref=e545]: gelas
+        - generic [ref=e546]:
+          - generic [ref=e547]: "Fonetik:"
+          - generic [ref=e548]: ★★★★☆
+        - generic [ref=e549]:
+          - paragraph [ref=e550]: "\"Das Glas ist leer.\""
+          - paragraph [ref=e551]: "\"Gelasnya kosong.\""
+      - generic [ref=e552]:
+        - checkbox [ref=e554]
+        - generic [ref=e555]:
+          - heading "Gratis" [level=3] [ref=e556]
+          - button "Putar pengucapan Gratis" [ref=e557] [cursor=pointer]
+        - paragraph [ref=e562]: gratis
+        - generic [ref=e563]:
+          - generic [ref=e564]: "Fonetik:"
+          - generic [ref=e565]: ★★★★★
+        - generic [ref=e566]:
+          - paragraph [ref=e567]: "\"Das ist heute gratis.\""
+          - paragraph [ref=e568]: "\"Hari ini itu gratis.\""
+      - generic [ref=e569]:
+        - checkbox [ref=e571]
+        - generic [ref=e572]:
+          - generic [ref=e573]: das
+          - heading "Handtuch" [level=3] [ref=e574]
+          - button "Putar pengucapan Handtuch" [ref=e575] [cursor=pointer]
+        - paragraph [ref=e580]: handuk
+        - generic [ref=e581]:
+          - generic [ref=e582]: "Fonetik:"
+          - generic [ref=e583]: ★★★★☆
+        - generic [ref=e584]:
+          - paragraph [ref=e585]: "\"Ich brauche ein Handtuch.\""
+          - paragraph [ref=e586]: "\"Saya butuh handuk.\""
+      - generic [ref=e587]:
+        - checkbox [ref=e589]
+        - generic [ref=e590]:
+          - generic [ref=e591]: das
+          - heading "Hotel" [level=3] [ref=e592]
+          - button "Putar pengucapan Hotel" [ref=e593] [cursor=pointer]
+        - paragraph [ref=e598]: hotel
+        - generic [ref=e599]:
+          - generic [ref=e600]: "Fonetik:"
+          - generic [ref=e601]: ★★★★★
+        - generic [ref=e602]:
+          - paragraph [ref=e603]: "\"Das Hotel ist teuer.\""
+          - paragraph [ref=e604]: "\"Hotelnya mahal.\""
+      - generic [ref=e605]:
+        - checkbox [ref=e607]
+        - generic [ref=e608]:
+          - generic [ref=e609]: das
+          - heading "Institut" [level=3] [ref=e610]
+          - button "Putar pengucapan Institut" [ref=e611] [cursor=pointer]
+        - paragraph [ref=e616]: institut
+        - generic [ref=e617]:
+          - generic [ref=e618]: "Fonetik:"
+          - generic [ref=e619]: ★★★★★
+        - generic [ref=e620]:
+          - paragraph [ref=e621]: "\"Das ist ein neues Institut.\""
+          - paragraph [ref=e622]: "\"Ini adalah institut baru.\""
+      - generic [ref=e623]:
+        - checkbox [ref=e625]
+        - generic [ref=e626]:
+          - generic [ref=e627]: das
+          - heading "Kabel" [level=3] [ref=e628]
+          - button "Putar pengucapan Kabel" [ref=e629] [cursor=pointer]
+        - paragraph [ref=e634]: kabel
+        - generic [ref=e635]:
+          - generic [ref=e636]: "Fonetik:"
+          - generic [ref=e637]: ★★★★★
+        - generic [ref=e638]:
+          - paragraph [ref=e639]: "\"Das Kabel ist zu kurz.\""
+          - paragraph [ref=e640]: "\"Kabelnya terlalu pendek.\""
+      - generic [ref=e641]:
+        - checkbox [ref=e643]
+        - generic [ref=e644]:
+          - generic [ref=e645]: der
+          - heading "Kaffee" [level=3] [ref=e646]
+          - button "Putar pengucapan Kaffee" [ref=e647] [cursor=pointer]
+        - paragraph [ref=e652]: kopi
+        - generic [ref=e653]:
+          - generic [ref=e654]: "Fonetik:"
+          - generic [ref=e655]: ★★★★☆
+        - generic [ref=e656]:
+          - paragraph [ref=e657]: "\"Ich trinke gern Kaffee.\""
+          - paragraph [ref=e658]: "\"Saya suka minum kopi.\""
+      - generic [ref=e659]:
+        - checkbox [ref=e661]
+        - generic [ref=e662]:
+          - generic [ref=e663]: die
+          - heading "Kammer" [level=3] [ref=e664]
+          - button "Putar pengucapan Kammer" [ref=e665] [cursor=pointer]
+        - paragraph [ref=e670]: kamar
+        - generic [ref=e671]:
+          - generic [ref=e672]: "Fonetik:"
+          - generic [ref=e673]: ★★★★☆
+        - generic [ref=e674]:
+          - paragraph [ref=e675]: "\"Die Kammer ist klein.\""
+          - paragraph [ref=e676]: "\"Kamarnya kecil.\""
+      - generic [ref=e677]:
+        - checkbox [ref=e679]
+        - generic [ref=e680]:
+          - generic [ref=e681]: die
+          - heading "Kapsel" [level=3] [ref=e682]
+          - button "Putar pengucapan Kapsel" [ref=e683] [cursor=pointer]
+        - paragraph [ref=e688]: kapsul
+        - generic [ref=e689]:
+          - generic [ref=e690]: "Fonetik:"
+          - generic [ref=e691]: ★★★★★
+        - generic [ref=e692]:
+          - paragraph [ref=e693]: "\"Schluck die Kapsel.\""
+          - paragraph [ref=e694]: "\"Telan kapsulnya.\""
+      - generic [ref=e695]:
+        - checkbox [ref=e697]
+        - generic [ref=e698]:
+          - generic [ref=e699]: die
+          - heading "Karte" [level=3] [ref=e700]
+          - button "Putar pengucapan Karte" [ref=e701] [cursor=pointer]
+        - paragraph [ref=e706]: kartu
+        - generic [ref=e707]:
+          - generic [ref=e708]: "Fonetik:"
+          - generic [ref=e709]: ★★★★☆
+        - generic [ref=e710]:
+          - paragraph [ref=e711]: "\"Hier ist meine Karte.\""
+          - paragraph [ref=e712]: "\"Ini kartu saya.\""
+      - generic [ref=e713]:
+        - checkbox [ref=e715]
+        - generic [ref=e716]:
+          - generic [ref=e717]: die
+          - heading "Kasse" [level=3] [ref=e718]
+          - button "Putar pengucapan Kasse" [ref=e719] [cursor=pointer]
+        - paragraph [ref=e724]: kasir
+        - generic [ref=e725]:
+          - generic [ref=e726]: "Fonetik:"
+          - generic [ref=e727]: ★★★★☆
+        - generic [ref=e728]:
+          - paragraph [ref=e729]: "\"Zahlen Sie an der Kasse.\""
+          - paragraph [ref=e730]: "\"Bayarlah di kasir (kassa).\""
+      - generic [ref=e731]:
+        - checkbox [ref=e733]
+        - generic [ref=e734]:
+          - generic [ref=e735]: der
+          - heading "Kessel" [level=3] [ref=e736]
+          - button "Putar pengucapan Kessel" [ref=e737] [cursor=pointer]
+        - paragraph [ref=e742]: ketel
+        - generic [ref=e743]:
+          - generic [ref=e744]: "Fonetik:"
+          - generic [ref=e745]: ★★★★☆
+        - generic [ref=e746]:
+          - paragraph [ref=e747]: "\"Der Kessel pfeift.\""
+          - paragraph [ref=e748]: "\"Ketelnya berbunyi.\""
+      - generic [ref=e749]:
+        - checkbox [ref=e751]
+        - generic [ref=e752]:
+          - generic [ref=e753]: das
+          - heading "Klavier" [level=3] [ref=e754]
+          - button "Putar pengucapan Klavier" [ref=e755] [cursor=pointer]
+        - paragraph [ref=e760]: klavier
+        - generic [ref=e761]:
+          - generic [ref=e762]: "Fonetik:"
+          - generic [ref=e763]: ★★★★★
+        - generic [ref=e764]:
+          - paragraph [ref=e765]: "\"Sie spielt Klavier.\""
+          - paragraph [ref=e766]: "\"Dia bermain klavier (piano).\""
+      - generic [ref=e767]:
+        - checkbox [ref=e769]
+        - generic [ref=e770]:
+          - generic [ref=e771]: die
+          - heading "Klinik" [level=3] [ref=e772]
+          - button "Putar pengucapan Klinik" [ref=e773] [cursor=pointer]
+        - paragraph [ref=e778]: klinik
+        - generic [ref=e779]:
+          - generic [ref=e780]: "Fonetik:"
+          - generic [ref=e781]: ★★★★★
+        - generic [ref=e782]:
+          - paragraph [ref=e783]: "\"Er ist in der Klinik.\""
+          - paragraph [ref=e784]: "\"Dia ada di klinik.\""
+      - generic [ref=e785]:
+        - checkbox [ref=e787]
+        - generic [ref=e788]:
+          - generic [ref=e789]: der
+          - heading "Korridor" [level=3] [ref=e790]
+          - button "Putar pengucapan Korridor" [ref=e791] [cursor=pointer]
+        - paragraph [ref=e796]: koridor
+        - generic [ref=e797]:
+          - generic [ref=e798]: "Fonetik:"
+          - generic [ref=e799]: ★★★★★
+        - generic [ref=e800]:
+          - paragraph [ref=e801]: "\"Der Korridor ist lang.\""
+          - paragraph [ref=e802]: "\"Koridornya panjang.\""
+      - generic [ref=e803]:
+        - checkbox [ref=e805]
+        - generic [ref=e806]:
+          - generic [ref=e807]: der
+          - heading "Kurs" [level=3] [ref=e808]
+          - button "Putar pengucapan Kurs" [ref=e809] [cursor=pointer]
+        - paragraph [ref=e814]: kurs
+        - generic [ref=e815]:
+          - generic [ref=e816]: "Fonetik:"
+          - generic [ref=e817]: ★★★★★
+        - generic [ref=e818]:
+          - paragraph [ref=e819]: "\"Der Kurs ist hoch.\""
+          - paragraph [ref=e820]: "\"Kursnya tinggi.\""
+      - generic [ref=e821]:
+        - checkbox [ref=e823]
+        - generic [ref=e824]:
+          - generic [ref=e825]: die
+          - heading "Lampe" [level=3] [ref=e826]
+          - button "Putar pengucapan Lampe" [ref=e827] [cursor=pointer]
+        - paragraph [ref=e832]: lampu
+        - generic [ref=e833]:
+          - generic [ref=e834]: "Fonetik:"
+          - generic [ref=e835]: ★★★★★
+        - generic [ref=e836]:
+          - paragraph [ref=e837]: "\"Die Lampe ist hell.\""
+          - paragraph [ref=e838]: "\"Lampunya terang.\""
+      - generic [ref=e839]:
+        - checkbox [ref=e841]
+        - generic [ref=e842]:
+          - generic [ref=e843]: die
+          - heading "Matratze" [level=3] [ref=e844]
+          - button "Putar pengucapan Matratze" [ref=e845] [cursor=pointer]
+        - paragraph [ref=e850]: matras
+        - generic [ref=e851]:
+          - generic [ref=e852]: "Fonetik:"
+          - generic [ref=e853]: ★★★★☆
+        - generic [ref=e854]:
+          - paragraph [ref=e855]: "\"Die Matratze ist weich.\""
+          - paragraph [ref=e856]: "\"Matrasnya empuk.\""
+      - generic [ref=e857]:
+        - checkbox [ref=e859]
+        - generic [ref=e860]:
+          - generic [ref=e861]: die
+          - heading "Mayonnaise" [level=3] [ref=e862]
+          - button "Putar pengucapan Mayonnaise" [ref=e863] [cursor=pointer]
+        - paragraph [ref=e868]: mayones
+        - generic [ref=e869]:
+          - generic [ref=e870]: "Fonetik:"
+          - generic [ref=e871]: ★★★★★
+        - generic [ref=e872]:
+          - paragraph [ref=e873]: "\"Pommes mit Mayonnaise.\""
+          - paragraph [ref=e874]: "\"Kentang goreng dengan mayones.\""
+      - generic [ref=e875]:
+        - checkbox [ref=e877]
+        - generic [ref=e878]:
+          - generic [ref=e879]: die
+          - heading "Methode" [level=3] [ref=e880]
+          - button "Putar pengucapan Methode" [ref=e881] [cursor=pointer]
+        - paragraph [ref=e886]: metode
+        - generic [ref=e887]:
+          - generic [ref=e888]: "Fonetik:"
+          - generic [ref=e889]: ★★★★★
+        - generic [ref=e890]:
+          - paragraph [ref=e891]: "\"Eine gute Methode.\""
+          - paragraph [ref=e892]: "\"Sebuah metode yang bagus.\""
+      - generic [ref=e893]:
+        - checkbox [ref=e895]
+        - generic [ref=e896]:
+          - generic [ref=e897]: der
+          - heading "Motor" [level=3] [ref=e898]
+          - button "Putar pengucapan Motor" [ref=e899] [cursor=pointer]
+        - paragraph [ref=e904]: motor
+        - generic [ref=e905]:
+          - generic [ref=e906]: "Fonetik:"
+          - generic [ref=e907]: ★★★★★
+        - generic [ref=e908]:
+          - paragraph [ref=e909]: "\"Der Motor ist laut.\""
+          - paragraph [ref=e910]: "\"Motornya berisik.\""
+      - generic [ref=e911]:
+        - checkbox [ref=e913]
+        - generic [ref=e914]:
+          - generic [ref=e915]: das
+          - heading "Museum" [level=3] [ref=e916]
+          - button "Putar pengucapan Museum" [ref=e917] [cursor=pointer]
+        - paragraph [ref=e922]: museum
+        - generic [ref=e923]:
+          - generic [ref=e924]: "Fonetik:"
+          - generic [ref=e925]: ★★★★★
+        - generic [ref=e926]:
+          - paragraph [ref=e927]: "\"Das Museum ist interessant.\""
+          - paragraph [ref=e928]: "\"Museum itu menarik.\""
+      - generic [ref=e929]:
+        - checkbox [ref=e931]
+        - generic [ref=e932]:
+          - generic [ref=e933]: die
+          - heading "Musik" [level=3] [ref=e934]
+          - button "Putar pengucapan Musik" [ref=e935] [cursor=pointer]
+        - paragraph [ref=e940]: musik
+        - generic [ref=e941]:
+          - generic [ref=e942]: "Fonetik:"
+          - generic [ref=e943]: ★★★★★
+        - generic [ref=e944]:
+          - paragraph [ref=e945]: "\"Hörst du Musik?\""
+          - paragraph [ref=e946]: "\"Apakah kamu mendengar musik?\""
+      - generic [ref=e947]:
+        - checkbox [ref=e949]
+        - generic [ref=e950]:
+          - generic [ref=e951]: die
+          - heading "Nummer" [level=3] [ref=e952]
+          - button "Putar pengucapan Nummer" [ref=e953] [cursor=pointer]
+        - paragraph [ref=e958]: nomor
+        - generic [ref=e959]:
+          - generic [ref=e960]: "Fonetik:"
+          - generic [ref=e961]: ★★★★★
+        - generic [ref=e962]:
+          - paragraph [ref=e963]: "\"Wie ist deine Nummer?\""
+          - paragraph [ref=e964]: "\"Berapa nomormu?\""
+      - generic [ref=e965]:
+        - checkbox [ref=e967]
+        - generic [ref=e968]:
+          - generic [ref=e969]: die
+          - heading "Operation" [level=3] [ref=e970]
+          - button "Putar pengucapan Operation" [ref=e971] [cursor=pointer]
+        - paragraph [ref=e976]: operasi
+        - generic [ref=e977]:
+          - generic [ref=e978]: "Fonetik:"
+          - generic [ref=e979]: ★★★★★
+        - generic [ref=e980]:
+          - paragraph [ref=e981]: "\"Die Operation war erfolgreich.\""
+          - paragraph [ref=e982]: "\"Operasinya sukses.\""
+      - generic [ref=e983]:
+        - checkbox [ref=e985]
+        - generic [ref=e986]:
+          - generic [ref=e987]: das
+          - heading "Organ" [level=3] [ref=e988]
+          - button "Putar pengucapan Organ" [ref=e989] [cursor=pointer]
+        - paragraph [ref=e994]: organ
+        - generic [ref=e995]:
+          - generic [ref=e996]: "Fonetik:"
+          - generic [ref=e997]: ★★★★★
+        - generic [ref=e998]:
+          - paragraph [ref=e999]: "\"Das Herz ist ein Organ.\""
+          - paragraph [ref=e1000]: "\"Jantung adalah sebuah organ.\""
+      - generic [ref=e1001]:
+        - checkbox [ref=e1003]
+        - generic [ref=e1004]:
+          - generic [ref=e1005]: der
+          - heading "Paragraph" [level=3] [ref=e1006]
+          - button "Putar pengucapan Paragraph" [ref=e1007] [cursor=pointer]
+        - paragraph [ref=e1012]: paragraf
+        - generic [ref=e1013]:
+          - generic [ref=e1014]: "Fonetik:"
+          - generic [ref=e1015]: ★★★★★
+        - generic [ref=e1016]:
+          - paragraph [ref=e1017]: "\"Ein neuer Paragraph.\""
+          - paragraph [ref=e1018]: "\"Sebuah paragraf baru.\""
+      - generic [ref=e1019]:
+        - checkbox [ref=e1021]
+        - generic [ref=e1022]:
+          - generic [ref=e1023]: die
+          - heading "Pasta" [level=3] [ref=e1024]
+          - button "Putar pengucapan Pasta" [ref=e1025] [cursor=pointer]
+        - paragraph [ref=e1030]: pasta
+        - generic [ref=e1031]:
+          - generic [ref=e1032]: "Fonetik:"
+          - generic [ref=e1033]: ★★★★★
+        - generic [ref=e1034]:
+          - paragraph [ref=e1035]: "\"Heute gibt es Pasta.\""
+          - paragraph [ref=e1036]: "\"Hari ini ada pasta.\""
+      - generic [ref=e1037]:
+        - checkbox [ref=e1039]
+        - generic [ref=e1040]:
+          - generic [ref=e1041]: der
+          - heading "Patient" [level=3] [ref=e1042]
+          - button "Putar pengucapan Patient" [ref=e1043] [cursor=pointer]
+        - paragraph [ref=e1048]: pasien
+        - generic [ref=e1049]:
+          - generic [ref=e1050]: "Fonetik:"
+          - generic [ref=e1051]: ★★★★★
+        - generic [ref=e1052]:
+          - paragraph [ref=e1053]: "\"Der Patient schläft.\""
+          - paragraph [ref=e1054]: "\"Pasiennya tidur.\""
+      - generic [ref=e1055]:
+        - checkbox [ref=e1057]
+        - generic [ref=e1058]:
+          - generic [ref=e1059]: die
+          - heading "Pension" [level=3] [ref=e1060]
+          - button "Putar pengucapan Pension" [ref=e1061] [cursor=pointer]
+        - paragraph [ref=e1066]: pensiun
+        - generic [ref=e1067]:
+          - generic [ref=e1068]: "Fonetik:"
+          - generic [ref=e1069]: ★★★★★
+        - generic [ref=e1070]:
+          - paragraph [ref=e1071]: "\"Er ist in Pension.\""
+          - paragraph [ref=e1072]: "\"Dia sudah pensiun.\""
+      - generic [ref=e1073]:
+        - checkbox [ref=e1075]
+        - generic [ref=e1076]:
+          - generic [ref=e1077]: das
+          - heading "Pflaster" [level=3] [ref=e1078]
+          - button "Putar pengucapan Pflaster" [ref=e1079] [cursor=pointer]
+        - paragraph [ref=e1084]: plester
+        - generic [ref=e1085]:
+          - generic [ref=e1086]: "Fonetik:"
+          - generic [ref=e1087]: ★★★★☆
+        - generic [ref=e1088]:
+          - paragraph [ref=e1089]: "\"Ich brauche ein Pflaster.\""
+          - paragraph [ref=e1090]: "\"Saya butuh plester.\""
+      - generic [ref=e1091]:
+        - checkbox [ref=e1093]
+        - generic [ref=e1094]:
+          - generic [ref=e1095]: die
+          - heading "Physik" [level=3] [ref=e1096]
+          - button "Putar pengucapan Physik" [ref=e1097] [cursor=pointer]
+        - paragraph [ref=e1102]: fisika
+        - generic [ref=e1103]:
+          - generic [ref=e1104]: "Fonetik:"
+          - generic [ref=e1105]: ★★★★★
+        - generic [ref=e1106]:
+          - paragraph [ref=e1107]: "\"Physik ist schwer.\""
+          - paragraph [ref=e1108]: "\"Fisika itu sulit.\""
+      - generic [ref=e1109]:
+        - checkbox [ref=e1111]
+        - generic [ref=e1112]:
+          - generic [ref=e1113]: die
+          - heading "Pille" [level=3] [ref=e1114]
+          - button "Putar pengucapan Pille" [ref=e1115] [cursor=pointer]
+        - paragraph [ref=e1120]: pil
+        - generic [ref=e1121]:
+          - generic [ref=e1122]: "Fonetik:"
+          - generic [ref=e1123]: ★★★★★
+        - generic [ref=e1124]:
+          - paragraph [ref=e1125]: "\"Nimm die Pille.\""
+          - paragraph [ref=e1126]: "\"Minum pilnya.\""
+      - generic [ref=e1127]:
+        - checkbox [ref=e1129]
+        - generic [ref=e1130]:
+          - generic [ref=e1131]: die
+          - heading "Politik" [level=3] [ref=e1132]
+          - button "Putar pengucapan Politik" [ref=e1133] [cursor=pointer]
+        - paragraph [ref=e1138]: politik
+        - generic [ref=e1139]:
+          - generic [ref=e1140]: "Fonetik:"
+          - generic [ref=e1141]: ★★★★★
+        - generic [ref=e1142]:
+          - paragraph [ref=e1143]: "\"Politik ist kompliziert.\""
+          - paragraph [ref=e1144]: "\"Politik itu rumit.\""
+      - generic [ref=e1145]:
+        - checkbox [ref=e1147]
+        - generic [ref=e1148]:
+          - generic [ref=e1149]: die
+          - heading "Post" [level=3] [ref=e1150]
+          - button "Putar pengucapan Post" [ref=e1151] [cursor=pointer]
+        - paragraph [ref=e1156]: pos
+        - generic [ref=e1157]:
+          - generic [ref=e1158]: "Fonetik:"
+          - generic [ref=e1159]: ★★★★★
+        - generic [ref=e1160]:
+          - paragraph [ref=e1161]: "\"Ich gehe zur Post.\""
+          - paragraph [ref=e1162]: "\"Saya pergi ke kantor pos.\""
+      - generic [ref=e1163]:
+        - checkbox [ref=e1165]
+        - generic [ref=e1166]:
+          - generic [ref=e1167]: die
+          - heading "Praxis" [level=3] [ref=e1168]
+          - button "Putar pengucapan Praxis" [ref=e1169] [cursor=pointer]
+        - paragraph [ref=e1174]: praktik
+        - generic [ref=e1175]:
+          - generic [ref=e1176]: "Fonetik:"
+          - generic [ref=e1177]: ★★★★☆
+        - generic [ref=e1178]:
+          - paragraph [ref=e1179]: "\"In der Praxis ist es anders.\""
+          - paragraph [ref=e1180]: "\"Dalam praktik itu berbeda.\""
+      - generic [ref=e1181]:
+        - checkbox [ref=e1183]
+        - generic [ref=e1184]:
+          - generic [ref=e1185]: das
+          - heading "Problem" [level=3] [ref=e1186]
+          - button "Putar pengucapan Problem" [ref=e1187] [cursor=pointer]
+        - paragraph [ref=e1192]: problem
+        - generic [ref=e1193]:
+          - generic [ref=e1194]: "Fonetik:"
+          - generic [ref=e1195]: ★★★★★
+        - generic [ref=e1196]:
+          - paragraph [ref=e1197]: "\"Das ist kein Problem.\""
+          - paragraph [ref=e1198]: "\"Itu bukan problem (masalah).\""
+      - generic [ref=e1199]:
+        - checkbox [ref=e1201]
+        - generic [ref=e1202]:
+          - generic [ref=e1203]: das
+          - heading "Projekt" [level=3] [ref=e1204]
+          - button "Putar pengucapan Projekt" [ref=e1205] [cursor=pointer]
+        - paragraph [ref=e1210]: proyek
+        - generic [ref=e1211]:
+          - generic [ref=e1212]: "Fonetik:"
+          - generic [ref=e1213]: ★★★★★
+        - generic [ref=e1214]:
+          - paragraph [ref=e1215]: "\"Unser neues Projekt.\""
+          - paragraph [ref=e1216]: "\"Proyek baru kita.\""
+      - generic [ref=e1217]:
+        - checkbox [ref=e1219]
+        - generic [ref=e1220]:
+          - generic [ref=e1221]: das
+          - heading "Protokoll" [level=3] [ref=e1222]
+          - button "Putar pengucapan Protokoll" [ref=e1223] [cursor=pointer]
+        - paragraph [ref=e1228]: protokol
+        - generic [ref=e1229]:
+          - generic [ref=e1230]: "Fonetik:"
+          - generic [ref=e1231]: ★★★★★
+        - generic [ref=e1232]:
+          - paragraph [ref=e1233]: "\"Schreiben Sie das Protokoll.\""
+          - paragraph [ref=e1234]: "\"Tulislah protokol (notulen).\""
+      - generic [ref=e1235]:
+        - checkbox [ref=e1237]
+        - generic [ref=e1238]:
+          - generic [ref=e1239]: das
+          - heading "Prozent" [level=3] [ref=e1240]
+          - button "Putar pengucapan Prozent" [ref=e1241] [cursor=pointer]
+        - paragraph [ref=e1246]: persen
+        - generic [ref=e1247]:
+          - generic [ref=e1248]: "Fonetik:"
+          - generic [ref=e1249]: ★★★★★
+        - generic [ref=e1250]:
+          - paragraph [ref=e1251]: "\"Zehn Prozent Rabatt.\""
+          - paragraph [ref=e1252]: "\"Diskon sepuluh persen.\""
+      - generic [ref=e1253]:
+        - checkbox [ref=e1255]
+        - generic [ref=e1256]:
+          - generic [ref=e1257]: die
+          - heading "Quarantäne" [level=3] [ref=e1258]
+          - button "Putar pengucapan Quarantäne" [ref=e1259] [cursor=pointer]
+        - paragraph [ref=e1264]: karantina
+        - generic [ref=e1265]:
+          - generic [ref=e1266]: "Fonetik:"
+          - generic [ref=e1267]: ★★★★★
+        - generic [ref=e1268]:
+          - paragraph [ref=e1269]: "\"Wir sind in Quarantäne.\""
+          - paragraph [ref=e1270]: "\"Kita ada di karantina.\""
+      - generic [ref=e1271]:
+        - checkbox [ref=e1273]
+        - generic [ref=e1274]:
+          - generic [ref=e1275]: die
+          - heading "Quittung" [level=3] [ref=e1276]
+          - button "Putar pengucapan Quittung" [ref=e1277] [cursor=pointer]
+        - paragraph [ref=e1282]: kuitansi
+        - generic [ref=e1283]:
+          - generic [ref=e1284]: "Fonetik:"
+          - generic [ref=e1285]: ★★★★☆
+        - generic [ref=e1286]:
+          - paragraph [ref=e1287]: "\"Brauchen Sie eine Quittung?\""
+          - paragraph [ref=e1288]: "\"Apakah Anda butuh kuitansi?\""
+      - generic [ref=e1289]:
+        - checkbox [ref=e1291]
+        - generic [ref=e1292]:
+          - generic [ref=e1293]: das
+          - heading "Radio" [level=3] [ref=e1294]
+          - button "Putar pengucapan Radio" [ref=e1295] [cursor=pointer]
+        - paragraph [ref=e1300]: radio
+        - generic [ref=e1301]:
+          - generic [ref=e1302]: "Fonetik:"
+          - generic [ref=e1303]: ★★★★★
+        - generic [ref=e1304]:
+          - paragraph [ref=e1305]: "\"Ich höre oft Radio.\""
+          - paragraph [ref=e1306]: "\"Saya sering mendengar radio.\""
+      - generic [ref=e1307]:
+        - checkbox [ref=e1309]
+        - generic [ref=e1310]:
+          - generic [ref=e1311]: das
+          - heading "Restaurant" [level=3] [ref=e1312]
+          - button "Putar pengucapan Restaurant" [ref=e1313] [cursor=pointer]
+        - paragraph [ref=e1318]: restoran
+        - generic [ref=e1319]:
+          - generic [ref=e1320]: "Fonetik:"
+          - generic [ref=e1321]: ★★★★★
+        - generic [ref=e1322]:
+          - paragraph [ref=e1323]: "\"Ein gutes Restaurant.\""
+          - paragraph [ref=e1324]: "\"Sebuah restoran yang bagus.\""
+      - generic [ref=e1325]:
+        - checkbox [ref=e1327]
+        - generic [ref=e1328]:
+          - generic [ref=e1329]: das
+          - heading "Rezept" [level=3] [ref=e1330]
+          - button "Putar pengucapan Rezept" [ref=e1331] [cursor=pointer]
+        - paragraph [ref=e1336]: resep
+        - generic [ref=e1337]:
+          - generic [ref=e1338]: "Fonetik:"
+          - generic [ref=e1339]: ★★★★★
+        - generic [ref=e1340]:
+          - paragraph [ref=e1341]: "\"Haben Sie ein Rezept?\""
+          - paragraph [ref=e1342]: "\"Apakah Anda punya resep?\""
+      - generic [ref=e1343]:
+        - checkbox [ref=e1345]
+        - generic [ref=e1346]:
+          - generic [ref=e1347]: der
+          - heading "Rhythmus" [level=3] [ref=e1348]
+          - button "Putar pengucapan Rhythmus" [ref=e1349] [cursor=pointer]
+        - paragraph [ref=e1354]: ritme
+        - generic [ref=e1355]:
+          - generic [ref=e1356]: "Fonetik:"
+          - generic [ref=e1357]: ★★★★★
+        - generic [ref=e1358]:
+          - paragraph [ref=e1359]: "\"Fühlst du den Rhythmus?\""
+          - paragraph [ref=e1360]: "\"Apakah kamu merasakan ritme itu?\""
+      - generic [ref=e1361]:
+        - checkbox [ref=e1363]
+        - generic [ref=e1364]:
+          - generic [ref=e1365]: der
+          - heading "Salat" [level=3] [ref=e1366]
+          - button "Putar pengucapan Salat" [ref=e1367] [cursor=pointer]
+        - paragraph [ref=e1372]: selada
+        - generic [ref=e1373]:
+          - generic [ref=e1374]: "Fonetik:"
+          - generic [ref=e1375]: ★★★★☆
+        - generic [ref=e1376]:
+          - paragraph [ref=e1377]: "\"Wir essen Salat.\""
+          - paragraph [ref=e1378]: "\"Kita makan selada.\""
+      - generic [ref=e1379]:
+        - checkbox [ref=e1381]
+        - generic [ref=e1382]:
+          - generic [ref=e1383]: der
+          - heading "Saldo" [level=3] [ref=e1384]
+          - button "Putar pengucapan Saldo" [ref=e1385] [cursor=pointer]
+        - paragraph [ref=e1390]: saldo
+        - generic [ref=e1391]:
+          - generic [ref=e1392]: "Fonetik:"
+          - generic [ref=e1393]: ★★★★★
+        - generic [ref=e1394]:
+          - paragraph [ref=e1395]: "\"Wie hoch ist der Saldo?\""
+          - paragraph [ref=e1396]: "\"Berapa saldonya?\""
+      - generic [ref=e1397]:
+        - checkbox [ref=e1399]
+        - generic [ref=e1400]:
+          - generic [ref=e1401]: die
+          - heading "Sauce" [level=3] [ref=e1402]
+          - button "Putar pengucapan Sauce" [ref=e1403] [cursor=pointer]
+        - paragraph [ref=e1408]: saus
+        - generic [ref=e1409]:
+          - generic [ref=e1410]: "Fonetik:"
+          - generic [ref=e1411]: ★★★★☆
+        - generic [ref=e1412]:
+          - paragraph [ref=e1413]: "\"Die Sauce ist scharf.\""
+          - paragraph [ref=e1414]: "\"Sausnya pedas.\""
+      - generic [ref=e1415]:
+        - checkbox [ref=e1417]
+        - generic [ref=e1418]:
+          - generic [ref=e1419]: der
+          - heading "Schalter" [level=3] [ref=e1420]
+          - button "Putar pengucapan Schalter" [ref=e1421] [cursor=pointer]
+        - paragraph [ref=e1426]: sakelar
+        - generic [ref=e1427]:
+          - generic [ref=e1428]: "Fonetik:"
+          - generic [ref=e1429]: ★★★☆☆
+        - generic [ref=e1430]:
+          - paragraph [ref=e1431]: "\"Wo ist der Schalter?\""
+          - paragraph [ref=e1432]: "\"Di mana sakelarnya?\""
+      - generic [ref=e1433]:
+        - checkbox [ref=e1435]
+        - generic [ref=e1436]:
+          - generic [ref=e1437]: die
+          - heading "Schaufel" [level=3] [ref=e1438]
+          - button "Putar pengucapan Schaufel" [ref=e1439] [cursor=pointer]
+        - paragraph [ref=e1444]: sekop
+        - generic [ref=e1445]:
+          - generic [ref=e1446]: "Fonetik:"
+          - generic [ref=e1447]: ★★★★☆
+        - generic [ref=e1448]:
+          - paragraph [ref=e1449]: "\"Hol die Schaufel.\""
+          - paragraph [ref=e1450]: "\"Ambilkan sekopnya.\""
+      - generic [ref=e1451]:
+        - checkbox [ref=e1453]
+        - generic [ref=e1454]:
+          - generic [ref=e1455]: die
+          - heading "Schokolade" [level=3] [ref=e1456]
+          - button "Putar pengucapan Schokolade" [ref=e1457] [cursor=pointer]
+        - paragraph [ref=e1462]: cokelat
+        - generic [ref=e1463]:
+          - generic [ref=e1464]: "Fonetik:"
+          - generic [ref=e1465]: ★★★★☆
+        - generic [ref=e1466]:
+          - paragraph [ref=e1467]: "\"Ich liebe Schokolade.\""
+          - paragraph [ref=e1468]: "\"Saya cinta cokelat.\""
+      - generic [ref=e1469]:
+        - checkbox [ref=e1471]
+        - generic [ref=e1472]:
+          - generic [ref=e1473]: die
+          - heading "Schraube" [level=3] [ref=e1474]
+          - button "Putar pengucapan Schraube" [ref=e1475] [cursor=pointer]
+        - paragraph [ref=e1480]: sekrup
+        - generic [ref=e1481]:
+          - generic [ref=e1482]: "Fonetik:"
+          - generic [ref=e1483]: ★★★☆☆
+        - generic [ref=e1484]:
+          - paragraph [ref=e1485]: "\"Die Schraube ist locker.\""
+          - paragraph [ref=e1486]: "\"Sekrupnya longgar.\""
+      - generic [ref=e1487]:
+        - checkbox [ref=e1489]
+        - generic [ref=e1490]:
+          - generic [ref=e1491]: die
+          - heading "Schule" [level=3] [ref=e1492]
+          - button "Putar pengucapan Schule" [ref=e1493] [cursor=pointer]
+        - paragraph [ref=e1498]: sekolah
+        - generic [ref=e1499]:
+          - generic [ref=e1500]: "Fonetik:"
+          - generic [ref=e1501]: ★★★☆☆
+        - generic [ref=e1502]:
+          - paragraph [ref=e1503]: "\"Die Schule beginnt.\""
+          - paragraph [ref=e1504]: "\"Sekolahnya dimulai.\""
+      - generic [ref=e1505]:
+        - checkbox [ref=e1507]
+        - generic [ref=e1508]:
+          - generic [ref=e1509]: der
+          - heading "Sirup" [level=3] [ref=e1510]
+          - button "Putar pengucapan Sirup" [ref=e1511] [cursor=pointer]
+        - paragraph [ref=e1516]: sirup
+        - generic [ref=e1517]:
+          - generic [ref=e1518]: "Fonetik:"
+          - generic [ref=e1519]: ★★★★★
+        - generic [ref=e1520]:
+          - paragraph [ref=e1521]: "\"Ich mag Sirup.\""
+          - paragraph [ref=e1522]: "\"Saya suka sirup.\""
+      - generic [ref=e1523]:
+        - checkbox [ref=e1525]
+        - generic [ref=e1526]:
+          - generic [ref=e1527]: das
+          - heading "Sofa" [level=3] [ref=e1528]
+          - button "Putar pengucapan Sofa" [ref=e1529] [cursor=pointer]
+        - paragraph [ref=e1534]: sofa
+        - generic [ref=e1535]:
+          - generic [ref=e1536]: "Fonetik:"
+          - generic [ref=e1537]: ★★★★★
+        - generic [ref=e1538]:
+          - paragraph [ref=e1539]: "\"Das Sofa ist bequem.\""
+          - paragraph [ref=e1540]: "\"Sofanya nyaman.\""
+      - generic [ref=e1541]:
+        - checkbox [ref=e1543]
+        - generic [ref=e1544]:
+          - generic [ref=e1545]: die
+          - heading "Station" [level=3] [ref=e1546]
+          - button "Putar pengucapan Station" [ref=e1547] [cursor=pointer]
+        - paragraph [ref=e1552]: stasiun
+        - generic [ref=e1553]:
+          - generic [ref=e1554]: "Fonetik:"
+          - generic [ref=e1555]: ★★★★★
+        - generic [ref=e1556]:
+          - paragraph [ref=e1557]: "\"Nächste Station ist hier.\""
+          - paragraph [ref=e1558]: "\"Stasiun berikutnya di sini.\""
+      - generic [ref=e1559]:
+        - checkbox [ref=e1561]
+        - generic [ref=e1562]:
+          - generic [ref=e1563]: das
+          - heading "Steak" [level=3] [ref=e1564]
+          - button "Putar pengucapan Steak" [ref=e1565] [cursor=pointer]
+        - paragraph [ref=e1570]: bistik
+        - generic [ref=e1571]:
+          - generic [ref=e1572]: "Fonetik:"
+          - generic [ref=e1573]: ★★★☆☆
+        - generic [ref=e1574]:
+          - paragraph [ref=e1575]: "\"Das Steak ist gut.\""
+          - paragraph [ref=e1576]: "\"Bistiknya enak.\""
+      - generic [ref=e1577]:
+        - checkbox [ref=e1579]
+        - generic [ref=e1580]:
+          - generic [ref=e1581]: die
+          - heading "Steckdose" [level=3] [ref=e1582]
+          - button "Putar pengucapan Steckdose" [ref=e1583] [cursor=pointer]
+        - paragraph [ref=e1588]: stopkontak
+        - generic [ref=e1589]:
+          - generic [ref=e1590]: "Fonetik:"
+          - generic [ref=e1591]: ★★☆☆☆
+        - generic [ref=e1592]:
+          - paragraph [ref=e1593]: "\"Ich suche eine Steckdose.\""
+          - paragraph [ref=e1594]: "\"Saya mencari stopkontak.\""
+      - generic [ref=e1595]:
+        - checkbox [ref=e1597]
+        - generic [ref=e1598]:
+          - generic [ref=e1599]: die
+          - heading "Suppe" [level=3] [ref=e1600]
+          - button "Putar pengucapan Suppe" [ref=e1601] [cursor=pointer]
+        - paragraph [ref=e1606]: sup
+        - generic [ref=e1607]:
+          - generic [ref=e1608]: "Fonetik:"
+          - generic [ref=e1609]: ★★★★★
+        - generic [ref=e1610]:
+          - paragraph [ref=e1611]: "\"Die Suppe ist heiß.\""
+          - paragraph [ref=e1612]: "\"Supnya panas.\""
+      - generic [ref=e1613]:
+        - checkbox [ref=e1615]
+        - generic [ref=e1616]:
+          - generic [ref=e1617]: das
+          - heading "System" [level=3] [ref=e1618]
+          - button "Putar pengucapan System" [ref=e1619] [cursor=pointer]
+        - paragraph [ref=e1624]: sistem
+        - generic [ref=e1625]:
+          - generic [ref=e1626]: "Fonetik:"
+          - generic [ref=e1627]: ★★★★★
+        - generic [ref=e1628]:
+          - paragraph [ref=e1629]: "\"Das System funktioniert.\""
+          - paragraph [ref=e1630]: "\"Sistemnya berfungsi.\""
+      - generic [ref=e1631]:
+        - checkbox [ref=e1633]
+        - generic [ref=e1634]:
+          - generic [ref=e1635]: die
+          - heading "Tablette" [level=3] [ref=e1636]
+          - button "Putar pengucapan Tablette" [ref=e1637] [cursor=pointer]
+        - paragraph [ref=e1642]: tablet
+        - generic [ref=e1643]:
+          - generic [ref=e1644]: "Fonetik:"
+          - generic [ref=e1645]: ★★★★★
+        - generic [ref=e1646]:
+          - paragraph [ref=e1647]: "\"Eine Tablette am Tag.\""
+          - paragraph [ref=e1648]: "\"Satu tablet sehari.\""
+      - generic [ref=e1649]:
+        - checkbox [ref=e1651]
+        - generic [ref=e1652]:
+          - generic [ref=e1653]: der
+          - heading "Tarif" [level=3] [ref=e1654]
+          - button "Putar pengucapan Tarif" [ref=e1655] [cursor=pointer]
+        - paragraph [ref=e1660]: tarif
+        - generic [ref=e1661]:
+          - generic [ref=e1662]: "Fonetik:"
+          - generic [ref=e1663]: ★★★★★
+        - generic [ref=e1664]:
+          - paragraph [ref=e1665]: "\"Das ist der normale Tarif.\""
+          - paragraph [ref=e1666]: "\"Ini tarif normal.\""
+      - generic [ref=e1667]:
+        - checkbox [ref=e1669]
+        - generic [ref=e1670]:
+          - generic [ref=e1671]: die
+          - heading "Tasche" [level=3] [ref=e1672]
+          - button "Putar pengucapan Tasche" [ref=e1673] [cursor=pointer]
+        - paragraph [ref=e1678]: tas
+        - generic [ref=e1679]:
+          - generic [ref=e1680]: "Fonetik:"
+          - generic [ref=e1681]: ★★★★★
+        - generic [ref=e1682]:
+          - paragraph [ref=e1683]: "\"Meine Tasche ist schwer.\""
+          - paragraph [ref=e1684]: "\"Tas saya berat.\""
+      - generic [ref=e1685]:
+        - checkbox [ref=e1687]
+        - generic [ref=e1688]:
+          - generic [ref=e1689]: der
+          - heading "Tee" [level=3] [ref=e1690]
+          - button "Putar pengucapan Tee" [ref=e1691] [cursor=pointer]
+        - paragraph [ref=e1696]: teh
+        - generic [ref=e1697]:
+          - generic [ref=e1698]: "Fonetik:"
+          - generic [ref=e1699]: ★★★★☆
+        - generic [ref=e1700]:
+          - paragraph [ref=e1701]: "\"Möchtest du Tee?\""
+          - paragraph [ref=e1702]: "\"Apakah kamu mau teh?\""
+      - generic [ref=e1703]:
+        - checkbox [ref=e1705]
+        - generic [ref=e1706]:
+          - generic [ref=e1707]: das
+          - heading "Telefon" [level=3] [ref=e1708]
+          - button "Putar pengucapan Telefon" [ref=e1709] [cursor=pointer]
+        - paragraph [ref=e1714]: telepon
+        - generic [ref=e1715]:
+          - generic [ref=e1716]: "Fonetik:"
+          - generic [ref=e1717]: ★★★★★
+        - generic [ref=e1718]:
+          - paragraph [ref=e1719]: "\"Das Telefon klingelt.\""
+          - paragraph [ref=e1720]: "\"Telepon berdering.\""
+      - generic [ref=e1721]:
+        - checkbox [ref=e1723]
+        - generic [ref=e1724]:
+          - generic [ref=e1725]: die
+          - heading "Terrasse" [level=3] [ref=e1726]
+          - button "Putar pengucapan Terrasse" [ref=e1727] [cursor=pointer]
+        - paragraph [ref=e1732]: teras
+        - generic [ref=e1733]:
+          - generic [ref=e1734]: "Fonetik:"
+          - generic [ref=e1735]: ★★★★★
+        - generic [ref=e1736]:
+          - paragraph [ref=e1737]: "\"Die Terrasse ist schön.\""
+          - paragraph [ref=e1738]: "\"Terasnya indah.\""
+      - generic [ref=e1739]:
+        - checkbox [ref=e1741]
+        - generic [ref=e1742]:
+          - generic [ref=e1743]: der
+          - heading "Text" [level=3] [ref=e1744]
+          - button "Putar pengucapan Text" [ref=e1745] [cursor=pointer]
+        - paragraph [ref=e1750]: teks
+        - generic [ref=e1751]:
+          - generic [ref=e1752]: "Fonetik:"
+          - generic [ref=e1753]: ★★★★★
+        - generic [ref=e1754]:
+          - paragraph [ref=e1755]: "\"Lies den Text.\""
+          - paragraph [ref=e1756]: "\"Bacalah teksnya.\""
+      - generic [ref=e1757]:
+        - checkbox [ref=e1759]
+        - generic [ref=e1760]:
+          - generic [ref=e1761]: das
+          - heading "Theater" [level=3] [ref=e1762]
+          - button "Putar pengucapan Theater" [ref=e1763] [cursor=pointer]
+        - paragraph [ref=e1768]: teater
+        - generic [ref=e1769]:
+          - generic [ref=e1770]: "Fonetik:"
+          - generic [ref=e1771]: ★★★★★
+        - generic [ref=e1772]:
+          - paragraph [ref=e1773]: "\"Wir gehen ins Theater.\""
+          - paragraph [ref=e1774]: "\"Kita pergi ke teater.\""
+      - generic [ref=e1775]:
+        - checkbox [ref=e1777]
+        - generic [ref=e1778]:
+          - generic [ref=e1779]: die
+          - heading "Theorie" [level=3] [ref=e1780]
+          - button "Putar pengucapan Theorie" [ref=e1781] [cursor=pointer]
+        - paragraph [ref=e1786]: teori
+        - generic [ref=e1787]:
+          - generic [ref=e1788]: "Fonetik:"
+          - generic [ref=e1789]: ★★★★★
+        - generic [ref=e1790]:
+          - paragraph [ref=e1791]: "\"Das ist nur Theorie.\""
+          - paragraph [ref=e1792]: "\"Itu hanya teori.\""
+      - generic [ref=e1793]:
+        - checkbox [ref=e1795]
+        - generic [ref=e1796]:
+          - generic [ref=e1797]: die
+          - heading "Toilette" [level=3] [ref=e1798]
+          - button "Putar pengucapan Toilette" [ref=e1799] [cursor=pointer]
+        - paragraph [ref=e1804]: toilet
+        - generic [ref=e1805]:
+          - generic [ref=e1806]: "Fonetik:"
+          - generic [ref=e1807]: ★★★★★
+        - generic [ref=e1808]:
+          - paragraph [ref=e1809]: "\"Wo ist die Toilette?\""
+          - paragraph [ref=e1810]: "\"Di mana toilet?\""
+      - generic [ref=e1811]:
+        - checkbox [ref=e1813]
+        - generic [ref=e1814]:
+          - generic [ref=e1815]: die
+          - heading "Tomate" [level=3] [ref=e1816]
+          - button "Putar pengucapan Tomate" [ref=e1817] [cursor=pointer]
+        - paragraph [ref=e1822]: tomat
+        - generic [ref=e1823]:
+          - generic [ref=e1824]: "Fonetik:"
+          - generic [ref=e1825]: ★★★★★
+        - generic [ref=e1826]:
+          - paragraph [ref=e1827]: "\"Die Tomate ist rot.\""
+          - paragraph [ref=e1828]: "\"Tomatnya merah.\""
+      - generic [ref=e1829]:
+        - checkbox [ref=e1831]
+        - generic [ref=e1832]:
+          - generic [ref=e1833]: die
+          - heading "Trompete" [level=3] [ref=e1834]
+          - button "Putar pengucapan Trompete" [ref=e1835] [cursor=pointer]
+        - paragraph [ref=e1840]: terompet
+        - generic [ref=e1841]:
+          - generic [ref=e1842]: "Fonetik:"
+          - generic [ref=e1843]: ★★★★☆
+        - generic [ref=e1844]:
+          - paragraph [ref=e1845]: "\"Die Trompete ist laut.\""
+          - paragraph [ref=e1846]: "\"Terompetnya keras.\""
+      - generic [ref=e1847]:
+        - checkbox [ref=e1849]
+        - generic [ref=e1850]:
+          - generic [ref=e1851]: die
+          - heading "Universität" [level=3] [ref=e1852]
+          - button "Putar pengucapan Universität" [ref=e1853] [cursor=pointer]
+        - paragraph [ref=e1858]: universitas
+        - generic [ref=e1859]:
+          - generic [ref=e1860]: "Fonetik:"
+          - generic [ref=e1861]: ★★★★★
+        - generic [ref=e1862]:
+          - paragraph [ref=e1863]: "\"Sie studiert an der Universität.\""
+          - paragraph [ref=e1864]: "\"Dia kuliah di universitas.\""
+      - generic [ref=e1865]:
+        - checkbox [ref=e1867]
+        - generic [ref=e1868]:
+          - generic [ref=e1869]: die
+          - heading "Vanille" [level=3] [ref=e1870]
+          - button "Putar pengucapan Vanille" [ref=e1871] [cursor=pointer]
+        - paragraph [ref=e1876]: vanili
+        - generic [ref=e1877]:
+          - generic [ref=e1878]: "Fonetik:"
+          - generic [ref=e1879]: ★★★★☆
+        - generic [ref=e1880]:
+          - paragraph [ref=e1881]: "\"Vanilleeis ist lecker.\""
+          - paragraph [ref=e1882]: "\"Es krim vanili lezat.\""
+      - generic [ref=e1883]:
+        - checkbox [ref=e1885]
+        - generic [ref=e1886]:
+          - generic [ref=e1887]: der
+          - heading "Verband" [level=3] [ref=e1888]
+          - button "Putar pengucapan Verband" [ref=e1889] [cursor=pointer]
+        - paragraph [ref=e1894]: perban
+        - generic [ref=e1895]:
+          - generic [ref=e1896]: "Fonetik:"
+          - generic [ref=e1897]: ★★★★☆
+        - generic [ref=e1898]:
+          - paragraph [ref=e1899]: "\"Der Verband ist neu.\""
+          - paragraph [ref=e1900]: "\"Perbannya baru.\""
+      - generic [ref=e1901]:
+        - checkbox [ref=e1903]
+        - generic [ref=e1904]:
+          - generic [ref=e1905]: das
+          - heading "Virus" [level=3] [ref=e1906]
+          - button "Putar pengucapan Virus" [ref=e1907] [cursor=pointer]
+        - paragraph [ref=e1912]: virus
+        - generic [ref=e1913]:
+          - generic [ref=e1914]: "Fonetik:"
+          - generic [ref=e1915]: ★★★★★
+        - generic [ref=e1916]:
+          - paragraph [ref=e1917]: "\"Das Virus ist gefährlich.\""
+          - paragraph [ref=e1918]: "\"Virus itu berbahaya.\""
+      - generic [ref=e1919]:
+        - checkbox [ref=e1921]
+        - generic [ref=e1922]:
+          - generic [ref=e1923]: die
+          - heading "Zange" [level=3] [ref=e1924]
+          - button "Putar pengucapan Zange" [ref=e1925] [cursor=pointer]
+        - paragraph [ref=e1930]: tang
+        - generic [ref=e1931]:
+          - generic [ref=e1932]: "Fonetik:"
+          - generic [ref=e1933]: ★★★☆☆
+        - generic [ref=e1934]:
+          - paragraph [ref=e1935]: "\"Gib mir die Zange.\""
+          - paragraph [ref=e1936]: "\"Berikan tang itu kepadaku.\""
+      - generic [ref=e1937]:
+        - checkbox [ref=e1939]
+        - generic [ref=e1940]:
+          - generic [ref=e1941]: die
+          - heading "Zitrone" [level=3] [ref=e1942]
+          - button "Putar pengucapan Zitrone" [ref=e1943] [cursor=pointer]
+        - paragraph [ref=e1948]: sitrun
+        - generic [ref=e1949]:
+          - generic [ref=e1950]: "Fonetik:"
+          - generic [ref=e1951]: ★★★★☆
+        - generic [ref=e1952]:
+          - paragraph [ref=e1953]: "\"Die Zitrone ist sauer.\""
+          - paragraph [ref=e1954]: "\"Sitrunnya asam.\""

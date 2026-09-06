@@ -1,0 +1,20 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - heading "DeutschEasier" [level=1] [ref=e10]
+    - generic [ref=e11]: Portal Khusus Guru (Lehrer)
+  - generic [ref=e15]:
+    - paragraph [ref=e16]: Guru dapat membuat skenario percakapan AI, mengelola bank kata kognat, membuat kunci akses berbatas waktu untuk murid, dan memantau analitik nilai kuis.
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: Password / PIN Guru
+        - generic [ref=e20]:
+          - textbox "Masukkan password..." [ref=e21]
+          - button [ref=e22] [cursor=pointer]
+        - paragraph [ref=e26]:
+          - text: "Hint: Password default:"
+          - code [ref=e27]: guru123
+          - text: (dikonfigurasi melalui file .env)
+      - button "Masuk ke Dashboard Guru" [ref=e28] [cursor=pointer]
+    - generic [ref=e31]:
+      - generic [ref=e32]: 🧑‍🎓 Apakah Anda seorang Murid?
+      - text: Anda tidak memerlukan akun untuk belajar. Cukup gunakan tautan skenario yang dibagikan oleh guru Anda beserta Kunci Aksesnya.

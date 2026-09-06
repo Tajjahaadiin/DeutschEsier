@@ -1,0 +1,116 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - button "Beranda" [ref=e6] [cursor=pointer]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: Level A1
+        - heading "Sich im Büro vorstellen (Perkenalan Diri di Kantor)" [level=1] [ref=e12]
+        - paragraph [ref=e13]: Dua rekan kerja yang baru bertemu di sebuah kantor di Berlin sedang saling memperkenalkan diri secara sopan dan formal.
+      - generic [ref=e14]:
+        - button "Edit Skenario" [ref=e15] [cursor=pointer]
+        - button "Bagikan" [ref=e20] [cursor=pointer]
+  - generic [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - heading "Dialog" [level=2] [ref=e30]
+        - generic [ref=e31]: (9 Baris)
+      - button "Putar Seluruh Dialog" [ref=e33] [cursor=pointer]
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]: Sprecher A
+        - generic [ref=e41]: 👨 Pria
+      - paragraph [ref=e42]: Hallo, guten Tag! Ich bin Thomas Müller. Wie heißen Sie?
+      - paragraph [ref=e43]: Halo, selamat siang! Saya Thomas Müller. Siapa nama Anda?
+      - button "Putar" [ref=e44] [cursor=pointer]
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]: Sprecher B
+        - generic [ref=e53]: 👩 Wanita
+      - paragraph [ref=e54]: Guten Tag! Mein Name ist Maria Garcia. Schön, Sie kennenzulernen.
+      - paragraph [ref=e55]: Selamat siang! Nama saya Maria Garcia. Senang berkenalan dengan Anda.
+      - button "Putar" [ref=e56] [cursor=pointer]
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]: Sprecher A
+        - generic [ref=e65]: 👨 Pria
+      - paragraph [ref=e66]: Woher kommen Sie, Frau Garcia?
+      - paragraph [ref=e67]: Dari mana Anda berasal, Ibu Garcia?
+      - button "Putar" [ref=e68] [cursor=pointer]
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - generic [ref=e76]: Sprecher B
+        - generic [ref=e77]: 👩 Wanita
+      - paragraph [ref=e78]: Ich komme aus Spanien, aber ich wohne jetzt in Berlin. Und Sie?
+      - paragraph [ref=e79]: Saya berasal dari Spanyol, tetapi saya sekarang tinggal di Berlin. Dan Anda?
+      - button "Putar" [ref=e80] [cursor=pointer]
+    - generic [ref=e86]:
+      - generic [ref=e87]:
+        - generic [ref=e88]: Sprecher A
+        - generic [ref=e89]: 👨 Pria
+      - paragraph [ref=e90]: Ich komme aus Deutschland und wohne auch in Berlin, in der Goethestraße 5.
+      - paragraph [ref=e91]: Saya berasal dari Jerman dan tinggal juga di Berlin, di Jalan Goethe nomor 5.
+      - button "Putar" [ref=e92] [cursor=pointer]
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - generic [ref=e100]: Sprecher B
+        - generic [ref=e101]: 👩 Wanita
+      - paragraph [ref=e102]: Welche Sprachen sprechen Sie, Herr Müller?
+      - paragraph [ref=e103]: Bahasa apa saja yang Anda kuasai, Bapak Müller?
+      - button "Putar" [ref=e104] [cursor=pointer]
+    - generic [ref=e110]:
+      - generic [ref=e111]:
+        - generic [ref=e112]: Sprecher A
+        - generic [ref=e113]: 👨 Pria
+      - paragraph [ref=e114]: Ich spreche Deutsch und Englisch. Wie ist Ihre Handynummer?
+      - paragraph [ref=e115]: Saya berbicara bahasa Jerman dan Inggris. Berapa nomor handphone Anda?
+      - button "Putar" [ref=e116] [cursor=pointer]
+    - generic [ref=e122]:
+      - generic [ref=e123]:
+        - generic [ref=e124]: Sprecher B
+        - generic [ref=e125]: 👩 Wanita
+      - paragraph [ref=e126]: Meine Handynummer ist 0176 456789. Vielen Dank!
+      - paragraph [ref=e127]: Nomor handphone saya 0176 456789. Terima kasih banyak!
+      - button "Putar" [ref=e128] [cursor=pointer]
+    - generic [ref=e134]:
+      - generic [ref=e135]:
+        - generic [ref=e136]: Sprecher A
+        - generic [ref=e137]: 👨 Pria
+      - paragraph [ref=e138]: Bitte, Auf wiedersehen
+      - paragraph [ref=e139]: Sama-sama, sampai jumpa
+      - button "Putar" [ref=e140] [cursor=pointer]
+  - generic [ref=e146]:
+    - heading "Vocab Clues" [level=2] [ref=e147]
+    - generic [ref=e148]:
+      - generic [ref=e150]:
+        - generic [ref=e151]:
+          - paragraph [ref=e152]: heißen
+          - paragraph [ref=e153]: bernama
+          - paragraph [ref=e154]: Kata kerja untuk menyatakan nama. Konjugasi untuk 'ich' adalah 'heiße' dan untuk 'Sie' (formal) adalah 'heißen'.
+        - button "Putar pengucapan" [ref=e155] [cursor=pointer]
+      - generic [ref=e161]:
+        - generic [ref=e162]:
+          - paragraph [ref=e163]: kommen aus
+          - paragraph [ref=e164]: berasal dari
+          - paragraph [ref=e165]: Digunakan bersama kata depan 'aus' untuk menunjukkan negara atau kota asal.
+        - button "Putar pengucapan" [ref=e166] [cursor=pointer]
+      - generic [ref=e172]:
+        - generic [ref=e173]:
+          - paragraph [ref=e174]: wohnen
+          - paragraph [ref=e175]: tinggal / berdomisili
+          - paragraph [ref=e176]: Diikuti kata depan 'in' untuk menyebutkan kota atau nama jalan tempat tinggal.
+        - button "Putar pengucapan" [ref=e177] [cursor=pointer]
+      - generic [ref=e183]:
+        - generic [ref=e184]:
+          - paragraph [ref=e185]: sprechen
+          - paragraph [ref=e186]: berbicara / menguasai bahasa
+          - paragraph [ref=e187]: Kata kerja tidak teratur (starkes Verb). Untuk subjek 'ich' menjadi 'spreche', sedangkan 'Sie' menjadi 'sprechen'.
+        - button "Putar pengucapan" [ref=e188] [cursor=pointer]
+      - generic [ref=e194]:
+        - generic [ref=e195]:
+          - paragraph [ref=e196]: die Handynummer
+          - paragraph [ref=e197]: nomor HP
+          - paragraph [ref=e198]: Kata benda berjenis kelamin feminin (die). Kata ganti kepunyaannya adalah 'meine' (punya saya) atau 'Ihre' (punya Anda).
+        - button "Putar pengucapan" [ref=e199] [cursor=pointer]
+    - generic [ref=e204]:
+      - paragraph [ref=e205]: Bagikan skenario ini ke siswa
+      - button "Salin Link" [ref=e206] [cursor=pointer]

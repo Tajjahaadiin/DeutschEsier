@@ -1,0 +1,139 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e5]:
+    - button "Beranda" [ref=f1e6] [cursor=pointer]
+    - generic [ref=f1e9]:
+      - generic [ref=f1e10]:
+        - generic [ref=f1e11]:
+          - generic [ref=f1e12]: Level B1
+          - generic [ref=f1e13]: Mode Guru (Akses Penuh)
+        - heading "Umweltschutz im Alltag" [level=1] [ref=f1e17]
+        - paragraph [ref=f1e18]: Dua kawan berbincang di kantin kampus mengenai kebiasaan ramah lingkungan yang dapat diterapkan sehari-hari.
+      - generic [ref=f1e19]:
+        - button "Kunci Akses Siswa" [ref=f1e20] [cursor=pointer]
+        - button "Analitik & Kuis (1)" [ref=f1e26] [cursor=pointer]
+        - button "Edit Skenario" [ref=f1e30] [cursor=pointer]
+        - button "Bagikan Link" [ref=f1e35] [cursor=pointer]
+  - generic [ref=f1e45]:
+    - button "💬 Dialog Percakapan" [ref=f1e46] [cursor=pointer]
+    - button "🃏 Flashcard Kata 6" [ref=f1e48] [cursor=pointer]:
+      - generic [ref=f1e49]: 🃏 Flashcard Kata
+      - generic [ref=f1e50]: "6"
+    - button "📝 Kuis Pemahaman" [active] [ref=f1e51] [cursor=pointer]
+  - generic [ref=f1e504]:
+    - generic [ref=f1e505]:
+      - generic [ref=f1e506]:
+        - generic [ref=f1e507]: 📝 Kuis Interaktif
+        - generic [ref=f1e508]: 6 Soal Auto-Grading
+      - heading "Kuis Pemahaman Skenario" [level=2] [ref=f1e509]
+      - paragraph [ref=f1e510]: Uji kemampuan mendengar (Hörverstehen) dan penguasaan kosakata (Lückentext) dari skenario ini.
+    - generic [ref=f1e511]:
+      - generic [ref=f1e512]:
+        - text: Nama Lengkap Siswa
+        - generic [ref=f1e516]: "*"
+      - textbox "Masukkan nama lengkap Anda..." [ref=f1e517]
+    - generic [ref=f1e518]:
+      - generic [ref=f1e519]:
+        - generic [ref=f1e520]:
+          - generic [ref=f1e521]:
+            - generic [ref=f1e522]: "1"
+            - generic [ref=f1e523]: Hörverstehen
+          - generic [ref=f1e527]:
+            - button "1x" [ref=f1e528] [cursor=pointer]
+            - button "🔊 Putar Audio" [ref=f1e529] [cursor=pointer]
+        - paragraph [ref=f1e535]: "Dengarkan ucapan Sprecher A, lalu ketik kalimat lengkap dalam bahasa Jerman yang Anda dengar:"
+        - textbox "Ketik kalimat bahasa Jerman yang didengar..." [ref=f1e537]
+        - paragraph [ref=f1e539]:
+          - text: 🇮🇩
+          - strong [ref=f1e540]: "Arti / Konteks:"
+          - text: Omong-omong, apakah kamu selalu membeli sayuranmu di pasar mingguan?
+      - generic [ref=f1e541]:
+        - generic [ref=f1e542]:
+          - generic [ref=f1e543]:
+            - generic [ref=f1e544]: "2"
+            - generic [ref=f1e545]: Hörverstehen
+          - generic [ref=f1e549]:
+            - button "1x" [ref=f1e550] [cursor=pointer]
+            - button "🔊 Putar Audio" [ref=f1e551] [cursor=pointer]
+        - paragraph [ref=f1e557]: "Dengarkan ucapan Sprecher B, lalu ketik kalimat lengkap dalam bahasa Jerman yang Anda dengar:"
+        - textbox "Ketik kalimat bahasa Jerman yang didengar..." [ref=f1e559]
+        - paragraph [ref=f1e561]:
+          - text: 🇮🇩
+          - strong [ref=f1e562]: "Arti / Konteks:"
+          - text: Ya, biasanya. Di sana kita bisa menghindari sampah plastik karena semuanya dijual tanpa kemasan.
+      - generic [ref=f1e563]:
+        - generic [ref=f1e564]:
+          - generic [ref=f1e565]:
+            - generic [ref=f1e566]: "3"
+            - generic [ref=f1e567]: Hörverstehen
+          - generic [ref=f1e571]:
+            - button "1x" [ref=f1e572] [cursor=pointer]
+            - button "🔊 Putar Audio" [ref=f1e573] [cursor=pointer]
+        - paragraph [ref=f1e579]: "Dengarkan ucapan Sprecher A, lalu ketik kalimat lengkap dalam bahasa Jerman yang Anda dengar:"
+        - textbox "Ketik kalimat bahasa Jerman yang didengar..." [ref=f1e581]
+        - paragraph [ref=f1e583]:
+          - text: 🇮🇩
+          - strong [ref=f1e584]: "Arti / Konteks:"
+          - text: Itu ide yang bagus! Aku juga mencoba hidup lebih ramah lingkungan, tapi terkadang terasa sulit bagiku.
+      - generic [ref=f1e585]:
+        - generic [ref=f1e586]:
+          - generic [ref=f1e587]:
+            - generic [ref=f1e588]: "4"
+            - generic [ref=f1e589]: Lückentext
+          - generic [ref=f1e595]:
+            - button "1x" [ref=f1e596] [cursor=pointer]
+            - button "🔊 Putar Audio" [ref=f1e597] [cursor=pointer]
+        - paragraph [ref=f1e603]: "Lengkapi kalimat rumpang di bawah ini dengan kosakata bahasa Jerman yang sesuai:"
+        - generic [ref=f1e604]: Ja, meistens. Dort kann man Plastikmüll [ ________ ], weil alles unverpackt verkauft wird.
+        - textbox "Ketik kata yang hilang di sini..." [ref=f1e606]
+        - generic [ref=f1e607]:
+          - paragraph [ref=f1e608]:
+            - text: 🇮🇩
+            - strong [ref=f1e609]: "Arti / Konteks:"
+            - text: menghindari
+          - paragraph [ref=f1e610]:
+            - text: 💡
+            - strong [ref=f1e611]: "Tip Grammar:"
+            - text: Kata kerja kuat (vermeidet - vermied - hat vermieden). Membutuhkan objek dalam kasus Akkusativ.
+      - generic [ref=f1e612]:
+        - generic [ref=f1e613]:
+          - generic [ref=f1e614]:
+            - generic [ref=f1e615]: "5"
+            - generic [ref=f1e616]: Lückentext
+          - generic [ref=f1e622]:
+            - button "1x" [ref=f1e623] [cursor=pointer]
+            - button "🔊 Putar Audio" [ref=f1e624] [cursor=pointer]
+        - paragraph [ref=f1e630]: "Lengkapi kalimat rumpang di bawah ini dengan kosakata bahasa Jerman yang sesuai:"
+        - generic [ref=f1e631]: Ja, meistens. Dort kann man Plastikmüll vermeiden, weil alles [ ________ ] verkauft wird.
+        - textbox "Ketik kata yang hilang di sini..." [ref=f1e633]
+        - generic [ref=f1e634]:
+          - paragraph [ref=f1e635]:
+            - text: 🇮🇩
+            - strong [ref=f1e636]: "Arti / Konteks:"
+            - text: tanpa kemasan
+          - paragraph [ref=f1e637]:
+            - text: 💡
+            - strong [ref=f1e638]: "Tip Grammar:"
+            - text: Kata sifat yang dibentuk dari awalan negasi 'un-' dan Partizip II 'verpackt'.
+      - generic [ref=f1e639]:
+        - generic [ref=f1e640]:
+          - generic [ref=f1e641]:
+            - generic [ref=f1e642]: "6"
+            - generic [ref=f1e643]: Lückentext
+          - generic [ref=f1e649]:
+            - button "1x" [ref=f1e650] [cursor=pointer]
+            - button "🔊 Putar Audio" [ref=f1e651] [cursor=pointer]
+        - paragraph [ref=f1e657]: "Lengkapi kalimat rumpang di bawah ini dengan kosakata bahasa Jerman yang sesuai:"
+        - generic [ref=f1e658]: "Silakan ketik kata bahasa Jerman yang tepat: [ ________ ]"
+        - textbox "Ketik kata yang hilang di sini..." [ref=f1e660]
+        - generic [ref=f1e661]:
+          - paragraph [ref=f1e662]:
+            - text: 🇮🇩
+            - strong [ref=f1e663]: "Arti / Konteks:"
+            - text: terasa sulit (bagi seseorang)
+          - paragraph [ref=f1e664]:
+            - text: 💡
+            - strong [ref=f1e665]: "Tip Grammar:"
+            - text: "Trennbares Verb (fällt schwer - fiel schwer - ist schwergefallen). Menggunakan kata ganti Dativ (misal: 'es fällt mir schwer')."
+    - generic [ref=f1e666]:
+      - button "Kumpulkan Jawaban Kuis" [ref=f1e667] [cursor=pointer]
+      - paragraph [ref=f1e672]: Jawaban akan otomatis dikoreksi dan skor langsung ditampilkan.
