@@ -1,16 +1,16 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
+import { pgTable, serial, text, integer, boolean, index } from 'drizzle-orm/pg-core'
 
-export const wordBank = sqliteTable('word_bank', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const wordBank = pgTable('word_bank', {
+  id: serial('id').primaryKey(),
   germanWord: text('german_word').notNull(),
-  article: text('article'),  // 'der' | 'die' | 'das' | null
+  article: text('article'),
   indonesianWord: text('indonesian_word').notNull(),
   englishMeaning: text('english_meaning').notNull(),
   category: text('category').notNull(),
-  phoneticSimilarity: integer('phonetic_similarity').default(3),  // 1-5
+  phoneticSimilarity: integer('phonetic_similarity').default(3),
   exampleSentenceDe: text('example_sentence_de').notNull().default(''),
   exampleSentenceId: text('example_sentence_id').notNull().default(''),
-  audioFilename: text('audio_filename').notNull().default(''),  // e.g. 'kaffee.mp3'
+  audioFilename: text('audio_filename').notNull().default(''),
   cefrLevel: text('cefr_level').notNull().default('A1'),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),
 }, (table) => [
@@ -18,34 +18,34 @@ export const wordBank = sqliteTable('word_bank', {
   index('idx_word_bank_german').on(table.germanWord),
 ])
 
-export const learningSession = sqliteTable('learning_session', {
-  id: text('id').primaryKey(),  // nanoid
+export const learningSession = pgTable('learning_session', {
+  id: text('id').primaryKey(),
   title: text('title').notNull(),
   scenarioPrompt: text('scenario_prompt').notNull(),
   cefrLevel: text('cefr_level').notNull().default('A1'),
-  sceneDescription: text('scene_description').notNull().default(''),  // AI-generated scene context
-  dialogueJson: text('dialogue_json').notNull(),   // JSON array
-  vocabCluesJson: text('vocab_clues_json').notNull(),  // JSON array
+  sceneDescription: text('scene_description').notNull().default(''),
+  dialogueJson: text('dialogue_json').notNull(),
+  vocabCluesJson: text('vocab_clues_json').notNull(),
   imageUrl: text('image_url'),
-  published: integer('published', { mode: 'boolean' }).notNull().default(true),
+  published: boolean('published').notNull().default(true),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),
   updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()).notNull(),
 })
 
-export const scenarioAccessKey = sqliteTable('scenario_access_key', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const scenarioAccessKey = pgTable('scenario_access_key', {
+  id: serial('id').primaryKey(),
   key: text('key').notNull().unique(),
   sessionId: text('session_id').notNull(),
   label: text('label').notNull().default(''),
   expiresAt: text('expires_at').notNull(),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),
-  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  isActive: boolean('is_active').notNull().default(true),
 }, (table) => [
   index('idx_access_key').on(table.key),
   index('idx_access_session').on(table.sessionId),
 ])
 
-export const quizSubmission = sqliteTable('quiz_submission', {
+export const quizSubmission = pgTable('quiz_submission', {
   id: text('id').primaryKey(),
   sessionId: text('session_id').notNull(),
   accessKey: text('access_key').notNull().default(''),

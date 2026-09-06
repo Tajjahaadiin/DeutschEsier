@@ -1,13 +1,10 @@
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { neon } from '@neondatabase/serverless'
+import { drizzle } from 'drizzle-orm/neon-http'
 import * as schema from './schema'
-import { join } from 'path'
 
-const dbPath = process.env.DATABASE_URL || join(process.cwd(), 'sqlite.db')
+const connectionString = process.env.DATABASE_URL || ''
 
-const sqlite = new Database(dbPath)
-sqlite.pragma('journal_mode = WAL')
-sqlite.pragma('synchronous = NORMAL')
-sqlite.pragma('foreign_keys = ON')
+// Fallback dummy client jika DATABASE_URL belum di-set saat build time
+const sql = neon(connectionString || 'postgresql://dummy:dummy@ep-dummy.neon.tech/neondb')
+export const db = drizzle(sql, { schema })
 
-export const db = drizzle(sqlite, { schema })

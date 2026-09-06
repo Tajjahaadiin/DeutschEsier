@@ -46,16 +46,16 @@ accessKeysRouter.post('/:id/keys', requireTeacherAuth, async (c) => {
     const expiresAt = new Date(Date.now() + (hoursValid || 24) * 3600 * 1000).toISOString()
     const key = generateAccessKeyCode()
 
-    const insertedRecord = await db
+    const [insertedRecord] = await db
       .insert(scenarioAccessKey)
       .values({
         key,
         sessionId: id,
         label: body.label || '',
         expiresAt,
+        isActive: true,
       })
       .returning()
-      .get()
 
     return c.json({ success: true, key: insertedRecord })
   } catch (error) {
@@ -90,7 +90,7 @@ accessKeysRouter.get('/:id/verify-access', async (c) => {
       return c.json({ valid: false, reason: 'missing_key' })
     }
 
-    const found = await db
+    const [found] = await db
       .select()
       .from(scenarioAccessKey)
       .where(
@@ -100,7 +100,7 @@ accessKeysRouter.get('/:id/verify-access', async (c) => {
           eq(scenarioAccessKey.isActive, true)
         )
       )
-      .get()
+      .limit(1)
 
     if (!found) {
       return c.json({ valid: false, reason: 'not_found' })

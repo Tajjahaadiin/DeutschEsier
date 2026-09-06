@@ -18,7 +18,7 @@ sessionsRouter.get('/', async (c) => {
 sessionsRouter.get('/:id', async (c) => {
   try {
     const id = c.req.param('id')
-    const session = await db.select().from(learningSession).where(eq(learningSession.id, id)).get()
+    const [session] = await db.select().from(learningSession).where(eq(learningSession.id, id)).limit(1)
     if (!session) return c.json({ error: 'Session not found' }, 404)
     return c.json(session)
   } catch (error) {
@@ -33,7 +33,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
     if (!body.id || !body.title) return c.json({ error: 'Invalid data' }, 400)
     
     // Check if exists
-    const existing = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).get()
+    const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1)
     
     if (existing) {
       await db.update(learningSession).set({
