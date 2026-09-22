@@ -6,8 +6,6 @@ sqlite.db
 sqlite.db-wal
 sqlite.db-shm
 deutsch_easier.db
-public/audio/cache/*.mp3
-!public/audio/cache/.gitkeep
 .playwright-mcp/
 .codegraph/
 .pi/

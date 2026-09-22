@@ -148,50 +148,10 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
   fallbackSpeechSynthesis(text, options)
 }
 
-export function playAudioFile(filename: string, onEnd?: () => void) {
-  stopSpeech()
-  const audio = new Audio(`/audio/${filename}`)
-  currentHtmlAudio = audio
-  audio.onended = () => {
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (onEnd) onEnd()
-  }
-  audio.onerror = () => {
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (onEnd) onEnd()
-  }
-  audio.play().catch(e => {
-    console.error('Failed to play audio file', e)
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (onEnd) onEnd()
-  })
-}
-
-export function playWordAudio(audioFilename: string, germanText: string, optionsOrOnEnd?: SpeakOptions | (() => void)) {
-  stopSpeech()
-  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
-
-  if (options.gender === 'male' || !audioFilename || audioFilename === '') {
-    speakGerman(germanText, options)
-    return
-  }
-
-  const audio = new Audio('/audio/' + audioFilename)
-  currentHtmlAudio = audio
-  let fallbackHandled = false
-  const safeFallback = () => {
-    if (fallbackHandled) return
-    fallbackHandled = true
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    speakGerman(germanText, options)
-  }
-
-  audio.onended = () => {
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (options.onEnd) options.onEnd()
-  }
-  audio.onerror = () => safeFallback()
-  audio.play().catch(() => safeFallback())
+// Memutar audio satu kata. Saat ini selalu melalui TTS (Web Speech API / Edge TTS),
+// karena bank audio statis (.mp3) tidak lagi disertakan dalam proyek.
+export function playWordAudio(germanText: string, optionsOrOnEnd?: SpeakOptions | (() => void)) {
+  speakGerman(germanText, optionsOrOnEnd)
 }
 
 export function getStoredVoiceGender(): VoiceGender {

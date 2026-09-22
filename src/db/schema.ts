@@ -10,7 +10,6 @@ export const wordBank = pgTable('word_bank', {
   phoneticSimilarity: integer('phonetic_similarity').default(3),
   exampleSentenceDe: text('example_sentence_de').notNull().default(''),
   exampleSentenceId: text('example_sentence_id').notNull().default(''),
-  audioFilename: text('audio_filename').notNull().default(''),
   cefrLevel: text('cefr_level').notNull().default('A1'),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),
 }, (table) => [
@@ -59,11 +58,4 @@ export const quizSubmission = pgTable('quiz_submission', {
   index('idx_submission_session').on(table.sessionId),
 ])
 
-export type WordBank = typeof wordBank.$inferSelect
 export type NewWordBank = typeof wordBank.$inferInsert
-export type LearningSession = typeof learningSession.$inferSelect
-export type NewLearningSession = typeof learningSession.$inferInsert
-export type ScenarioAccessKey = typeof scenarioAccessKey.$inferSelect
-export type NewScenarioAccessKey = typeof scenarioAccessKey.$inferInsert
-export type QuizSubmission = typeof quizSubmission.$inferSelect
-export type NewQuizSubmission = typeof quizSubmission.$inferInsert

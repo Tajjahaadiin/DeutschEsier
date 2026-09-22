@@ -1,4 +1,3 @@
-import React from 'react'
 import { Card } from '../ui/card'
 import { playWordAudio } from '../../lib/audio'
 import { Volume2 } from 'lucide-react'
@@ -26,7 +25,7 @@ export function WordCard({ word, isSelected, onToggle, voiceGender }: { word: an
         <button 
           onClick={(e) => { 
             e.stopPropagation(); 
-            playWordAudio(word.audioFilename, word.germanWord, { gender: voiceGender || 'female' }) 
+            playWordAudio(word.germanWord, { gender: voiceGender || 'female' }) 
           }} 
           className="text-gray-400 hover:text-blue-500 transition-colors"
           aria-label={`Putar pengucapan ${word.germanWord}`}
