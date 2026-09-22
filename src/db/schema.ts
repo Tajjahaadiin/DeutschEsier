@@ -47,6 +47,11 @@ export const scenarioAccessKey = pgTable('scenario_access_key', {
 export const quizSubmission = pgTable('quiz_submission', {
   id: text('id').primaryKey(),
   sessionId: text('session_id').notNull(),
+  /**
+   * Jenis aktivitas: 'quiz' (Hörverstehen + Lückentext) atau 'grammar'
+   * (latihan Richtig/Falsch). Memisahkan analitik kedua aktivitas.
+   */
+  kind: text('kind').notNull().default('quiz'),
   accessKey: text('access_key').notNull().default(''),
   studentName: text('student_name').notNull(),
   score: integer('score').notNull(),
@@ -56,6 +61,7 @@ export const quizSubmission = pgTable('quiz_submission', {
   submittedAt: text('submitted_at').$defaultFn(() => new Date().toISOString()).notNull(),
 }, (table) => [
   index('idx_submission_session').on(table.sessionId),
+  index('idx_submission_kind').on(table.kind),
 ])
 
 export type NewWordBank = typeof wordBank.$inferInsert
