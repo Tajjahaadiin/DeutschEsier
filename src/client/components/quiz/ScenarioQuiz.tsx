@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Volume2, CheckCircle2, XCircle, Award, RotateCcw, Send, AlertCircle, HelpCircle, User, Headphones, FileEdit } from 'lucide-react'
+import { Volume2, CheckCircle2, Award, RotateCcw, Send, AlertCircle, HelpCircle, User, Headphones, FileEdit } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
 
 export interface DialogTurn {

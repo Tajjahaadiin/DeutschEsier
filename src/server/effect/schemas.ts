@@ -18,7 +18,3 @@ export const GeneratedLessonSchema = Schema.Struct({
   dialogue: Schema.Array(DialogLineSchema),
   vocabClues: Schema.Array(VocabClueSchema),
 })
-
-export type DialogLine = Schema.Schema.Type<typeof DialogLineSchema>
-export type VocabClue = Schema.Schema.Type<typeof VocabClueSchema>
-export type GeneratedLesson = Schema.Schema.Type<typeof GeneratedLessonSchema>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import HomePage from './pages/HomePage'
 import GeneratorPage from './pages/GeneratorPage'
 import ViewPage from './pages/ViewPage'

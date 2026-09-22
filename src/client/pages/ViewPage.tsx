@@ -19,9 +19,7 @@ import {
   Lock,
   Clock,
   AlertCircle,
-  ArrowRight,
   ShieldCheck,
-  RotateCcw,
 } from 'lucide-react'
 
 interface DialogTurn {

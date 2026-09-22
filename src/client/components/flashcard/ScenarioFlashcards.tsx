@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Volume2, ChevronLeft, ChevronRight, Shuffle, RotateCw, Star, CheckCircle2 } from 'lucide-react'
 import { speakGerman, stopSpeech } from '../../lib/audio'
 

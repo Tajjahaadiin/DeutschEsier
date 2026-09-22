@@ -10,7 +10,6 @@ wordsRouter.get('/', async (c) => {
   const category = c.req.query('category') || ''
   const page = parseInt(c.req.query('page') || '1')
   const limit = parseInt(c.req.query('limit') || '20')
-  const offset = (page - 1) * limit
 
   try {
     let query = db.select().from(wordBank)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Key, Copy, Check, Trash2, Clock, Plus, ExternalLink, ShieldCheck, AlertCircle } from 'lucide-react'
+import { X, Key, Copy, Check, Trash2, Clock, Plus, ExternalLink, AlertCircle } from 'lucide-react'
 import { getAuthHeaders } from '../../lib/auth'
 
 export interface KeyManagerModalProps {

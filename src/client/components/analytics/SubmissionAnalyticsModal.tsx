@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   X,
   Users,
@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   XCircle,
   Volume2,
-  Calendar,
   Key,
   BarChart3,
   HelpCircle,
