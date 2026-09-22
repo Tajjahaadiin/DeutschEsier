@@ -8,6 +8,7 @@ import {
   Award,
   Lightbulb,
   GraduationCap,
+  Send,
 } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
 import {
@@ -22,6 +23,9 @@ export interface GrammarPanelProps {
   vocabClues: { germanWord: string; indonesianMeaning: string; grammarTip: string }[]
   dialogue?: { germanText: string }[]
   sessionTitle?: string
+  sessionId?: string
+  accessKey?: string
+  isTeacher?: boolean
 }
 
 type Tab = 'materi' | 'latihan'
@@ -30,9 +34,17 @@ type Tab = 'materi' | 'latihan'
  * Tab pembelajaran grammatik: materi terkelompok + latihan Richtig/Falsch.
  *
  * Semua soal diturunkan dari vocabClues skenario, jadi tidak ada panggilan AI
- * tambahan. Latihan ini bersifat mandiri (tidak mengirim nilai ke guru).
+ * tambahan. Hasil latihan dikirim sebagai submission berjenis 'grammar' agar
+ * terpisah dari nilai kuis di analitik guru.
  */
-export default function GrammarPanel({ vocabClues, dialogue = [], sessionTitle }: GrammarPanelProps) {
+export default function GrammarPanel({
+  vocabClues,
+  dialogue = [],
+  sessionTitle,
+  sessionId,
+  accessKey = '',
+  isTeacher = false,
+}: GrammarPanelProps) {
   const [tab, setTab] = useState<Tab>('materi')
   const [openTopic, setOpenTopic] = useState<string | null>(null)
 
@@ -40,6 +52,10 @@ export default function GrammarPanel({ vocabClues, dialogue = [], sessionTitle }
   const [answers, setAnswers] = useState<Record<string, 'richtig' | 'falsch'>>({})
   const [submitted, setSubmitted] = useState(false)
   const [playingWord, setPlayingWord] = useState<string | null>(null)
+  const [studentName, setStudentName] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [saved, setSaved] = useState(false)
 
   const topics: GrammarTopic[] = useMemo(
     () => buildTopics(vocabClues, dialogue),
@@ -64,6 +80,54 @@ export default function GrammarPanel({ vocabClues, dialogue = [], sessionTitle }
   const handleReset = () => {
     setAnswers({})
     setSubmitted(false)
+    setSaved(false)
+    setSaveError('')
+  }
+
+  /** Kirim hasil latihan sebagai submission berjenis 'grammar'. */
+  const handleSaveResult = async () => {
+    if (!sessionId) return
+    const name = studentName.trim()
+    if (name === '') {
+      setSaveError('Silakan masukkan nama terlebih dahulu.')
+      return
+    }
+    setSaving(true)
+    setSaveError('')
+    try {
+      const graded = questions.map((q) => ({
+        questionId: q.id,
+        type: q.kind === 'sentence' ? 'grammar-sentence' : 'grammar-concept',
+        title: q.kind === 'sentence' ? 'Grammatik: Kalimat' : 'Grammatik: Konsep',
+        prompt: q.statement,
+        studentAnswer: answers[q.id] === 'richtig' ? 'Richtig' : 'Falsch',
+        correctAnswer: q.isCorrect ? 'Richtig' : 'Falsch',
+        isCorrect: isAnswerCorrect(q, answers[q.id]),
+        audioText: q.audioText,
+        grammarTip: q.explanation,
+      }))
+
+      const res = await fetch(`/api/sessions/${sessionId}/submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'grammar',
+          studentName: name,
+          accessKey: accessKey || (isTeacher ? 'TEACHER-PREVIEW' : ''),
+          score,
+          totalQuestions: questions.length,
+          correctAnswers: correctCount,
+          answers: graded,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || 'Gagal menyimpan hasil')
+      setSaved(true)
+    } catch (err: any) {
+      setSaveError(err?.message || 'Gagal menyimpan hasil latihan')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (topics.length === 0) {
@@ -235,10 +299,46 @@ export default function GrammarPanel({ vocabClues, dialogue = [], sessionTitle }
                   ? 'Sehr gut! Kerja bagus! 👍'
                   : 'Weiter üben! Terus berlatih! 💪'}
               </p>
+
+              {/* Kirim hasil ke guru (submission terpisah dari nilai kuis) */}
+              {sessionId && !saved && (
+                <div className="mt-4 pt-4 border-t border-slate-200/70 text-left max-w-sm mx-auto">
+                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                    Kirim ke Guru (opsional)
+                  </label>
+                  <input
+                    type="text"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    placeholder="Nama lengkap siswa..."
+                    className="w-full text-xs px-3 py-2 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-slate-400"
+                  />
+                  {saveError && (
+                    <p className="text-[11px] text-rose-600 mt-1.5">{saveError}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSaveResult}
+                    disabled={saving || studentName.trim() === ''}
+                    className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <Send size={13} />
+                    <span>{saving ? 'Menyimpan...' : 'Simpan Hasil Latihan'}</span>
+                  </button>
+                </div>
+              )}
+
+              {saved && (
+                <p className="mt-3 text-[11px] font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-xl px-3 py-2 inline-flex items-center gap-1.5">
+                  <CheckCircle2 size={13} />
+                  <span>Hasil tersimpan di analitik guru.</span>
+                </p>
+              )}
+
               <button
                 type="button"
                 onClick={handleReset}
-                className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all cursor-pointer"
+                className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-all cursor-pointer"
               >
                 <RotateCcw size={14} />
                 <span>Ulangi Latihan</span>

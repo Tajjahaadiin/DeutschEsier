@@ -125,7 +125,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
       setAccessGranted(true)
       setVerifyingKey(false)
       // Ambil jumlah submissions untuk badge guru
-      fetch(`/api/sessions/${id}/submissions`, {
+      fetch(`/api/sessions/${id}/submissions?kind=all`, {
         headers: getAuthHeaders(),
       })
         .then((res) => res.json())
@@ -820,6 +820,9 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                 vocabClues={session.vocabClues}
                 dialogue={session.dialogue}
                 sessionTitle={session.title}
+                sessionId={id}
+                accessKey={validKey}
+                isTeacher={isTeacher}
               />
             </div>
           )}
@@ -845,7 +848,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
           onClose={() => {
             setShowAnalytics(false)
             // Segarkan jumlah submission
-            fetch(`/api/sessions/${id}/submissions`, {
+            fetch(`/api/sessions/${id}/submissions?kind=all`, {
               headers: getAuthHeaders(),
             })
               .then((res) => res.json())
