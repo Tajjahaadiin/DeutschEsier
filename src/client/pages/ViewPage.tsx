@@ -6,6 +6,7 @@ import KeyManagerModal from '../components/access/KeyManagerModal'
 import SubmissionAnalyticsModal from '../components/analytics/SubmissionAnalyticsModal'
 import ScenarioFlashcards from '../components/flashcard/ScenarioFlashcards'
 import ScenarioQuiz from '../components/quiz/ScenarioQuiz'
+import GrammarPanel from '../components/grammar/GrammarPanel'
 import {
   Volume2,
   Share2,
@@ -65,8 +66,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   const playbackRateRef = React.useRef(playbackRate)
   playbackRateRef.current = playbackRate
 
-  // Tab state: 'dialog' | 'flashcard' | 'quiz'
-  const [activeTab, setActiveTab] = useState<'dialog' | 'flashcard' | 'quiz'>('dialog')
+  // Tab state: 'dialog' | 'flashcard' | 'quiz' | 'grammar'
+  const [activeTab, setActiveTab] = useState<'dialog' | 'flashcard' | 'quiz' | 'grammar'>('dialog')
 
   // Access Gate states
   const [accessGranted, setAccessGranted] = useState<boolean>(isTeacher)
@@ -582,6 +583,22 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                 >
                   <span>📝 Kuis Pemahaman</span>
                 </button>
+
+                {/* Tab 4: Grammatik (Materi & Latihan) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('grammar')
+                    stopSpeech()
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                    activeTab === 'grammar'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>📚 Grammatik</span>
+                </button>
               </div>
             </div>
           </div>
@@ -792,6 +809,17 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                 sessionId={id}
                 accessKey={validKey}
                 isTeacher={isTeacher}
+              />
+            </div>
+          )}
+
+          {/* TAB 4: GRAMMATIK (MATERI & LATIHAN) */}
+          {activeTab === 'grammar' && (
+            <div className="flex-1 py-4">
+              <GrammarPanel
+                vocabClues={session.vocabClues}
+                dialogue={session.dialogue}
+                sessionTitle={session.title}
               />
             </div>
           )}
