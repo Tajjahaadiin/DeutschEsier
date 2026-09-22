@@ -42,6 +42,7 @@ interface AnswerItem {
 interface SubmissionItem {
   id: string
   sessionId: string
+  kind: 'quiz' | 'grammar'
   accessKey: string
   studentName: string
   score: number
@@ -49,6 +50,16 @@ interface SubmissionItem {
   correctAnswers: number
   answers: AnswerItem[]
   submittedAt: string
+}
+
+interface KindSummary {
+  count: number
+  stats: StatsData
+}
+
+interface ByKindData {
+  quiz: KindSummary
+  grammar: KindSummary
 }
 
 interface StatsData {
@@ -72,6 +83,8 @@ export default function SubmissionAnalyticsModal({
 }: SubmissionAnalyticsModalProps) {
   const [submissions, setSubmissions] = useState<SubmissionItem[]>([])
   const [stats, setStats] = useState<StatsData | null>(null)
+  const [byKind, setByKind] = useState<ByKindData | null>(null)
+  const [kindFilter, setKindFilter] = useState<'all' | 'quiz' | 'grammar'>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
@@ -80,7 +93,9 @@ export default function SubmissionAnalyticsModal({
   const fetchData = async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/sessions/${sessionId}/submissions`, {
+      // kind=all agar daftar memuat kuis DAN latihan grammatik sekaligus;
+      // filter jenis dilakukan di sisi klien.
+      const res = await fetch(`/api/sessions/${sessionId}/submissions?kind=all`, {
         headers: getAuthHeaders(),
       })
       const data = await res.json()
@@ -88,6 +103,7 @@ export default function SubmissionAnalyticsModal({
 
       setSubmissions(data.submissions || [])
       setStats(data.stats || null)
+      setByKind(data.byKind || null)
     } catch (err: any) {
       console.error(err)
       setError('Gagal memuat data analitik hasil kuis')
@@ -107,10 +123,21 @@ export default function SubmissionAnalyticsModal({
 
   if (!isOpen) return null
 
-  // Filter submissions by search term
-  const filteredSubmissions = submissions.filter((s) =>
+  // Filter submissions by kind, then by search term
+  const kindFiltered = submissions.filter((s) =>
+    kindFilter === 'all' ? true : s.kind === kindFilter
+  )
+  const filteredSubmissions = kindFiltered.filter((s) =>
     s.studentName.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Statistik mengikuti filter yang aktif.
+  const activeStats: StatsData | null =
+    kindFilter === 'all'
+      ? stats
+      : kindFilter === 'quiz'
+      ? byKind?.quiz.stats ?? null
+      : byKind?.grammar.stats ?? null
 
   const getScoreBadge = (score: number) => {
     if (score >= 81) return 'bg-emerald-100 text-emerald-800 border-emerald-200'
@@ -119,7 +146,7 @@ export default function SubmissionAnalyticsModal({
     return 'bg-rose-100 text-rose-800 border-rose-200'
   }
 
-  const distribution = stats?.distribution || {
+  const distribution = activeStats?.distribution || {
     '0-40': 0,
     '41-60': 0,
     '61-80': 0,
@@ -203,6 +230,30 @@ export default function SubmissionAnalyticsModal({
           {error && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
               {error}
+            </div>
+          )}
+
+          {/* Filter jenis aktivitas: kuis vs latihan grammatik */}
+          {!loading && !selectedSubmission && (
+            <div className="flex flex-wrap items-center gap-2">
+              {([
+                { key: 'all', label: 'Semua', count: submissions.length },
+                { key: 'quiz', label: '📝 Kuis', count: byKind?.quiz.count ?? 0 },
+                { key: 'grammar', label: '📚 Grammatik', count: byKind?.grammar.count ?? 0 },
+              ] as const).map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setKindFilter(f.key)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    kindFilter === f.key
+                      ? 'bg-slate-800 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                  }`}
+                >
+                  {f.label} ({f.count})
+                </button>
+              ))}
             </div>
           )}
 
@@ -307,7 +358,13 @@ export default function SubmissionAnalyticsModal({
                             )}
                           </span>
                           <span className="font-bold text-slate-800">
-                            Soal #{idx + 1} ({ans.type === 'dictation' ? 'Diktat' : 'Lückentext'})
+                            Soal #{idx + 1} ({ans.type === 'dictation'
+                              ? 'Diktat'
+                              : ans.type === 'cloze'
+                              ? 'Lückentext'
+                              : ans.type?.startsWith('grammar')
+                              ? 'Grammatik'
+                              : 'Soal'})
                           </span>
                         </div>
 
@@ -390,7 +447,7 @@ export default function SubmissionAnalyticsModal({
                     </span>
                   </div>
                   <div className="text-2xl font-extrabold text-slate-900">
-                    {stats?.totalSubmissions || 0}
+                    {activeStats?.totalSubmissions || 0}
                   </div>
                   <div className="text-[11px] text-slate-400 mt-0.5">Sudah mengumpulkan</div>
                 </div>
@@ -404,7 +461,7 @@ export default function SubmissionAnalyticsModal({
                     </span>
                   </div>
                   <div className="text-2xl font-extrabold text-indigo-600">
-                    {stats?.averageScore || 0}
+                    {activeStats?.averageScore || 0}
                     <span className="text-xs font-normal text-slate-400">/100</span>
                   </div>
                   <div className="text-[11px] text-slate-400 mt-0.5">Nilai rata-rata kelas</div>
@@ -419,7 +476,7 @@ export default function SubmissionAnalyticsModal({
                     </span>
                   </div>
                   <div className="text-2xl font-extrabold text-emerald-600">
-                    {stats?.passRate || 0}%
+                    {activeStats?.passRate || 0}%
                   </div>
                   <div className="text-[11px] text-slate-400 mt-0.5">Nilai KKM ≥ 70</div>
                 </div>
@@ -433,7 +490,7 @@ export default function SubmissionAnalyticsModal({
                     </span>
                   </div>
                   <div className="text-2xl font-extrabold text-amber-600">
-                    {stats?.highestScore || 0}
+                    {activeStats?.highestScore || 0}
                     <span className="text-xs font-normal text-slate-400">/100</span>
                   </div>
                   <div className="text-[11px] text-slate-400 mt-0.5">Skor maksimal kelas</div>
@@ -448,7 +505,7 @@ export default function SubmissionAnalyticsModal({
                     Distribusi Nilai Siswa (Score Distribution)
                   </h3>
                   <span className="text-xs text-slate-400">
-                    Berdasarkan {stats?.totalSubmissions || 0} siswa
+                    Berdasarkan {activeStats?.totalSubmissions || 0} siswa
                   </span>
                 </div>
 
@@ -506,7 +563,7 @@ export default function SubmissionAnalyticsModal({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                     <Users size={15} className="text-slate-500" />
-                    Daftar Nilai Siswa ({submissions.length})
+                    Daftar Nilai Siswa ({filteredSubmissions.length})
                   </h3>
 
                   {/* Input Search */}
@@ -525,12 +582,18 @@ export default function SubmissionAnalyticsModal({
                   </div>
                 </div>
 
-                {submissions.length === 0 ? (
+                {kindFiltered.length === 0 ? (
                   <div className="text-center py-10 border border-dashed border-slate-200 rounded-2xl text-slate-400">
                     <HelpCircle size={32} className="mx-auto mb-2 opacity-30" />
-                    <p className="text-xs font-medium">Belum ada murid yang mengerjakan kuis.</p>
+                    <p className="text-xs font-medium">
+                      {kindFilter === 'grammar'
+                        ? 'Belum ada murid yang mengerjakan latihan grammatik.'
+                        : kindFilter === 'quiz'
+                        ? 'Belum ada murid yang mengerjakan kuis.'
+                        : 'Belum ada murid yang mengerjakan aktivitas ini.'}
+                    </p>
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      Bagikan link kuis atau kunci akses kepada murid untuk mulai mengumpulkan nilai.
+                      Bagikan link atau kunci akses kepada murid untuk mulai mengumpulkan nilai.
                     </p>
                   </div>
                 ) : filteredSubmissions.length === 0 ? (
