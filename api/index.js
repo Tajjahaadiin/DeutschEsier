@@ -8827,6 +8827,13 @@ var wordBank = pgTable("word_bank", {
   phoneticSimilarity: integer("phonetic_similarity").default(3),
   exampleSentenceDe: text("example_sentence_de").notNull().default(""),
   exampleSentenceId: text("example_sentence_id").notNull().default(""),
+  /**
+   * Nama berkas audio statis (mis. "kaffee.mp3").
+   * Kolom ini masih ada di database produksi namun belum dipakai kode:
+   * audio kini dihasilkan runtime via TTS (lihat src/server/routes/tts.ts).
+   * Dipertahankan agar schema selaras dengan database.
+   */
+  audioFilename: text("audio_filename").notNull().default(""),
   cefrLevel: text("cefr_level").notNull().default("A1"),
   createdAt: text("created_at").$defaultFn(() => (/* @__PURE__ */ new Date()).toISOString()).notNull()
 }, (table) => [
@@ -8841,6 +8848,8 @@ var learningSession = pgTable("learning_session", {
   sceneDescription: text("scene_description").notNull().default(""),
   dialogueJson: text("dialogue_json").notNull(),
   vocabCluesJson: text("vocab_clues_json").notNull(),
+  /** Jumlah baris dialog yang diminta guru saat generate (1-20). */
+  dialogueCount: integer("dialogue_count").notNull().default(8),
   imageUrl: text("image_url"),
   published: boolean("published").notNull().default(true),
   createdAt: text("created_at").$defaultFn(() => (/* @__PURE__ */ new Date()).toISOString()).notNull(),
@@ -9004,6 +9013,10 @@ var auth_default = authRouter;
 
 // src/server/routes/sessions.ts
 var sessionsRouter = new Hono2();
+function normalizeDialogueCount(raw2) {
+  if (typeof raw2 !== "number" || !Number.isInteger(raw2)) return 8;
+  return Math.min(20, Math.max(1, raw2));
+}
 sessionsRouter.get("/", async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt));
@@ -9026,6 +9039,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json();
     if (!body.id || !body.title) return c.json({ error: "Invalid data" }, 400);
+    const dialogueCount = normalizeDialogueCount(body.dialogueCount);
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1);
     if (existing) {
       await db.update(learningSession).set({
@@ -9035,6 +9049,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         cefrLevel: body.cefrLevel,
         dialogueJson: JSON.stringify(body.dialogueJson),
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+        dialogueCount,
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
       }).where(eq(learningSession.id, body.id));
     } else {
@@ -9045,7 +9060,8 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         sceneDescription: body.sceneDescription || "",
         cefrLevel: body.cefrLevel,
         dialogueJson: JSON.stringify(body.dialogueJson),
-        vocabCluesJson: JSON.stringify(body.vocabCluesJson)
+        vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+        dialogueCount
       });
     }
     return c.json({ success: true, id: body.id });
@@ -9065,6 +9081,7 @@ sessionsRouter.put("/:id", requireTeacherAuth, async (c) => {
       cefrLevel: body.cefrLevel,
       dialogueJson: JSON.stringify(body.dialogueJson),
       vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+      dialogueCount: normalizeDialogueCount(body.dialogueCount),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     }).where(eq(learningSession.id, id));
     return c.json({ success: true, id });
@@ -37256,8 +37273,8 @@ function getAiClient() {
 var retryPolicy = Schedule_exports.exponential(Duration_exports.millis(500), 2).pipe(
   Schedule_exports.intersect(Schedule_exports.recurs(3))
 );
-function generateLesson(prompt, cefrLevel, cognateWords) {
-  const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords);
+function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
+  const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords, dialogueCount);
   const callGemini = Effect_exports.tryPromise({
     try: async () => {
       const ai = getAiClient();
@@ -37322,7 +37339,7 @@ function generateLesson(prompt, cefrLevel, cognateWords) {
   );
   return pipeline.pipe(Effect_exports.retry(retryPolicy));
 }
-function buildPrompt(prompt, level, cognates) {
+function buildPrompt(prompt, level, cognates, dialogueCount) {
   const cognateList = cognates.length > 0 ? `
 Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
   return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.
@@ -37336,25 +37353,42 @@ Panduan:
 4. Terjemahan Indonesia harus natural
 5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu
 6. sceneDescription menggambarkan latar tempat dan konteks dialog
-7. Sertakan setidaknya 6-8 baris dialog
+7. Sertakan tepat ${dialogueCount} baris dialog
 8. vocabClues minimal 4-6 kata`;
 }
 
 // src/server/routes/generate.ts
 var generateRouter = new Hono2();
+var MIN_DIALOGUE_COUNT = 1;
+var MAX_DIALOGUE_COUNT = 20;
+var DEFAULT_DIALOGUE_COUNT = 8;
 generateRouter.post("/", requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json();
-    const { prompt, cefrLevel, wordIds } = body;
+    const { prompt, cefrLevel, wordIds, dialogueCount } = body;
     if (!prompt || !cefrLevel) {
       return c.json({ error: "Missing prompt or cefrLevel" }, 400);
+    }
+    let count3 = DEFAULT_DIALOGUE_COUNT;
+    if (dialogueCount !== void 0) {
+      if (typeof dialogueCount !== "number" || !Number.isInteger(dialogueCount) || dialogueCount < MIN_DIALOGUE_COUNT || dialogueCount > MAX_DIALOGUE_COUNT) {
+        return c.json(
+          {
+            error: `Jumlah dialog harus berupa bilangan bulat antara ${MIN_DIALOGUE_COUNT} dan ${MAX_DIALOGUE_COUNT}.`
+          },
+          400
+        );
+      }
+      count3 = dialogueCount;
     }
     let cognateWords = [];
     if (wordIds && Array.isArray(wordIds) && wordIds.length > 0) {
       const words = await db.select({ word: wordBank.germanWord }).from(wordBank).where(inArray(wordBank.id, wordIds));
       cognateWords = words.map((w) => w.word);
     }
-    const result = await Effect_exports.runPromise(generateLesson(prompt, cefrLevel, cognateWords));
+    const result = await Effect_exports.runPromise(
+      generateLesson(prompt, cefrLevel, cognateWords, count3)
+    );
     return c.json({ lesson: result });
   } catch (error) {
     console.error("Generation Error:", error);
