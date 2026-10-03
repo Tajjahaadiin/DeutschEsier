@@ -1,1 +1,0 @@
-ALTER TABLE `learning_session` ADD `scene_description` text DEFAULT '' NOT NULL;

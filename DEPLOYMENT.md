@@ -44,9 +44,13 @@ Di dashboard Render (bagian **Environment**), atur variabel lingkungan berikut:
 > Data bersifat persisten di sisi Neon, sehingga tidak memerlukan Persistent Disk di Render.
 > Jalankan `npm run db:seed` untuk mengisi data awal bank kata.
 >
-> **Catatan skema**: file di `drizzle/` adalah artefak SQLite lama dan **tidak kompatibel**
-> dengan PostgreSQL (`npm run db:migrate` akan gagal). Skema Postgres sudah terpasang di Neon;
-> untuk mengubahnya, perbarui `src/db/schema.ts` lalu sinkronkan ke Neon.
+> **Catatan skema**: migrasi di `drizzle/` kini berupa baseline **PostgreSQL** (`0000_baseline.sql`).
+> Riwayat migrasi Drizzle tidak dipakai di Neon (tabel `drizzle.__drizzle_migrations` kosong),
+> jadi `npm run db:migrate` **tidak** menjadi alur yang dipakai. Untuk mengubah skema, perbarui
+> `src/db/schema.ts` lalu sinkronkan dengan `npx drizzle-kit push`.
+>
+> **PostgreSQL 18**: gunakan `drizzle-kit@0.31.7` atau lebih baru. Versi lama memiliki bug yang
+> membuat `push` tanpa perubahan schema tetap menghasilkan `DROP CONSTRAINT ..._not_null` dan gagal.
 
 ---
 

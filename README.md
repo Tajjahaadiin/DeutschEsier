@@ -26,10 +26,16 @@ npm run build
 npm start
 ```
 
-> **Catatan skema database**: file migrasi di `drizzle/` adalah artefak **SQLite** dari versi lama
-> dan tidak kompatibel dengan PostgreSQL/Neon yang dipakai saat ini (`npm run db:migrate` akan gagal).
-> Skema PostgreSQL saat ini sudah terpasang di Neon. Untuk mengubah skema, perbarui
-> `src/db/schema.ts` lalu sinkronkan langsung ke Neon (mis. `npx drizzle-kit push`).
+> **Catatan skema database**: migrasi di `drizzle/` kini berupa baseline **PostgreSQL**
+> (`0000_baseline.sql`, hasil `drizzle-kit generate`). Riwayat migrasi Drizzle **tidak** dipakai
+> di database Neon (tabel `drizzle.__drizzle_migrations` kosong), jadi `npm run db:migrate`
+> **tidak** menjadi alur yang dipakai. Untuk mengubah skema: perbarui `src/db/schema.ts`,
+> lalu sinkronkan ke Neon dengan `npx drizzle-kit push`.
+>
+> **Penting — PostgreSQL 18**: Neon berjalan di PG 18, dan `drizzle-kit` **< 0.31.7** memiliki bug
+> yang membuat `push` tanpa perubahan schema tetap menghasilkan `DROP CONSTRAINT ..._not_null`
+> (gagal dengan `column "id" is in a primary key`). Versi **0.31.7+** sudah memperbaikinya; repo ini
+> memakai `drizzle-kit@0.31.11`. Jangan turunkan versinya di bawah 0.31.7.
 
 ## ☁️ Deployment
 
