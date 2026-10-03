@@ -10,6 +10,13 @@ export const wordBank = pgTable('word_bank', {
   phoneticSimilarity: integer('phonetic_similarity').default(3),
   exampleSentenceDe: text('example_sentence_de').notNull().default(''),
   exampleSentenceId: text('example_sentence_id').notNull().default(''),
+  /**
+   * Nama berkas audio statis (mis. "kaffee.mp3").
+   * Kolom ini masih ada di database produksi namun belum dipakai kode:
+   * audio kini dihasilkan runtime via TTS (lihat src/server/routes/tts.ts).
+   * Dipertahankan agar schema selaras dengan database.
+   */
+  audioFilename: text('audio_filename').notNull().default(''),
   cefrLevel: text('cefr_level').notNull().default('A1'),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),
 }, (table) => [
@@ -25,6 +32,8 @@ export const learningSession = pgTable('learning_session', {
   sceneDescription: text('scene_description').notNull().default(''),
   dialogueJson: text('dialogue_json').notNull(),
   vocabCluesJson: text('vocab_clues_json').notNull(),
+  /** Jumlah baris dialog yang diminta guru saat generate (1-20). */
+  dialogueCount: integer('dialogue_count').notNull().default(8),
   imageUrl: text('image_url'),
   published: boolean('published').notNull().default(true),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),

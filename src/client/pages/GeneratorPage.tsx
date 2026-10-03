@@ -31,6 +31,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [fetchingSession, setFetchingSession] = useState(false)
   const [prompt, setPrompt] = useState('Di sebuah kafe di Berlin, memesan kopi dan kue.')
   const [cefrLevel, setCefrLevel] = useState('A1')
+  const [dialogueCount, setDialogueCount] = useState(8)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -76,6 +77,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         setPrompt(data.scenarioPrompt || '')
         setEditedSceneDesc(data.sceneDescription || '')
         setCefrLevel(data.cefrLevel || 'A1')
+        if (typeof data.dialogueCount === 'number') setDialogueCount(data.dialogueCount)
         setEditedDialogue(parsedDialogue)
         setEditedVocab(parsedVocab)
         setLesson({
@@ -110,7 +112,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ prompt, cefrLevel, wordIds: selectedWords })
+        body: JSON.stringify({ prompt, cefrLevel, wordIds: selectedWords, dialogueCount })
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -142,6 +144,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         scenarioPrompt: prompt,
         sceneDescription: editedSceneDesc,
         cefrLevel,
+        dialogueCount,
         dialogueJson: editedDialogue,
         vocabCluesJson: editedVocab,
       }
@@ -316,6 +319,24 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               <option value="A2">A2 - Dasar</option>
               <option value="B1">B1 - Menengah</option>
             </select>
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Jumlah Dialog
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={dialogueCount}
+              onChange={e => {
+                const parsed = parseInt(e.target.value, 10)
+                if (Number.isNaN(parsed)) return
+                setDialogueCount(Math.min(20, Math.max(1, parsed)))
+              }}
+              className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">1 - 20 baris dialog</p>
           </div>
           <div className="text-sm text-slate-500 mt-5">
             <span className="font-medium text-blue-600">{selectedWords.length}</span> kata dari Bank Kata

@@ -8,13 +8,36 @@ import { requireTeacherAuth } from './auth'
 
 const generateRouter = new Hono()
 
+/** Batas jumlah dialog yang boleh diminta guru. */
+export const MIN_DIALOGUE_COUNT = 1
+export const MAX_DIALOGUE_COUNT = 20
+export const DEFAULT_DIALOGUE_COUNT = 8
+
 generateRouter.post('/', requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json()
-    const { prompt, cefrLevel, wordIds } = body
+    const { prompt, cefrLevel, wordIds, dialogueCount } = body
     
     if (!prompt || !cefrLevel) {
       return c.json({ error: 'Missing prompt or cefrLevel' }, 400)
+    }
+
+    let count = DEFAULT_DIALOGUE_COUNT
+    if (dialogueCount !== undefined) {
+      if (
+        typeof dialogueCount !== 'number' ||
+        !Number.isInteger(dialogueCount) ||
+        dialogueCount < MIN_DIALOGUE_COUNT ||
+        dialogueCount > MAX_DIALOGUE_COUNT
+      ) {
+        return c.json(
+          {
+            error: `Jumlah dialog harus berupa bilangan bulat antara ${MIN_DIALOGUE_COUNT} dan ${MAX_DIALOGUE_COUNT}.`,
+          },
+          400
+        )
+      }
+      count = dialogueCount
     }
 
     let cognateWords: string[] = []
@@ -23,7 +46,9 @@ generateRouter.post('/', requireTeacherAuth, async (c) => {
       cognateWords = words.map(w => w.word)
     }
 
-    const result = await Effect.runPromise(generateLesson(prompt, cefrLevel, cognateWords))
+    const result = await Effect.runPromise(
+      generateLesson(prompt, cefrLevel, cognateWords, count)
+    )
     
     return c.json({ lesson: result })
   } catch (error: any) {

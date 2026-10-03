@@ -27,9 +27,10 @@ const retryPolicy = Schedule.exponential(Duration.millis(500), 2).pipe(
 export function generateLesson(
   prompt: string,
   cefrLevel: 'A1' | 'A2' | 'B1',
-  cognateWords: string[]
+  cognateWords: string[],
+  dialogueCount = 8
 ) {
-  const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords)
+  const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords, dialogueCount)
   
   const callGemini = Effect.tryPromise({
     try: async () => {
@@ -98,7 +99,7 @@ export function generateLesson(
   return pipeline.pipe(Effect.retry(retryPolicy))
 }
 
-function buildPrompt(prompt: string, level: string, cognates: string[]): string {
+function buildPrompt(prompt: string, level: string, cognates: string[], dialogueCount: number): string {
   const cognateList = cognates.length > 0 ? `\nKata kognate yang WAJIB digunakan: ${cognates.join(', ')}` : ''
-  return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.\n\nSkenario: ${prompt}${cognateList}\n\nPanduan:\n1. Dialog harus natural dan relevan dengan skenario\n2. Speaker adalah "Sprecher A" und "Sprecher B"\n3. Teks Jerman harus sesuai level ${level} CEFR\n4. Terjemahan Indonesia harus natural\n5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu\n6. sceneDescription menggambarkan latar tempat dan konteks dialog\n7. Sertakan setidaknya 6-8 baris dialog\n8. vocabClues minimal 4-6 kata`
+  return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.\n\nSkenario: ${prompt}${cognateList}\n\nPanduan:\n1. Dialog harus natural dan relevan dengan skenario\n2. Speaker adalah "Sprecher A" und "Sprecher B"\n3. Teks Jerman harus sesuai level ${level} CEFR\n4. Terjemahan Indonesia harus natural\n5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu\n6. sceneDescription menggambarkan latar tempat dan konteks dialog\n7. Sertakan tepat ${dialogueCount} baris dialog\n8. vocabClues minimal 4-6 kata`
 }

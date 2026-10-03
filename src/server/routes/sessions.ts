@@ -6,6 +6,12 @@ import { requireTeacherAuth } from './auth'
 
 const sessionsRouter = new Hono()
 
+/** Jumlah dialog valid: bilangan bulat 1-20, default 8 bila tidak valid/kosong. */
+function normalizeDialogueCount(raw: unknown): number {
+  if (typeof raw !== 'number' || !Number.isInteger(raw)) return 8
+  return Math.min(20, Math.max(1, raw))
+}
+
 sessionsRouter.get('/', async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt))
@@ -31,6 +37,8 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
     const body = await c.req.json()
     // Minimal validation
     if (!body.id || !body.title) return c.json({ error: 'Invalid data' }, 400)
+
+    const dialogueCount = normalizeDialogueCount(body.dialogueCount)
     
     // Check if exists
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1)
@@ -43,6 +51,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
         cefrLevel: body.cefrLevel,
         dialogueJson: JSON.stringify(body.dialogueJson),
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+        dialogueCount,
         updatedAt: new Date().toISOString(),
       }).where(eq(learningSession.id, body.id))
     } else {
@@ -54,6 +63,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
         cefrLevel: body.cefrLevel,
         dialogueJson: JSON.stringify(body.dialogueJson),
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+        dialogueCount,
       })
     }
     
@@ -75,6 +85,7 @@ sessionsRouter.put('/:id', requireTeacherAuth, async (c) => {
       cefrLevel: body.cefrLevel,
       dialogueJson: JSON.stringify(body.dialogueJson),
       vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+      dialogueCount: normalizeDialogueCount(body.dialogueCount),
       updatedAt: new Date().toISOString(),
     }).where(eq(learningSession.id, id))
     return c.json({ success: true, id })
