@@ -95,14 +95,6 @@ const WRONG_ARTICLE: Record<string, string> = {
   das: 'der',
 }
 
-const OTHER_CATEGORY: Record<GrammarCategory, GrammarCategory> = {
-  Verb: 'Nomen',
-  Nomen: 'Verb',
-  Adjektiv: 'Konjunktion',
-  Konjunktion: 'Adjektiv',
-  Präposition: 'Nomen',
-  Sonstiges: 'Nomen',
-}
 
 /**
  * Artikel yang tepat untuk tiap nama kategori saat dipakai dalam kalimat Jerman.
@@ -235,15 +227,24 @@ export function buildTopics(
 }
 
 /**
- * Buat soal Richtig/Falsch dari kalimat dialog + pernyataan konsep.
+ * Jumlah soal latihan yang selalu ditampilkan.
  *
- * Dua gaya soal (sesuai permintaan: "campur keduanya"):
- *  - 'sentence' : kalimat asli dari dialog (benar) vs kalimat dengan artikel
- *                 yang ditukar (salah). Hanya dibuat bila artikel kata benda
- *                 diketahui, sehingga kesalahannya pasti.
- *  - 'concept'  : pernyataan tentang kategori kata atau artikelnya.
+ * Materi (vocabClues) biasanya hanya 4-6 kata, sehingga 1 soal per kata tidak
+ * cukup. Karena itu tiap kata diturunkan menjadi beberapa kandidat soal, lalu
+ * dipilih 10 dengan komposisi Richtig/Falsch yang seimbang.
+ */
+export const GRAMMAR_QUESTION_COUNT = 10
+
+/**
+ * Buat 10 soal Richtig/Falsch dari kalimat dialog + pernyataan konsep.
  *
- * Jawaban benar/salah dibuat bergantian agar tidak berat sebelah.
+ * Tiap kata diturunkan menjadi beberapa kandidat soal:
+ *  - 'sentence' : kalimat asli dialog (benar) vs artikel yang ditukar (salah).
+ *  - 'concept'  : pernyataan artikel, kategori kata, atau arti kata.
+ *
+ * Kandidat yang pernyataannya sama dibuang agar tidak ada soal kembar, lalu
+ * diambil sampai GRAMMAR_QUESTION_COUNT dengan urutan benar/salah bergantian.
+ * Bila materi tidak cukup untuk 10 soal berbeda, hasilnya lebih sedikit.
  */
 export function buildQuestions(
   vocabClues: { germanWord: string; indonesianMeaning: string; grammarTip: string }[],
@@ -251,92 +252,116 @@ export function buildQuestions(
 ): GrammarQuestion[] {
   const sentences = (dialogue || []).map((d) => d.germanText || '')
   const items = (vocabClues || []).map((v) => toVocabItem(v, sentences))
-  const questions: GrammarQuestion[] = []
+  const candidates: Omit<GrammarQuestion, 'id'>[] = []
 
-  let flip = false
-  const nextIsCorrect = () => {
-    flip = !flip
-    return flip
-  }
+  const ALL_CATEGORIES: GrammarCategory[] = [
+    'Verb',
+    'Nomen',
+    'Adjektiv',
+    'Konjunktion',
+    'Präposition',
+  ]
 
   for (const item of items) {
-    // --- Gaya 1: soal kalimat (mutasi artikel pada kalimat dialog asli) ---
+    // --- Kandidat 1: soal kalimat (mutasi artikel pada kalimat dialog asli) ---
     if (item.article && item.noun) {
       const original = item.article + ' ' + item.noun
       const mutated = WRONG_ARTICLE[item.article] + ' ' + item.noun
       const sentence = sentences.find((s) => s.includes(original))
 
       if (sentence) {
-        const askCorrect = nextIsCorrect()
-        const statement = askCorrect
-          ? sentence
-          : sentence.replace(original, mutated)
-
-        // Jangan buat soal bila mutasi tidak mengubah apa pun.
-        if (statement !== sentence || askCorrect) {
-          questions.push({
-            id: `grammar-sentence-${questions.length}`,
+        const mutatedSentence = sentence.replace(original, mutated)
+        candidates.push({
+          kind: 'sentence',
+          statement: sentence,
+          isCorrect: true,
+          explanation: item.grammarTip,
+          source: item.germanWord,
+          audioText: sentence,
+        })
+        // Hanya bila mutasi benar-benar mengubah kalimat.
+        if (mutatedSentence !== sentence) {
+          candidates.push({
             kind: 'sentence',
-            statement,
-            isCorrect: askCorrect,
+            statement: mutatedSentence,
+            isCorrect: false,
             explanation: item.grammarTip,
             source: item.germanWord,
-            // Kalimat utuh — aman dibacakan TTS Jerman.
-            audioText: statement,
+            audioText: mutatedSentence,
           })
-          continue
         }
       }
     }
 
-    // --- Gaya 2: soal konsep ---
-    const askCorrect = nextIsCorrect()
-
+    // --- Kandidat 2: pernyataan artikel (der/die/das) ---
     if (item.article && item.noun) {
-      const shown = askCorrect ? item.article : WRONG_ARTICLE[item.article]
-      questions.push({
-        id: `grammar-concept-${questions.length}`,
-        kind: 'concept',
-        statement: `Das Wort „${item.noun}“ hat den Artikel „${shown}“.`,
-        isCorrect: askCorrect,
-        explanation: item.grammarTip,
-        source: item.germanWord,
-        // Hanya frasa Jermannya yang dibacakan, bukan kalimat penuh.
-        audioText: `${shown} ${item.noun}`,
-      })
-      continue
+      for (const article of ARTICLES) {
+        candidates.push({
+          kind: 'concept',
+          statement: `Das Wort „${item.noun}“ hat den Artikel „${article}“.`,
+          isCorrect: article === item.article,
+          explanation: item.grammarTip,
+          source: item.germanWord,
+          audioText: `${article} ${item.noun}`,
+        })
+      }
     }
 
+    // --- Kandidat 3: pernyataan kategori kata ---
     if (item.category !== 'Sonstiges') {
-      const shown = askCorrect ? item.category : OTHER_CATEGORY[item.category]
-      const art = CATEGORY_ARTICLE[shown]
-      questions.push({
-        id: `grammar-concept-${questions.length}`,
-        kind: 'concept',
-        statement: `„${item.germanWord}“ ist ${art} ${shown}.`,
-        isCorrect: askCorrect,
-        explanation: item.grammarTip,
-        source: item.germanWord,
-        audioText: item.germanWord,
-      })
-      continue
+      for (const category of ALL_CATEGORIES) {
+        const art = CATEGORY_ARTICLE[category]
+        candidates.push({
+          kind: 'concept',
+          statement: `„${item.germanWord}“ ist ${art} ${category}.`,
+          isCorrect: category === item.category,
+          explanation: item.grammarTip,
+          source: item.germanWord,
+          audioText: item.germanWord,
+        })
+      }
     }
 
-    // Gaya 3: kategori tidak terdeteksi — tanyakan arti katanya (selalu ada).
-    const askMeaning = nextIsCorrect()
-    questions.push({
-      id: `grammar-meaning-${questions.length}`,
+    // --- Kandidat 4: pernyataan arti kata (selalu tersedia) ---
+    candidates.push({
       kind: 'concept',
-      statement: `„${item.germanWord}“ bedeutet „${askMeaning ? item.indonesianMeaning : 'etwas anderes'}“.`,
-      isCorrect: askMeaning,
+      statement: `„${item.germanWord}“ bedeutet „${item.indonesianMeaning}“.`,
+      isCorrect: true,
       explanation: item.grammarTip,
       source: item.germanWord,
-      // Hanya kata Jermannya; terjemahan Indonesia tidak dibacakan.
+      audioText: item.germanWord,
+    })
+    candidates.push({
+      kind: 'concept',
+      statement: `„${item.germanWord}“ bedeutet „etwas anderes“.`,
+      isCorrect: false,
+      explanation: item.grammarTip,
+      source: item.germanWord,
       audioText: item.germanWord,
     })
   }
 
-  return questions
+  // Buang kandidat dengan pernyataan kembar agar tidak ada soal duplikat.
+  const seen = new Set<string>()
+  const unique = candidates.filter((c) => {
+    if (seen.has(c.statement)) return false
+    seen.add(c.statement)
+    return true
+  })
+
+  // Pilih sampai 10 soal dengan urutan benar/salah bergantian.
+  const correct = unique.filter((c) => c.isCorrect)
+  const incorrect = unique.filter((c) => !c.isCorrect)
+  const picked: Omit<GrammarQuestion, 'id'>[] = []
+  let ci = 0
+  let ii = 0
+  while (picked.length < GRAMMAR_QUESTION_COUNT && (ci < correct.length || ii < incorrect.length)) {
+    if (ci < correct.length) picked.push(correct[ci++])
+    if (picked.length >= GRAMMAR_QUESTION_COUNT) break
+    if (ii < incorrect.length) picked.push(incorrect[ii++])
+  }
+
+  return picked.map((c, i) => ({ id: `grammar-${c.kind}-${i}`, ...c }))
 }
 
 /** Nilai jawaban siswa: 'richtig' benar bila soal memang benar, dan sebaliknya. */
