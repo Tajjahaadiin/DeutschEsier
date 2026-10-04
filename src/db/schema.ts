@@ -34,6 +34,11 @@ export const learningSession = pgTable('learning_session', {
   vocabCluesJson: text('vocab_clues_json').notNull(),
   /** Jumlah baris dialog yang diminta guru saat generate (1-20). */
   dialogueCount: integer('dialogue_count').notNull().default(8),
+  /**
+   * Soal Richtig/Falsch hasil AI (JSON array) untuk skenario level B1.
+   * NULL untuk skenario A1/A2 dan data lama sebelum fitur ini.
+   */
+  comprehensionQuestionsJson: text('comprehension_questions_json'),
   imageUrl: text('image_url'),
   published: boolean('published').notNull().default(true),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),

@@ -60,6 +60,12 @@ function lastPromptSentToGemini(): string {
   return String(call?.[0]?.contents ?? '')
 }
 
+/** responseSchema Gemini pada pemanggilan terakhir. */
+function lastResponseSchema(): any {
+  const call = generateContent.mock.calls.at(-1)
+  return call?.[0]?.config?.responseSchema
+}
+
 beforeEach(() => {
   generateContent.mockReset()
   generateContent.mockResolvedValue({ text: VALID_LESSON })
@@ -110,4 +116,54 @@ describe('POST /api/generate — kontrol jumlah dialog', () => {
     expect(prompt).not.toContain('6-8')
   })
 
+})
+
+describe('POST /api/generate — soal Richtig/Falsch level B1', () => {
+  it('meminta AI membuat 10 soal Richtig/Falsch saat level B1', async () => {
+    const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'B1' })
+
+    expect(res.status).toBe(200)
+    const prompt = lastPromptSentToGemini()
+    expect(prompt).toContain('Richtig')
+    expect(prompt).toContain('10 soal')
+  })
+
+  it('mewajibkan comprehensionQuestions di responseSchema saat level B1', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'B1' })
+
+    const schema = lastResponseSchema()
+    expect(schema.properties.comprehensionQuestions).toBeDefined()
+    expect(schema.properties.comprehensionQuestions.type).toBe('ARRAY')
+    expect(schema.required).toContain('comprehensionQuestions')
+  })
+
+  it('tidak meminta soal Richtig/Falsch pada level A1', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+
+    const prompt = lastPromptSentToGemini()
+    expect(prompt).not.toContain('Richtig')
+    expect(lastResponseSchema().properties.comprehensionQuestions).toBeUndefined()
+  })
+
+  it('mengembalikan comprehensionQuestions ke klien saat level B1', async () => {
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        ...JSON.parse(VALID_LESSON),
+        comprehensionQuestions: [
+          {
+            statement: 'Sprecher A trinkt Tee.',
+            indonesianText: 'Pembicara A minum teh.',
+            isCorrect: false,
+            explanation: 'Ia memesan kopi, bukan teh.',
+          },
+        ],
+      }),
+    })
+
+    const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'B1' })
+    const body = (await res.json()) as any
+
+    expect(res.status).toBe(200)
+    expect(body.lesson.comprehensionQuestions).toHaveLength(1)
+  })
 })

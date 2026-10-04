@@ -12,6 +12,22 @@ function normalizeDialogueCount(raw: unknown): number {
   return Math.min(20, Math.max(1, raw))
 }
 
+/**
+ * Kolom soal Richtig/Falsch (level B1) untuk operasi tulis.
+ *
+ * undefined  -> kolom tidak disentuh sama sekali (dipakai mode edit agar data
+ *               lama tidak ikut terhapus saat klien tidak mengirim field ini)
+ * null       -> kolom dikosongkan (guru sengaja menghapus)
+ * array      -> disimpan sebagai JSON
+ */
+function comprehensionQuestionsColumn(
+  raw: unknown
+): { comprehensionQuestionsJson?: string | null } {
+  if (raw === undefined) return {}
+  if (raw === null) return { comprehensionQuestionsJson: null }
+  return { comprehensionQuestionsJson: JSON.stringify(raw) }
+}
+
 sessionsRouter.get('/', async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt))
@@ -39,6 +55,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
     if (!body.id || !body.title) return c.json({ error: 'Invalid data' }, 400)
 
     const dialogueCount = normalizeDialogueCount(body.dialogueCount)
+    const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions)
     
     // Check if exists
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1)
@@ -52,6 +69,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
         dialogueJson: JSON.stringify(body.dialogueJson),
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
         dialogueCount,
+        ...comprehensionCol,
         updatedAt: new Date().toISOString(),
       }).where(eq(learningSession.id, body.id))
     } else {
@@ -64,6 +82,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
         dialogueJson: JSON.stringify(body.dialogueJson),
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
         dialogueCount,
+        ...comprehensionCol,
       })
     }
     
@@ -86,6 +105,7 @@ sessionsRouter.put('/:id', requireTeacherAuth, async (c) => {
       dialogueJson: JSON.stringify(body.dialogueJson),
       vocabCluesJson: JSON.stringify(body.vocabCluesJson),
       dialogueCount: normalizeDialogueCount(body.dialogueCount),
+      ...comprehensionQuestionsColumn(body.comprehensionQuestions),
       updatedAt: new Date().toISOString(),
     }).where(eq(learningSession.id, id))
     return c.json({ success: true, id })
