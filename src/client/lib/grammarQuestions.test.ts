@@ -89,3 +89,15 @@ describe('parseGrammarQuestions', () => {
     expect(parsed[0].segments).toEqual([])
   })
 })
+
+describe('parseGrammarQuestions — kalimat salah wajib punya koreksi', () => {
+  it('membuang soal salah yang correctedSentence-nya kosong', () => {
+    const noCorrection = { ...question, correctedSentence: '' }
+
+    expect(parseGrammarQuestions(JSON.stringify([noCorrection]))).toEqual([])
+  })
+
+  it('tetap menerima soal salah yang punya koreksi', () => {
+    expect(parseGrammarQuestions(JSON.stringify([question]))).toHaveLength(1)
+  })
+})

@@ -352,7 +352,14 @@ export function buildQuestions(
   })
 }
 
-/** Nilai jawaban siswa: 'richtig' benar bila soal memang benar, dan sebaliknya. */
-export function isAnswerCorrect(question: GrammarQuestion, answer: 'richtig' | 'falsch'): boolean {
+/**
+ * Nilai jawaban siswa: 'richtig' benar bila soal memang benar, dan sebaliknya.
+ *
+ * Hanya butuh `isCorrect` sehingga bisa dipakai untuk soal AI maupun soal lama.
+ */
+export function isAnswerCorrect(
+  question: { isCorrect: boolean },
+  answer: 'richtig' | 'falsch'
+): boolean {
   return (answer === 'richtig') === question.isCorrect
 }

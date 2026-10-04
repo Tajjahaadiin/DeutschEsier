@@ -132,7 +132,6 @@ describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
       <GrammarPanel
         vocabClues={[]}
         grammarQuestionsJson={JSON.stringify([aiQuestion])}
-        cefrLevel="B1"
       />
     )
     openLatihan()
@@ -148,7 +147,6 @@ describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
       <GrammarPanel
         vocabClues={[]}
         grammarQuestionsJson={JSON.stringify([aiQuestion])}
-        cefrLevel="B1"
       />
     )
     openLatihan()
@@ -164,7 +162,7 @@ describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
     const vocabClues = [
       { germanWord: 'der Kaffee', indonesianMeaning: 'kopi', grammarTip: 'Kata benda maskulin.' },
     ]
-    render(<GrammarPanel vocabClues={vocabClues} grammarQuestionsJson={null} cefrLevel="B1" />)
+    render(<GrammarPanel vocabClues={vocabClues} grammarQuestionsJson={null} />)
     openLatihan()
 
     // Soal lama (konsep/arti) tetap muncul sehingga halaman tidak kosong.
@@ -178,7 +176,7 @@ describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
       { germanWord: 'der Kaffee', indonesianMeaning: 'kopi', grammarTip: 'Kata benda maskulin.' },
     ]
     render(
-      <GrammarPanel vocabClues={vocabClues} grammarQuestionsJson="bukan json{" cefrLevel="B1" />
+      <GrammarPanel vocabClues={vocabClues} grammarQuestionsJson="bukan json{" />
     )
     openLatihan()
 
@@ -187,7 +185,7 @@ describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
     expect(screen.getAllByRole('button', { name: '✓ Richtig' }).length).toBeGreaterThan(0)
   })
 
-  it('tetap berfungsi tanpa prop cefrLevel', () => {
+  it('tetap berfungsi tanpa prop level apa pun', () => {
     render(
       <GrammarPanel
         vocabClues={[]}

@@ -157,4 +157,12 @@ describe('coverSentence — pewarnaan toleran untuk soal latihan', () => {
 
     expect(coverSentence(sentence, weird).map((s) => s.text).join('')).toBe(sentence)
   })
+
+  it('tidak melempar walau elemen segmen rusak', () => {
+    const sentence = 'Ich habe geputzt.'
+    const malformed = [null, undefined, 42, 'teks', {}, []] as any
+
+    expect(() => coverSentence(sentence, malformed)).not.toThrow()
+    expect(coverSentence(sentence, malformed).map((s) => s.text).join('')).toBe(sentence)
+  })
 })

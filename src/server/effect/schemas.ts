@@ -131,6 +131,8 @@ const GrammarQuestionsSchema = Schema.transform(
           const decoded = Schema.decodeUnknownSync(GrammarQuestionItemSchema)(entry)
           if (!isGrammarTopicId(decoded.topicId)) return []
           if (decoded.sentence.trim() === '' || decoded.explanationId.trim() === '') return []
+          // Kalimat salah wajib punya bentuk benar; tanpa itu soalnya dibuang.
+          if (!decoded.isCorrect && decoded.correctedSentence.trim() === '') return []
           return [
             {
               ...decoded,

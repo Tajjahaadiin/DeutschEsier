@@ -140,7 +140,10 @@ export function coverSentence(
   if (!sentence) return []
   if (!Array.isArray(segments) || segments.length === 0) return plainSpan(sentence)
 
-  const usable = segments.filter((s) => typeof s.text === 'string' && s.text !== '')
+  const usable = segments.filter(
+    (s): s is { text: string; role: GrammarSegmentRole } =>
+      typeof s === 'object' && s !== null && typeof (s as any).text === 'string' && (s as any).text !== ''
+  )
   if (usable.length === 0) return plainSpan(sentence)
 
   // 1: kesamaan persis (jalur cepat).

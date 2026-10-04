@@ -77,10 +77,14 @@ function toQuestion(value: unknown, index: number): AiGrammarQuestion | null {
   const corrected =
     typeof v.correctedSentence === 'string' && v.correctedSentence.trim() !== ''
       ? v.correctedSentence
-      : // Soal yang benar tidak butuh koreksi; pakai kalimatnya sendiri.
-        v.isCorrect
-        ? v.sentence
+      : v.isCorrect
+        ? // Soal yang benar tidak butuh koreksi; pakai kalimatnya sendiri.
+          v.sentence
         : ''
+
+  // Kalimat yang salah WAJIB punya bentuk benar. Tanpa itu siswa melihat
+  // kesalahan tanpa koreksinya, jadi soalnya dibuang daripada menyesatkan.
+  if (!v.isCorrect && corrected === '') return null
 
   return {
     id: `grammar-ai-${index}`,

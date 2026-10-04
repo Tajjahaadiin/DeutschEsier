@@ -858,7 +858,6 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                 grammarPatterns={session.grammarPatterns}
                 grammarTopics={session.grammarTopics}
                 grammarQuestionsJson={session.grammarQuestionsJson}
-                cefrLevel={session.cefrLevel as 'A1' | 'A2' | 'B1'}
                 sessionTitle={session.title}
                 sessionId={id}
                 accessKey={validKey}

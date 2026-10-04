@@ -37779,6 +37779,7 @@ var GrammarQuestionsSchema = Schema_exports.transform(
         const decoded = Schema_exports.decodeUnknownSync(GrammarQuestionItemSchema)(entry);
         if (!isGrammarTopicId(decoded.topicId)) return [];
         if (decoded.sentence.trim() === "" || decoded.explanationId.trim() === "") return [];
+        if (!decoded.isCorrect && decoded.correctedSentence.trim() === "") return [];
         return [
           {
             ...decoded,

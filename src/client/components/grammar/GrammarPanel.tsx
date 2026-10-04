@@ -10,7 +10,7 @@ import {
   Send,
 } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
-import { buildQuestions, type GrammarQuestion } from '../../lib/grammar'
+import { buildQuestions, isAnswerCorrect, type GrammarQuestion } from '../../lib/grammar'
 import {
   segmentsCoverExample,
   coverSentence,
@@ -32,8 +32,6 @@ export interface GrammarPanelProps {
   grammarTopics?: GrammarTopicContent[]
   /** Soal latihan tata bahasa hasil AI (JSON) untuk level B1. */
   grammarQuestionsJson?: string | null
-  /** Level skenario; dipakai hanya untuk petunjuk, opsional. */
-  cefrLevel?: 'A1' | 'A2' | 'B1'
   sessionTitle?: string
   sessionId?: string
   accessKey?: string
@@ -64,7 +62,6 @@ export default function GrammarPanel({
   grammarPatterns = [],
   grammarTopics = [],
   grammarQuestionsJson = null,
-  cefrLevel,
   sessionTitle,
   sessionId,
   accessKey = '',
@@ -89,9 +86,6 @@ export default function GrammarPanel({
   )
   const usingAiQuestions = aiQuestions.length > 0
 
-  // Level hanya dipakai untuk petunjuk singkat; perilaku tidak bergantung level.
-  void cefrLevel
-
   const legacyQuestions: GrammarQuestion[] = useMemo(
     () => buildQuestions(vocabClues, dialogue, grammarTopics.map((t) => t.topicId)),
     [vocabClues, dialogue, grammarTopics]
@@ -112,6 +106,7 @@ export default function GrammarPanel({
         explanation: q.explanationId,
         correctedSentence: q.correctedSentence,
         kindLabel: 'Tata Bahasa',
+        legacyKind: undefined as 'sentence' | 'concept' | undefined,
         isAi: true,
       }))
     }
@@ -124,13 +119,14 @@ export default function GrammarPanel({
       explanation: q.explanation,
       correctedSentence: '',
       kindLabel: q.kind === 'sentence' ? 'Kalimat Skenario' : 'Konsep Tata Bahasa',
+      legacyKind: q.kind as 'sentence' | 'concept' | undefined,
       isAi: false,
     }))
   }, [usingAiQuestions, aiQuestions, legacyQuestions])
 
   const answeredCount = Object.keys(answers).length
   const correctCount = questions.filter(
-    (q) => answers[q.id] && (answers[q.id] === 'richtig') === q.isCorrect
+    (q) => answers[q.id] && isAnswerCorrect(q, answers[q.id])
   ).length
   const score = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0
 
@@ -159,12 +155,20 @@ export default function GrammarPanel({
     try {
       const graded = questions.map((q) => ({
         questionId: q.id,
-        type: q.isAi ? 'grammar-ai' : 'grammar-concept',
-        title: q.isAi ? 'Grammatik: Tata Bahasa' : 'Grammatik: Konsep',
+        type: q.isAi
+          ? 'grammar-ai'
+          : q.legacyKind === 'sentence'
+          ? 'grammar-sentence'
+          : 'grammar-concept',
+        title: q.isAi
+          ? 'Grammatik: Tata Bahasa'
+          : q.legacyKind === 'sentence'
+          ? 'Grammatik: Kalimat'
+          : 'Grammatik: Konsep',
         prompt: q.displayText,
         studentAnswer: answers[q.id] === 'richtig' ? 'Richtig' : 'Falsch',
         correctAnswer: q.isCorrect ? 'Richtig' : 'Falsch',
-        isCorrect: (answers[q.id] === 'richtig') === q.isCorrect,
+        isCorrect: isAnswerCorrect(q, answers[q.id]),
         audioText: q.audioText,
         grammarTip: q.explanation,
       }))
@@ -488,7 +492,7 @@ export default function GrammarPanel({
           {questions.map((q, idx) => {
             const answer = answers[q.id]
             const answered = Boolean(answer)
-            const isRight = answered ? (answer === 'richtig') === q.isCorrect : false
+            const isRight = answered ? isAnswerCorrect(q, answer) : false
 
             return (
               <div
@@ -566,8 +570,8 @@ export default function GrammarPanel({
                 <div className="grid grid-cols-2 gap-2.5">
                   {(['richtig', 'falsch'] as const).map((choice) => {
                     const selected = answer === choice
-                    const showAsCorrect = submitted && (choice === 'richtig') === q.isCorrect
-                    const showAsWrong = submitted && selected && (choice === 'richtig') !== q.isCorrect
+                    const showAsCorrect = submitted && isAnswerCorrect(q, choice)
+                    const showAsWrong = submitted && selected && !isAnswerCorrect(q, choice)
 
                     return (
                       <button
@@ -633,11 +637,18 @@ export default function GrammarPanel({
               </button>
               <p className="text-center text-xs text-slate-400 mt-2">
                 Latihan mandiri — tidak memengaruhi nilai kuis.
-                {grammarTopics.length > 0 && (
+                {usingAiQuestions ? (
                   <span className="block mt-1">
-                    Soal tetap disusun dari kosakata skenario. Topik pilihan hanya memengaruhi
-                    soal mana yang dipilih, bukan jenis soalnya.
+                    Soal tata bahasa dibuat AI dari topik pilihan. Selalu periksa "Bentuk benar"
+                    karena keluaran AI belum diverifikasi.
                   </span>
+                ) : (
+                  grammarTopics.length > 0 && (
+                    <span className="block mt-1">
+                      Soal tetap disusun dari kosakata skenario. Topik pilihan hanya memengaruhi
+                      soal mana yang dipilih, bukan jenis soalnya.
+                    </span>
+                  )
                 )}
               </p>
             </div>
