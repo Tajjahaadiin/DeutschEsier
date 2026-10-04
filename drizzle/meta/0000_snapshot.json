@@ -1,5 +1,5 @@
 {
-  "id": "1ae2d680-27f9-4417-830b-a1ff02d5b1c8",
+  "id": "061f3d13-ae57-4f2e-aeaf-970ff2fd1050",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -58,6 +58,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": 8
+        },
+        "comprehension_questions_json": {
+          "name": "comprehension_questions_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "image_url": {
           "name": "image_url",
