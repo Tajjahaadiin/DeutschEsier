@@ -8850,6 +8850,11 @@ var learningSession = pgTable("learning_session", {
   vocabCluesJson: text("vocab_clues_json").notNull(),
   /** Jumlah baris dialog yang diminta guru saat generate (1-20). */
   dialogueCount: integer("dialogue_count").notNull().default(8),
+  /**
+   * Soal Richtig/Falsch hasil AI (JSON array) untuk skenario level B1.
+   * NULL untuk skenario A1/A2 dan data lama sebelum fitur ini.
+   */
+  comprehensionQuestionsJson: text("comprehension_questions_json"),
   imageUrl: text("image_url"),
   published: boolean("published").notNull().default(true),
   createdAt: text("created_at").$defaultFn(() => (/* @__PURE__ */ new Date()).toISOString()).notNull(),
@@ -9017,6 +9022,11 @@ function normalizeDialogueCount(raw2) {
   if (typeof raw2 !== "number" || !Number.isInteger(raw2)) return 8;
   return Math.min(20, Math.max(1, raw2));
 }
+function comprehensionQuestionsColumn(raw2) {
+  if (raw2 === void 0) return {};
+  if (raw2 === null) return { comprehensionQuestionsJson: null };
+  return { comprehensionQuestionsJson: JSON.stringify(raw2) };
+}
 sessionsRouter.get("/", async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt));
@@ -9040,6 +9050,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
     const body = await c.req.json();
     if (!body.id || !body.title) return c.json({ error: "Invalid data" }, 400);
     const dialogueCount = normalizeDialogueCount(body.dialogueCount);
+    const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions);
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1);
     if (existing) {
       await db.update(learningSession).set({
@@ -9050,6 +9061,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         dialogueJson: JSON.stringify(body.dialogueJson),
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
         dialogueCount,
+        ...comprehensionCol,
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
       }).where(eq(learningSession.id, body.id));
     } else {
@@ -9061,7 +9073,8 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         cefrLevel: body.cefrLevel,
         dialogueJson: JSON.stringify(body.dialogueJson),
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
-        dialogueCount
+        dialogueCount,
+        ...comprehensionCol
       });
     }
     return c.json({ success: true, id: body.id });
@@ -9082,6 +9095,7 @@ sessionsRouter.put("/:id", requireTeacherAuth, async (c) => {
       dialogueJson: JSON.stringify(body.dialogueJson),
       vocabCluesJson: JSON.stringify(body.vocabCluesJson),
       dialogueCount: normalizeDialogueCount(body.dialogueCount),
+      ...comprehensionQuestionsColumn(body.comprehensionQuestions),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     }).where(eq(learningSession.id, id));
     return c.json({ success: true, id });
@@ -37246,11 +37260,22 @@ var VocabClueSchema = Schema_exports.Struct({
   indonesianMeaning: Schema_exports.String,
   grammarTip: Schema_exports.String
 });
+var ComprehensionQuestionSchema = Schema_exports.Struct({
+  statement: Schema_exports.String,
+  indonesianText: Schema_exports.String,
+  isCorrect: Schema_exports.Boolean,
+  explanation: Schema_exports.String
+});
 var GeneratedLessonSchema = Schema_exports.Struct({
   title: Schema_exports.String,
   sceneDescription: Schema_exports.String,
   dialogue: Schema_exports.Array(DialogLineSchema),
-  vocabClues: Schema_exports.Array(VocabClueSchema)
+  vocabClues: Schema_exports.Array(VocabClueSchema),
+  /**
+   * Opsional: hanya diisi untuk skenario level B1. Skenario A1/A2 dan data
+   * lama tidak punya field ini, sehingga dekode tetap berhasil.
+   */
+  comprehensionQuestions: Schema_exports.optional(Schema_exports.Array(ComprehensionQuestionSchema))
 });
 
 // src/server/effect/ai-service.ts
@@ -37275,6 +37300,7 @@ var retryPolicy = Schedule_exports.exponential(Duration_exports.millis(500), 2).
 );
 function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
   const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords, dialogueCount);
+  const wantsComprehension = cefrLevel === "B1";
   const callGemini = Effect_exports.tryPromise({
     try: async () => {
       const ai = getAiClient();
@@ -37311,9 +37337,31 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
                   },
                   required: ["germanWord", "indonesianMeaning", "grammarTip"]
                 }
-              }
+              },
+              // Hanya diminta untuk level B1 (menggantikan kuis pemahaman).
+              ...wantsComprehension ? {
+                comprehensionQuestions: {
+                  type: Type3.ARRAY,
+                  items: {
+                    type: Type3.OBJECT,
+                    properties: {
+                      statement: { type: Type3.STRING },
+                      indonesianText: { type: Type3.STRING },
+                      isCorrect: { type: Type3.BOOLEAN },
+                      explanation: { type: Type3.STRING }
+                    },
+                    required: ["statement", "indonesianText", "isCorrect", "explanation"]
+                  }
+                }
+              } : {}
             },
-            required: ["title", "sceneDescription", "dialogue", "vocabClues"]
+            required: [
+              "title",
+              "sceneDescription",
+              "dialogue",
+              "vocabClues",
+              ...wantsComprehension ? ["comprehensionQuestions"] : []
+            ]
           },
           temperature: 0.4
         }
@@ -37342,6 +37390,16 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
 function buildPrompt(prompt, level, cognates, dialogueCount) {
   const cognateList = cognates.length > 0 ? `
 Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
+  const comprehensionBlock = level === "B1" ? `
+
+Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):
+9. Buat tepat 10 soal Richtig oder Falsch berdasarkan dialog di atas
+10. Sebagian soal harus SALAH: ubah satu fakta penting dari dialog (subjek, objek, tempat, waktu, atau angka) sehingga pernyataannya tidak sesuai dialog
+11. Sebagian soal lainnya harus BENAR: pernyataannya sesuai dialog
+12. statement diisi pernyataan bahasa Jerman yang harus dinilai Benar atau Salah
+13. indonesianText adalah terjemahan Indonesia dari statement
+14. isCorrect diisi true bila pernyataan sesuai dialog, false bila tidak
+15. explanation menjelaskan singkat mengapa jawabannya demikian berdasarkan dialog` : "";
   return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.
 
 Skenario: ${prompt}${cognateList}
@@ -37354,7 +37412,7 @@ Panduan:
 5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu
 6. sceneDescription menggambarkan latar tempat dan konteks dialog
 7. Sertakan tepat ${dialogueCount} baris dialog
-8. vocabClues minimal 4-6 kata`;
+8. vocabClues minimal 4-6 kata${comprehensionBlock}`;
 }
 
 // src/server/routes/generate.ts
