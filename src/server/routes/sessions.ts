@@ -48,6 +48,16 @@ function grammarTopicsColumn(raw: unknown): { grammarTopicsJson?: string | null 
   return { grammarTopicsJson: JSON.stringify(raw) }
 }
 
+/**
+ * Kolom soal latihan tata bahasa hasil AI.
+ * Aturan sama: undefined = jangan sentuh, null = kosongkan, nilai = simpan.
+ */
+function grammarQuestionsColumn(raw: unknown): { grammarQuestionsJson?: string | null } {
+  if (raw === undefined) return {}
+  if (raw === null) return { grammarQuestionsJson: null }
+  return { grammarQuestionsJson: JSON.stringify(raw) }
+}
+
 sessionsRouter.get('/', async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt))
@@ -78,6 +88,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
     const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions)
     const grammarPatternsCol = grammarPatternsColumn(body.grammarPatterns)
     const grammarTopicsCol = grammarTopicsColumn(body.grammarTopics)
+    const grammarQuestionsCol = grammarQuestionsColumn(body.grammarQuestions)
     
     // Check if exists
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1)
@@ -94,6 +105,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
         ...comprehensionCol,
         ...grammarPatternsCol,
         ...grammarTopicsCol,
+        ...grammarQuestionsCol,
         updatedAt: new Date().toISOString(),
       }).where(eq(learningSession.id, body.id))
     } else {
@@ -109,6 +121,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
         ...comprehensionCol,
         ...grammarPatternsCol,
         ...grammarTopicsCol,
+        ...grammarQuestionsCol,
       })
     }
     
@@ -134,6 +147,7 @@ sessionsRouter.put('/:id', requireTeacherAuth, async (c) => {
       ...comprehensionQuestionsColumn(body.comprehensionQuestions),
       ...grammarPatternsColumn(body.grammarPatterns),
       ...grammarTopicsColumn(body.grammarTopics),
+      ...grammarQuestionsColumn(body.grammarQuestions),
       updatedAt: new Date().toISOString(),
     }).where(eq(learningSession.id, id))
     return c.json({ success: true, id })

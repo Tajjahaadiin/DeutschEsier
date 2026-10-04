@@ -12,6 +12,7 @@ import {
   parseGrammarTopicIds,
   type GrammarTopicContent,
 } from '../lib/grammarTopicsParser'
+import { parseGrammarQuestions, type AiGrammarQuestion } from '../lib/grammarQuestions'
 import GrammarTopicPicker from '../components/generator/GrammarTopicPicker'
 
 interface DialogTurn {
@@ -35,6 +36,7 @@ interface GeneratedLesson {
   comprehensionQuestions?: ComprehensionQuestion[]
   grammarPatterns?: GrammarPattern[]
   grammarTopics?: GrammarTopicContent[]
+  grammarQuestions?: AiGrammarQuestion[]
 }
 
 export default function GeneratorPage({ editId, navigate }: { editId?: string; navigate: (path: string) => void }) {
@@ -103,6 +105,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           comprehensionQuestions: parseComprehensionQuestions(data.comprehensionQuestionsJson),
           grammarPatterns: parseGrammarPatterns(data.grammarPatternsJson),
           grammarTopics: parseGrammarTopics(data.grammarTopicsJson),
+          grammarQuestions: parseGrammarQuestions(data.grammarQuestionsJson),
         })
 
         const turnA = parsedDialogue.find(t => t.speaker === 'Sprecher A')
@@ -185,6 +188,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         grammarTopics:
           cefrLevel === 'B1' && selectedTopicIds.length > 0
             ? { selected: selectedTopicIds, content: lesson.grammarTopics ?? [] }
+            : null,
+        // Soal latihan tata bahasa hasil AI, ikut disimpan agar tidak hilang.
+        grammarQuestions:
+          cefrLevel === 'B1' && selectedTopicIds.length > 0
+            ? lesson.grammarQuestions ?? []
             : null,
       }
 
