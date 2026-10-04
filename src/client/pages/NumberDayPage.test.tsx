@@ -62,6 +62,31 @@ describe('DayPage', () => {
     expect(after).not.toBe(before)
   })
 
+  it('menyesuaikan tahun saat mundur/maju melewati batas tahun', () => {
+    render(<DayPage navigate={() => {}} />)
+
+    const prev = screen.getAllByRole('button', { name: 'Bulan sebelumnya' })[0]
+    const next = screen.getAllByRole('button', { name: 'Bulan berikutnya' })[0]
+    const read = () => screen.getByText(/^\w+ \d{4}$/).textContent
+    const start = read()!
+
+    // Mundur 12 bulan = tepat satu tahun lebih awal (bulan sama).
+    for (let i = 0; i < 12; i++) fireEvent.click(prev)
+    const [startMonthName, startYear] = start.split(' ')
+    expect(read()).toBe(`${startMonthName} ${Number(startYear) - 1}`)
+
+    // Maju 12 bulan kembali ke titik awal.
+    for (let i = 0; i < 12; i++) fireEvent.click(next)
+    expect(read()).toBe(start)
+  })
+
+  it('tidak menandai 31 Desember sebagai hari libur', () => {
+    render(<DayPage navigate={() => {}} />)
+
+    // Silvester bukan hari libur resmi Jerman.
+    expect(screen.queryByText('Silvester')).toBeNull()
+  })
+
   it('menampilkan bagian bonus hari libur dan konteks waktu', () => {
     render(<DayPage navigate={() => {}} />)
 

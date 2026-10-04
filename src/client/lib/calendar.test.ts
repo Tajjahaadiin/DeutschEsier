@@ -5,6 +5,7 @@ import {
   buildMonthGrid,
   isHoliday,
   weekdayForDate,
+  shiftMonth,
 } from './calendar'
 
 describe('WEEKDAYS', () => {
@@ -81,5 +82,24 @@ describe('isHoliday', () => {
 
   it('mengembalikan undefined untuk hari biasa', () => {
     expect(isHoliday(0, 15)).toBeUndefined()
+  })
+
+  it('tidak menandai Silvester sebagai hari libur umum', () => {
+    // 31 Desember bukan gesetzlicher Feiertag di Jerman; jangan diajarkan salah.
+    expect(isHoliday(11, 31)).toBeUndefined()
+  })
+})
+
+describe('shiftMonth', () => {
+  it('maju satu bulan dalam tahun yang sama', () => {
+    expect(shiftMonth(2026, 0, 1)).toEqual({ year: 2026, month: 1 })
+  })
+
+  it('mundur dari Januari ke Desember tahun sebelumnya', () => {
+    expect(shiftMonth(2026, 0, -1)).toEqual({ year: 2025, month: 11 })
+  })
+
+  it('maju dari Desember ke Januari tahun berikutnya', () => {
+    expect(shiftMonth(2026, 11, 1)).toEqual({ year: 2027, month: 0 })
   })
 })

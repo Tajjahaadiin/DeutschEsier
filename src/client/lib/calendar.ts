@@ -21,8 +21,6 @@ export interface MonthInfo {
 export interface HolidayInfo {
   german: string
   meaningId: string
-  /** true bila tanggalnya berubah tiap tahun (mis. Paskah). */
-  movable?: boolean
 }
 
 /** Senin sampai Minggu, sesuai urutan kalender Jerman. */
@@ -66,16 +64,28 @@ export const TIME_CONTEXTS: DayInfo[] = [
 
 /**
  * Hari libur nasional Jerman, dikunci "bulan-tanggal" (bulan 0-index).
- * Hanya tanggal tetap; yang berpindah tiap tahun (Paskah dll.) ditandai movable.
+ *
+ * Hanya hari libur resmi (gesetzlicher Feiertag). Silvester (31 Des) dan
+ * Heiligabend (24 Des) SENGAJA tidak dimasukkan: keduanya hari kerja biasa di
+ * Jerman, jadi menandainya sebagai hari libur akan mengajarkan fakta yang salah.
+ * Hari libur yang berpindah tiap tahun (Paskah dll.) belum termasuk.
  */
-const HOLIDAYS: Record<string, HolidayInfo> = {
+export const HOLIDAYS: Record<string, HolidayInfo> = {
   '0-1': { german: 'Neujahr', meaningId: 'Tahun Baru' },
   '4-1': { german: 'Tag der Arbeit', meaningId: 'Hari Buruh' },
   '9-3': { german: 'Tag der Deutschen Einheit', meaningId: 'Hari Persatuan Jerman' },
   '11-25': { german: 'Weihnachten', meaningId: 'Natal' },
   '11-26': { german: 'Zweiter Weihnachtstag', meaningId: 'Hari Natal Kedua' },
-  '11-31': { german: 'Silvester', meaningId: 'Malam Tahun Baru' },
 }
+
+/** Daftar hari libur untuk ditampilkan, diturunkan dari sumber yang sama. */
+export const HOLIDAY_LIST: { month: number; day: number; german: string; meaningId: string }[] =
+  Object.entries(HOLIDAYS)
+    .map(([key, info]) => {
+      const [month, day] = key.split('-').map(Number)
+      return { month, day, german: info.german, meaningId: info.meaningId }
+    })
+    .sort((a, b) => a.month - b.month || a.day - b.day)
 
 /** Cari hari libur tetap berdasarkan bulan (0-index) dan tanggal. */
 export function isHoliday(month: number, day: number): HolidayInfo | undefined {
@@ -104,4 +114,18 @@ export function buildMonthGrid(year: number, month: number): (number | null)[] {
 export function weekdayForDate(year: number, month: number, day: number): DayInfo {
   const jsDay = new Date(year, month, day).getDay() // 0 = Minggu
   return WEEKDAYS[(jsDay + 6) % 7]
+}
+
+/**
+ * Geser satu bulan ke depan/belakang, tahun ikut menyesuaikan saat melewati
+ * Desember/Juni. Tanpa ini, melangkah dari Januari ke belakang akan menampilkan
+ * Desember pada tahun yang salah.
+ */
+export function shiftMonth(
+  year: number,
+  month: number,
+  delta: number
+): { year: number; month: number } {
+  const total = year * 12 + month + delta
+  return { year: Math.floor(total / 12), month: ((total % 12) + 12) % 12 }
 }

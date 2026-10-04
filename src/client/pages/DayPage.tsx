@@ -5,32 +5,27 @@ import {
   WEEKDAYS,
   MONTHS,
   TIME_CONTEXTS,
+  HOLIDAY_LIST,
   buildMonthGrid,
   isHoliday,
   weekdayForDate,
+  shiftMonth,
 } from '../lib/calendar'
 
 interface DayPageProps {
   navigate: (path: string) => void
 }
 
-/** Hari libur yang ditampilkan di bagian bonus (tanggal tetap). */
-const HOLIDAY_LIST = [
-  { date: '1 Januari', german: 'Neujahr', meaningId: 'Tahun Baru' },
-  { date: '1 Mei', german: 'Tag der Arbeit', meaningId: 'Hari Buruh' },
-  { date: '3 Oktober', german: 'Tag der Deutschen Einheit', meaningId: 'Hari Persatuan Jerman' },
-  { date: '25 Desember', german: 'Weihnachten', meaningId: 'Natal' },
-  { date: '26 Desember', german: 'Zweiter Weihnachtstag', meaningId: 'Hari Natal Kedua' },
-  { date: '31 Desember', german: 'Silvester', meaningId: 'Malam Tahun Baru' },
-]
-
 export default function DayPage({ navigate }: DayPageProps) {
-  const now = new Date()
-  const [monthIndex, setMonthIndex] = useState(now.getMonth())
-  const [year] = useState(now.getFullYear())
+  const [cursor, setCursor] = useState(() => {
+    const now = new Date()
+    return { year: now.getFullYear(), month: now.getMonth() }
+  })
   const [voiceGender, setVoiceGender] = useState<VoiceGender>(() => getStoredVoiceGender())
   const [speechRate, setSpeechRate] = useState(1.0)
   const [playing, setPlaying] = useState<string | null>(null)
+
+  const { year, month: monthIndex } = cursor
 
   const handleGenderChange = (gender: VoiceGender) => {
     setVoiceGender(gender)
@@ -45,8 +40,8 @@ export default function DayPage({ navigate }: DayPageProps) {
   const grid = buildMonthGrid(year, monthIndex)
   const month = MONTHS[monthIndex]
 
-  const goPrev = () => setMonthIndex((m) => (m === 0 ? 11 : m - 1))
-  const goNext = () => setMonthIndex((m) => (m === 11 ? 0 : m + 1))
+  const goPrev = () => setCursor((c) => shiftMonth(c.year, c.month, -1))
+  const goNext = () => setCursor((c) => shiftMonth(c.year, c.month, 1))
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -213,7 +208,9 @@ export default function DayPage({ navigate }: DayPageProps) {
                   <div>
                     <p className="text-sm font-bold text-slate-800">{h.german}</p>
                     <p className="text-xs text-slate-500 mt-0.5">{h.meaningId}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">{h.date}</p>
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      {h.day} {MONTHS[h.month].meaningId}
+                    </p>
                   </div>
                   <Volume2
                     size={16}

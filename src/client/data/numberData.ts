@@ -15,8 +15,6 @@ export interface NumberItem {
   pronunciation: string
   /** Terjemahan Indonesia. */
   meaningId: string
-  /** Kelompok kartu, untuk pengelompokan di UI. */
-  group: 'dasar' | 'belasan' | 'puluhan' | 'besar'
 }
 
 const PRONUNCIATION: Record<number, string> = {
@@ -83,13 +81,6 @@ const MEANING: Record<number, string> = {
   100: 'seratus',
 }
 
-function groupFor(value: number): NumberItem['group'] {
-  if (value <= 12) return 'dasar'
-  if (value < 20) return 'belasan'
-  if (value < 100) return 'puluhan'
-  return 'besar'
-}
-
 const VALUES = [
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 30, 40, 50, 60, 70, 80,
   90, 100,
@@ -101,5 +92,4 @@ export const NUMBER_ITEMS: NumberItem[] = VALUES.map((value) => ({
   german: numberWord(value),
   pronunciation: PRONUNCIATION[value] ?? '',
   meaningId: MEANING[value] ?? String(value),
-  group: groupFor(value),
 }))
