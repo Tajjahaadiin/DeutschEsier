@@ -54,6 +54,7 @@ interface Session {
   comprehensionQuestionsJson?: string | null
   grammarPatternsJson?: string | null
   grammarTopicsJson?: string | null
+  grammarQuestionsJson?: string | null
 }
 
 export default function ViewPage({ id, navigate }: { id: string; navigate: (path: string) => void }) {
@@ -856,6 +857,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                 dialogue={session.dialogue}
                 grammarPatterns={session.grammarPatterns}
                 grammarTopics={session.grammarTopics}
+                grammarQuestionsJson={session.grammarQuestionsJson}
+                cefrLevel={session.cefrLevel as 'A1' | 'A2' | 'B1'}
                 sessionTitle={session.title}
                 sessionId={id}
                 accessKey={validKey}

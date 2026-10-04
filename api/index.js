@@ -8865,6 +8865,11 @@ var learningSession = pgTable("learning_session", {
    * {"selected": string[], "content": [...]}. NULL untuk A1/A2 dan data lama.
    */
   grammarTopicsJson: text("grammar_topics_json"),
+  /**
+   * Soal latihan tata bahasa hasil AI (JSON array) untuk B1. NULL untuk A1/A2
+   * dan data lama; tab Latihan memakai soal lama sebagai cadangan bila kosong.
+   */
+  grammarQuestionsJson: text("grammar_questions_json"),
   imageUrl: text("image_url"),
   published: boolean("published").notNull().default(true),
   createdAt: text("created_at").$defaultFn(() => (/* @__PURE__ */ new Date()).toISOString()).notNull(),
@@ -9047,6 +9052,11 @@ function grammarTopicsColumn(raw2) {
   if (raw2 === null) return { grammarTopicsJson: null };
   return { grammarTopicsJson: JSON.stringify(raw2) };
 }
+function grammarQuestionsColumn(raw2) {
+  if (raw2 === void 0) return {};
+  if (raw2 === null) return { grammarQuestionsJson: null };
+  return { grammarQuestionsJson: JSON.stringify(raw2) };
+}
 sessionsRouter.get("/", async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt));
@@ -9073,6 +9083,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
     const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions);
     const grammarPatternsCol = grammarPatternsColumn(body.grammarPatterns);
     const grammarTopicsCol = grammarTopicsColumn(body.grammarTopics);
+    const grammarQuestionsCol = grammarQuestionsColumn(body.grammarQuestions);
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1);
     if (existing) {
       await db.update(learningSession).set({
@@ -9086,6 +9097,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         ...comprehensionCol,
         ...grammarPatternsCol,
         ...grammarTopicsCol,
+        ...grammarQuestionsCol,
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
       }).where(eq(learningSession.id, body.id));
     } else {
@@ -9100,7 +9112,8 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         dialogueCount,
         ...comprehensionCol,
         ...grammarPatternsCol,
-        ...grammarTopicsCol
+        ...grammarTopicsCol,
+        ...grammarQuestionsCol
       });
     }
     return c.json({ success: true, id: body.id });
@@ -9124,6 +9137,7 @@ sessionsRouter.put("/:id", requireTeacherAuth, async (c) => {
       ...comprehensionQuestionsColumn(body.comprehensionQuestions),
       ...grammarPatternsColumn(body.grammarPatterns),
       ...grammarTopicsColumn(body.grammarTopics),
+      ...grammarQuestionsColumn(body.grammarQuestions),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     }).where(eq(learningSession.id, id));
     return c.json({ success: true, id });
@@ -37747,6 +37761,37 @@ var GrammarTopicsSchema = Schema_exports.transform(
     encode: (entries2) => entries2.filter((e) => isGrammarTopicId(e.topicId))
   }
 );
+var GrammarQuestionItemSchema = Schema_exports.Struct({
+  sentence: Schema_exports.String,
+  isCorrect: Schema_exports.Boolean,
+  explanationId: Schema_exports.String,
+  correctedSentence: Schema_exports.String,
+  topicId: Schema_exports.String,
+  segments: Schema_exports.Array(GrammarSegmentSchema)
+});
+var GrammarQuestionsSchema = Schema_exports.transform(
+  Schema_exports.Array(Schema_exports.Unknown),
+  Schema_exports.Array(GrammarQuestionItemSchema),
+  {
+    strict: false,
+    decode: (entries2) => entries2.flatMap((entry) => {
+      try {
+        const decoded = Schema_exports.decodeUnknownSync(GrammarQuestionItemSchema)(entry);
+        if (!isGrammarTopicId(decoded.topicId)) return [];
+        if (decoded.sentence.trim() === "" || decoded.explanationId.trim() === "") return [];
+        return [
+          {
+            ...decoded,
+            correctedSentence: decoded.correctedSentence.trim() !== "" ? decoded.correctedSentence : decoded.isCorrect ? decoded.sentence : ""
+          }
+        ];
+      } catch {
+        return [];
+      }
+    }),
+    encode: (entries2) => entries2.filter((e) => isGrammarTopicId(e.topicId))
+  }
+);
 var GeneratedLessonSchema = Schema_exports.Struct({
   title: Schema_exports.String,
   sceneDescription: Schema_exports.String,
@@ -37766,7 +37811,12 @@ var GeneratedLessonSchema = Schema_exports.Struct({
    * Opsional: materi per topik tata bahasa B1 yang dipilih guru.
    * Hanya ada bila guru memilih topik; data lama tidak punya field ini.
    */
-  grammarTopics: Schema_exports.optional(GrammarTopicsSchema)
+  grammarTopics: Schema_exports.optional(GrammarTopicsSchema),
+  /**
+   * Opsional: soal latihan tata bahasa, hanya ada bila guru memilih topik B1.
+   * Data lama dan level A1/A2 tidak punya field ini.
+   */
+  grammarQuestions: Schema_exports.optional(GrammarQuestionsSchema)
 });
 
 // src/server/effect/ai-service.ts
@@ -37927,6 +37977,44 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, gram
                     ]
                   }
                 }
+              } : {},
+              // Soal latihan tata bahasa, hanya bila guru memilih topik B1.
+              ...wantsGrammarTopics ? {
+                grammarQuestions: {
+                  type: Type3.ARRAY,
+                  items: {
+                    type: Type3.OBJECT,
+                    properties: {
+                      sentence: { type: Type3.STRING },
+                      isCorrect: { type: Type3.BOOLEAN },
+                      explanationId: { type: Type3.STRING },
+                      correctedSentence: { type: Type3.STRING },
+                      topicId: { type: Type3.STRING },
+                      segments: {
+                        type: Type3.ARRAY,
+                        items: {
+                          type: Type3.OBJECT,
+                          properties: {
+                            text: { type: Type3.STRING },
+                            role: {
+                              type: Type3.STRING,
+                              enum: ["subjekt", "praedikat", "objekt", "other"]
+                            }
+                          },
+                          required: ["text", "role"]
+                        }
+                      }
+                    },
+                    required: [
+                      "sentence",
+                      "isCorrect",
+                      "explanationId",
+                      "correctedSentence",
+                      "topicId",
+                      "segments"
+                    ]
+                  }
+                }
               } : {}
             },
             required: [
@@ -37936,7 +38024,8 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, gram
               "vocabClues",
               "grammarPatterns",
               ...wantsComprehension ? ["comprehensionQuestions"] : [],
-              ...wantsGrammarTopics ? ["grammarTopics"] : []
+              ...wantsGrammarTopics ? ["grammarTopics"] : [],
+              ...wantsGrammarTopics ? ["grammarQuestions"] : []
             ]
           },
           temperature: 0.4
@@ -37985,10 +38074,32 @@ Untuk SETIAP topik di atas, isi satu entri pada "grammarTopics":
 6. examples: tepat 2 contoh { german, indonesian, note } \u2014 kalimat Jerman yang benar, terjemahan Indonesia, dan catatan singkat
 7. Usahakan minimal satu baris dialog di atas memakai tiap topik bila wajar untuk skenarionya`;
 }
+function buildGrammarQuestionsBlock(topicIds) {
+  const topics = topicsForPrompt(topicIds);
+  if (topics.length === 0) return "";
+  const list = topics.map((t) => `- topicId "${t.id}": ${t.german} (${t.nameId})`).join("\n");
+  return `
+
+Soal latihan tata bahasa (level B1) \u2014 isi "grammarQuestions":
+Setiap soal menanyakan: "Apakah kalimat ini gramatikal?" (benar atau salah secara tata bahasa).
+Topik yang diuji:
+${list}
+
+Aturan:
+1. Buat tepat 10 soal. Sekitar separuh kalimatnya SALAH secara tata bahasa, dan benar/salah dibuat berselang-seling
+2. Setiap soal berisi satu kalimat Jerman pada field "sentence"
+3. Kalimat yang salah harus punya TEPAT SATU kesalahan tata bahasa yang berkaitan dengan topiknya (mis. auxiliary salah: "Ich bin gestern die K\xFCche geputzt." seharusnya "Ich habe gestern die K\xFCche geputzt.")
+4. isCorrect diisi true bila kalimat itu benar secara tata bahasa, false bila salah
+5. correctedSentence WAJIB diisi: bentuk kalimat yang benar. Bila isCorrect true, salin "sentence" persis ke correctedSentence
+6. explanationId diisi penjelasan aturannya dalam bahasa Indonesia, 1-2 kalimat, menyebut aturan yang dilanggar
+7. topicId disalin persis dari daftar di atas
+8. segments memecah "sentence" menjadi potongan berurutan; tiap potongan punya "text" dan "role" (salah satu dari "subjekt", "praedikat", "objekt", "other"); gabungan semua "text" harus sama dengan "sentence"`;
+}
 function buildPrompt(prompt, level, cognates, dialogueCount, grammarTopicIds = []) {
   const cognateList = cognates.length > 0 ? `
 Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
   const grammarTopicsBlock = level === "B1" ? buildGrammarTopicsBlock(grammarTopicIds) : "";
+  const grammarQuestionsBlock = level === "B1" ? buildGrammarQuestionsBlock(grammarTopicIds) : "";
   const comprehensionBlock = level === "B1" ? `
 
 Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):
@@ -38024,7 +38135,7 @@ Aturan pengisian tiap pola:
 3. exampleIndonesian diisi terjemahan Indonesia dari exampleGerman
 4. segments memecah exampleGerman menjadi potongan berurutan; setiap potongan punya "text" dan "role"
 5. role hanya boleh salah satu dari: "subjekt", "praedikat", "objekt", atau "other" (untuk kata tanya, kata bantu, negasi, dan bagian lain)
-6. Gabungan semua "text" pada segments harus sama dengan exampleGerman${grammarTopicsBlock}`;
+6. Gabungan semua "text" pada segments harus sama dengan exampleGerman${grammarTopicsBlock}${grammarQuestionsBlock}`;
 }
 
 // src/server/routes/generate.ts

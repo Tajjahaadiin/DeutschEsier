@@ -10,17 +10,18 @@ import {
   Send,
 } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
-import {
-  buildQuestions,
-  isAnswerCorrect,
-  type GrammarQuestion,
-} from '../../lib/grammar'
+import { buildQuestions, type GrammarQuestion } from '../../lib/grammar'
 import {
   segmentsCoverExample,
+  coverSentence,
   type GrammarPattern,
   type GrammarSegmentRole,
 } from '../../lib/grammarPatterns'
 import { type GrammarTopicContent } from '../../lib/grammarTopicsParser'
+import {
+  parseGrammarQuestions,
+  type AiGrammarQuestion,
+} from '../../lib/grammarQuestions'
 
 export interface GrammarPanelProps {
   vocabClues: { germanWord: string; indonesianMeaning: string; grammarTip: string }[]
@@ -29,6 +30,10 @@ export interface GrammarPanelProps {
   grammarPatterns?: GrammarPattern[]
   /** Materi per topik tata bahasa B1 yang dipilih guru. */
   grammarTopics?: GrammarTopicContent[]
+  /** Soal latihan tata bahasa hasil AI (JSON) untuk level B1. */
+  grammarQuestionsJson?: string | null
+  /** Level skenario; dipakai hanya untuk petunjuk, opsional. */
+  cefrLevel?: 'A1' | 'A2' | 'B1'
   sessionTitle?: string
   sessionId?: string
   accessKey?: string
@@ -58,6 +63,8 @@ export default function GrammarPanel({
   dialogue = [],
   grammarPatterns = [],
   grammarTopics = [],
+  grammarQuestionsJson = null,
+  cefrLevel,
   sessionTitle,
   sessionId,
   accessKey = '',
@@ -74,14 +81,56 @@ export default function GrammarPanel({
   const [saveError, setSaveError] = useState('')
   const [saved, setSaved] = useState(false)
 
-  const questions: GrammarQuestion[] = useMemo(
+  // Soal latihan tata bahasa hasil AI (bila ada), jika tidak pakai soal lama
+  // yang diturunkan runtime dari kosakata skenario.
+  const aiQuestions: AiGrammarQuestion[] = useMemo(
+    () => parseGrammarQuestions(grammarQuestionsJson),
+    [grammarQuestionsJson]
+  )
+  const usingAiQuestions = aiQuestions.length > 0
+
+  // Level hanya dipakai untuk petunjuk singkat; perilaku tidak bergantung level.
+  void cefrLevel
+
+  const legacyQuestions: GrammarQuestion[] = useMemo(
     () => buildQuestions(vocabClues, dialogue, grammarTopics.map((t) => t.topicId)),
     [vocabClues, dialogue, grammarTopics]
   )
 
+  /**
+   * Bentuk seragam untuk dirender: soal AI dan soal lama disatukan agar sisa
+   * komponen tidak perlu tahu asalnya.
+   */
+  const questions = useMemo(() => {
+    if (usingAiQuestions) {
+      return aiQuestions.map((q) => ({
+        id: q.id,
+        isCorrect: q.isCorrect,
+        displayText: q.sentence,
+        segments: q.segments,
+        audioText: q.audioText,
+        explanation: q.explanationId,
+        correctedSentence: q.correctedSentence,
+        kindLabel: 'Tata Bahasa',
+        isAi: true,
+      }))
+    }
+    return legacyQuestions.map((q) => ({
+      id: q.id,
+      isCorrect: q.isCorrect,
+      displayText: q.statement,
+      segments: [] as { text: string; role: GrammarSegmentRole }[],
+      audioText: q.audioText,
+      explanation: q.explanation,
+      correctedSentence: '',
+      kindLabel: q.kind === 'sentence' ? 'Kalimat Skenario' : 'Konsep Tata Bahasa',
+      isAi: false,
+    }))
+  }, [usingAiQuestions, aiQuestions, legacyQuestions])
+
   const answeredCount = Object.keys(answers).length
   const correctCount = questions.filter(
-    (q) => answers[q.id] && isAnswerCorrect(q, answers[q.id])
+    (q) => answers[q.id] && (answers[q.id] === 'richtig') === q.isCorrect
   ).length
   const score = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0
 
@@ -110,12 +159,12 @@ export default function GrammarPanel({
     try {
       const graded = questions.map((q) => ({
         questionId: q.id,
-        type: q.kind === 'sentence' ? 'grammar-sentence' : 'grammar-concept',
-        title: q.kind === 'sentence' ? 'Grammatik: Kalimat' : 'Grammatik: Konsep',
-        prompt: q.statement,
+        type: q.isAi ? 'grammar-ai' : 'grammar-concept',
+        title: q.isAi ? 'Grammatik: Tata Bahasa' : 'Grammatik: Konsep',
+        prompt: q.displayText,
         studentAnswer: answers[q.id] === 'richtig' ? 'Richtig' : 'Falsch',
         correctAnswer: q.isCorrect ? 'Richtig' : 'Falsch',
-        isCorrect: isAnswerCorrect(q, answers[q.id]),
+        isCorrect: (answers[q.id] === 'richtig') === q.isCorrect,
         audioText: q.audioText,
         grammarTip: q.explanation,
       }))
@@ -144,6 +193,7 @@ export default function GrammarPanel({
   }
 
   if (grammarPatterns.length === 0 && grammarTopics.length === 0 && questions.length === 0) {
+    // Tidak ada materi maupun soal sama sekali.
     return (
       <div className="max-w-2xl mx-auto px-4 py-10 text-center">
         <GraduationCap size={40} className="mx-auto text-slate-300 mb-3" />
@@ -438,7 +488,7 @@ export default function GrammarPanel({
           {questions.map((q, idx) => {
             const answer = answers[q.id]
             const answered = Boolean(answer)
-            const isRight = answered ? isAnswerCorrect(q, answer) : false
+            const isRight = answered ? (answer === 'richtig') === q.isCorrect : false
 
             return (
               <div
@@ -457,7 +507,7 @@ export default function GrammarPanel({
                       {idx + 1}
                     </span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                      {q.kind === 'sentence' ? 'Kalimat Skenario' : 'Konsep Tata Bahasa'}
+                      {q.kindLabel}
                     </span>
                   </div>
                   {submitted && (
@@ -474,7 +524,32 @@ export default function GrammarPanel({
 
                 {/* Pernyataan */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-3">
-                  <p className="text-sm font-semibold text-slate-800 leading-relaxed">{q.statement}</p>
+                  {q.isAi && (
+                    <p className="text-[11px] font-semibold text-slate-500 mb-2">
+                      Apakah kalimat ini gramatikal?
+                    </p>
+                  )}
+                  {q.segments.length > 0 ? (
+                    <p className="text-sm font-semibold text-slate-800 leading-relaxed">
+                      {coverSentence(q.displayText, q.segments).map((span, i) =>
+                        span.role ? (
+                          <span
+                            key={i}
+                            className={`px-0.5 rounded ${ROLE_STYLE[span.role].className}`}
+                            title={ROLE_STYLE[span.role].label}
+                          >
+                            {span.text}
+                          </span>
+                        ) : (
+                          <span key={i}>{span.text}</span>
+                        )
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-semibold text-slate-800 leading-relaxed">
+                      {q.displayText}
+                    </p>
+                  )}
                   {/* Audio tersedia untuk SEMUA soal: kalimat utuh atau frasa Jermannya. */}
                   <button
                     type="button"
@@ -491,8 +566,8 @@ export default function GrammarPanel({
                 <div className="grid grid-cols-2 gap-2.5">
                   {(['richtig', 'falsch'] as const).map((choice) => {
                     const selected = answer === choice
-                    const showAsCorrect = submitted && isAnswerCorrect(q, choice)
-                    const showAsWrong = submitted && selected && !isAnswerCorrect(q, choice)
+                    const showAsCorrect = submitted && (choice === 'richtig') === q.isCorrect
+                    const showAsWrong = submitted && selected && (choice === 'richtig') !== q.isCorrect
 
                     return (
                       <button
@@ -521,11 +596,18 @@ export default function GrammarPanel({
                   <div className="mt-3 pt-3 border-t border-slate-200/70">
                     <p className="text-[11px] text-slate-600">
                       <strong className="text-slate-700">Kunci:</strong>{' '}
-                      {q.isCorrect ? 'Richtig (benar)' : 'Falsch (salah)'} · <em>{q.source}</em>
+                      {q.isCorrect ? 'Richtig (benar)' : 'Falsch (salah)'}
                     </p>
                     <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
                       💡 {q.explanation}
                     </p>
+                    {/* Selalu tampilkan bentuk yang benar agar kalimat yang salah
+                        selalu berpasangan dengan koreksinya. */}
+                    {q.isAi && q.correctedSentence && (
+                      <p className="text-[11px] text-emerald-800 mt-1 leading-relaxed">
+                        ✏️ <strong>Bentuk benar:</strong> {q.correctedSentence}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

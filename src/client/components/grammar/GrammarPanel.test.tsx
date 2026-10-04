@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import GrammarPanel from './GrammarPanel'
 import type { GrammarPattern } from '../../lib/grammarPatterns'
 
@@ -105,5 +105,97 @@ describe('GrammarPanel — topik tata bahasa terpilih', () => {
     // ...dan materi topik tetap dirender.
     expect(screen.getByText('Passiv')).toBeTruthy()
     expect(screen.getByText('Topik Tata Bahasa Pilihan')).toBeTruthy()
+  })
+})
+
+describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
+  const aiQuestion = {
+    sentence: 'Ich bin gestern die Küche geputzt.',
+    isCorrect: false,
+    explanationId: 'Putzen memakai haben, bukan sein.',
+    correctedSentence: 'Ich habe gestern die Küche geputzt.',
+    topicId: 'tempus-perfekt',
+    segments: [
+      { text: 'Ich ', role: 'subjekt' },
+      { text: 'bin ', role: 'praedikat' },
+      { text: 'gestern die Küche geputzt.', role: 'objekt' },
+    ],
+  }
+
+  const openLatihan = () => {
+    // Klik elemen <button> yang sesungguhnya, bukan node teks di dalamnya.
+    fireEvent.click(screen.getByRole('button', { name: /Latihan/ }))
+  }
+
+  it('menampilkan soal AI sebagai pertanyaan apakah kalimat ini gramatikal', () => {
+    render(
+      <GrammarPanel
+        vocabClues={[]}
+        grammarQuestionsJson={JSON.stringify([aiQuestion])}
+        cefrLevel="B1"
+      />
+    )
+    openLatihan()
+
+    expect(screen.getByText(/gramatikal/i)).toBeTruthy()
+    // Kalimat dipecah jadi potongan berwarna.
+    expect(screen.getByText('Ich')).toBeTruthy()
+    expect(screen.getByText('bin')).toBeTruthy()
+  })
+
+  it('menampilkan penjelasan DAN bentuk kalimat yang benar setelah submit', () => {
+    render(
+      <GrammarPanel
+        vocabClues={[]}
+        grammarQuestionsJson={JSON.stringify([aiQuestion])}
+        cefrLevel="B1"
+      />
+    )
+    openLatihan()
+
+    fireEvent.click(screen.getByRole('button', { name: '✓ Richtig' }))
+    fireEvent.click(screen.getByRole('button', { name: /Periksa Jawaban/ }))
+
+    expect(screen.getByText(/Putzen memakai haben/)).toBeTruthy()
+    expect(screen.getByText(/Ich habe gestern die Küche geputzt\./)).toBeTruthy()
+  })
+
+  it('jatuh kembali ke soal lama bila kolom soal AI kosong', () => {
+    const vocabClues = [
+      { germanWord: 'der Kaffee', indonesianMeaning: 'kopi', grammarTip: 'Kata benda maskulin.' },
+    ]
+    render(<GrammarPanel vocabClues={vocabClues} grammarQuestionsJson={null} cefrLevel="B1" />)
+    openLatihan()
+
+    // Soal lama (konsep/arti) tetap muncul sehingga halaman tidak kosong.
+    expect(
+      screen.getAllByText((_, el) => (el?.textContent ?? '').includes('Kaffee')).length
+    ).toBeGreaterThan(0)
+  })
+
+  it('tidak crash bila JSON soal rusak dan memakai soal lama', () => {
+    const vocabClues = [
+      { germanWord: 'der Kaffee', indonesianMeaning: 'kopi', grammarTip: 'Kata benda maskulin.' },
+    ]
+    render(
+      <GrammarPanel vocabClues={vocabClues} grammarQuestionsJson="bukan json{" cefrLevel="B1" />
+    )
+    openLatihan()
+
+    expect(screen.getByRole('button', { name: /Latihan/ })).toBeTruthy()
+    // Ada beberapa soal, jadi tombol Richtig muncul lebih dari satu.
+    expect(screen.getAllByRole('button', { name: '✓ Richtig' }).length).toBeGreaterThan(0)
+  })
+
+  it('tetap berfungsi tanpa prop cefrLevel', () => {
+    render(
+      <GrammarPanel
+        vocabClues={[]}
+        grammarQuestionsJson={JSON.stringify([aiQuestion])}
+      />
+    )
+    openLatihan()
+
+    expect(screen.getByText('Ich')).toBeTruthy()
   })
 })
