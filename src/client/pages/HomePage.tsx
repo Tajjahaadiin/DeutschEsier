@@ -89,6 +89,18 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
             >
               <span>🔤 Das Alphabet (30)</span>
             </button>
+            <button
+              onClick={() => navigate('/nummer')}
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+            >
+              <span>🔢 die Nummer</span>
+            </button>
+            <button
+              onClick={() => navigate('/tage')}
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+            >
+              <span>📅 die Tage</span>
+            </button>
             <Button
               onClick={() => navigate('/generate')}
               className="flex items-center gap-2 text-sm px-4 py-2"
@@ -140,6 +152,18 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
             className="px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
           >
             Das Alphabet (30)
+          </button>
+          <button
+            onClick={() => navigate('/nummer')}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
+          >
+            die Nummer
+          </button>
+          <button
+            onClick={() => navigate('/tage')}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
+          >
+            die Tage
           </button>
         </div>
 

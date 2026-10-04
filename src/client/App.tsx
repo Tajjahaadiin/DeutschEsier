@@ -3,6 +3,8 @@ import HomePage from './pages/HomePage'
 import GeneratorPage from './pages/GeneratorPage'
 import ViewPage from './pages/ViewPage'
 import AlphabetPage from './pages/AlphabetPage'
+import NumberPage from './pages/NumberPage'
+import DayPage from './pages/DayPage'
 import LoginPage from './pages/LoginPage'
 import { initGermanVoice } from './lib/audio'
 import { isTeacherAuthenticated } from './lib/auth'
@@ -64,6 +66,14 @@ export default function App() {
 
   if (currentPath === '/alphabet') {
     return <AlphabetPage navigate={navigate} />
+  }
+
+  if (currentPath === '/nummer') {
+    return <NumberPage navigate={navigate} />
+  }
+
+  if (currentPath === '/tage') {
+    return <DayPage navigate={navigate} />
   }
 
   if (currentPath === '/generate') {
