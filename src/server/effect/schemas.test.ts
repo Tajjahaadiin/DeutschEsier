@@ -24,8 +24,7 @@ const question = {
   explanation: 'Berdasarkan dialog, ia memesan kopi, bukan teh.',
 }
 
-describe('GeneratedLessonSchema — soal Richtig/Falsch level B1', () => {
-  it('menerima pelajaran dengan soal Richtig/Falsch', async () => {
+describe('GeneratedLessonSchema — soal Richtig/Falsch level B1', () => {  it('menerima pelajaran dengan soal Richtig/Falsch', async () => {
     const lesson = await decode({ ...baseLesson, comprehensionQuestions: [question] })
 
     expect(lesson.comprehensionQuestions).toHaveLength(1)
@@ -48,5 +47,57 @@ describe('GeneratedLessonSchema — soal Richtig/Falsch level B1', () => {
     const broken = { ...question, isCorrect: 'salah' }
 
     await expect(decode({ ...baseLesson, comprehensionQuestions: [broken] })).rejects.toThrow()
+  })
+})
+
+describe('GeneratedLessonSchema — pola kalimat (S-P-O dll.)', () => {
+  const pattern = {
+    name: 'Aussagesatz',
+    nameId: 'Kalimat Berita',
+    formula: 'Subjekt – Prädikat – Objekt',
+    exampleGerman: 'Der Mann trinkt Kaffee.',
+    exampleIndonesian: 'Pria itu minum kopi.',
+    segments: [
+      { text: 'Der Mann', role: 'subjekt' },
+      { text: 'trinkt', role: 'praedikat' },
+      { text: 'Kaffee', role: 'objekt' },
+    ],
+  }
+
+  it('menerima pelajaran dengan pola kalimat', async () => {
+    const lesson = await decode({ ...baseLesson, grammarPatterns: [pattern] })
+
+    expect(lesson.grammarPatterns).toHaveLength(1)
+    expect(lesson.grammarPatterns?.[0].segments[1].role).toBe('praedikat')
+  })
+
+  it('menerima pelajaran lama yang belum punya pola kalimat', async () => {
+    const lesson = await decode(baseLesson)
+
+    expect(lesson.grammarPatterns).toBeUndefined()
+  })
+
+  it('menolak role di luar daftar yang dikenal', async () => {
+    const broken = {
+      ...pattern,
+      segments: [{ text: 'Der Mann', role: 'verb' }],
+    }
+
+    await expect(decode({ ...baseLesson, grammarPatterns: [broken] })).rejects.toThrow()
+  })
+
+  it('menolak pola tanpa contoh terjemahan', async () => {
+    const { exampleIndonesian, ...broken } = pattern
+
+    await expect(decode({ ...baseLesson, grammarPatterns: [broken] })).rejects.toThrow()
+  })
+
+  it('tetap menerima pola walau gabungan segments tidak sama persis dengan contoh', async () => {
+    // Pemisahan segmen hanya untuk pewarnaan; tidak boleh menggagalkan generate.
+    const lenient = { ...pattern, exampleGerman: 'Der Mann trinkt Kaffee.' }
+
+    const lesson = await decode({ ...baseLesson, grammarPatterns: [lenient] })
+
+    expect(lesson.grammarPatterns).toHaveLength(1)
   })
 })

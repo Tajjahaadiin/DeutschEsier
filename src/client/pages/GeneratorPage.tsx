@@ -6,6 +6,7 @@ import { speakGerman, stopSpeech } from '../lib/audio'
 import { nanoid } from 'nanoid'
 import { getAuthHeaders } from '../lib/auth'
 import { parseComprehensionQuestions, type ComprehensionQuestion } from '../lib/comprehension'
+import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPatterns'
 
 interface DialogTurn {
   speaker: string
@@ -26,6 +27,7 @@ interface GeneratedLesson {
   dialogue: DialogTurn[]
   vocabClues: VocabClue[]
   comprehensionQuestions?: ComprehensionQuestion[]
+  grammarPatterns?: GrammarPattern[]
 }
 
 export default function GeneratorPage({ editId, navigate }: { editId?: string; navigate: (path: string) => void }) {
@@ -88,6 +90,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           dialogue: parsedDialogue,
           vocabClues: parsedVocab,
           comprehensionQuestions: parseComprehensionQuestions(data.comprehensionQuestionsJson),
+          grammarPatterns: parseGrammarPatterns(data.grammarPatternsJson),
         })
 
         const turnA = parsedDialogue.find(t => t.speaker === 'Sprecher A')
@@ -155,6 +158,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         comprehensionQuestions: lesson.comprehensionQuestions?.length
           ? lesson.comprehensionQuestions
           : null,
+        // Kirim ulang pola kalimat agar mode edit tidak menghapusnya.
+        grammarPatterns: lesson.grammarPatterns?.length ? lesson.grammarPatterns : null,
       }
 
       const url = editId ? `/api/sessions/${id}` : '/api/sessions'

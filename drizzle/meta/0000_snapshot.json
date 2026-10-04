@@ -1,5 +1,5 @@
 {
-  "id": "061f3d13-ae57-4f2e-aeaf-970ff2fd1050",
+  "id": "c1035137-fb4b-49cb-af35-fb101420ba88",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -61,6 +61,12 @@
         },
         "comprehension_questions_json": {
           "name": "comprehension_questions_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grammar_patterns_json": {
+          "name": "grammar_patterns_json",
           "type": "text",
           "primaryKey": false,
           "notNull": false

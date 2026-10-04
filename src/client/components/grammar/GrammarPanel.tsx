@@ -6,22 +6,26 @@ import {
   Volume2,
   RotateCcw,
   Award,
-  Lightbulb,
   GraduationCap,
   Send,
 } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
 import {
-  buildTopics,
   buildQuestions,
   isAnswerCorrect,
-  type GrammarTopic,
   type GrammarQuestion,
 } from '../../lib/grammar'
+import {
+  segmentsCoverExample,
+  type GrammarPattern,
+  type GrammarSegmentRole,
+} from '../../lib/grammarPatterns'
 
 export interface GrammarPanelProps {
   vocabClues: { germanWord: string; indonesianMeaning: string; grammarTip: string }[]
   dialogue?: { germanText: string }[]
+  /** Pola kalimat hasil AI untuk tab Materi; kosong = tampilkan empty state. */
+  grammarPatterns?: GrammarPattern[]
   sessionTitle?: string
   sessionId?: string
   accessKey?: string
@@ -30,23 +34,32 @@ export interface GrammarPanelProps {
 
 type Tab = 'materi' | 'latihan'
 
+/** Warna per peran gramatikal pada contoh kalimat. */
+const ROLE_STYLE: Record<GrammarSegmentRole, { label: string; className: string }> = {
+  subjekt: { label: 'Subjekt', className: 'bg-sky-100 text-sky-800 border-sky-200' },
+  praedikat: { label: 'Prädikat', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  objekt: { label: 'Objekt', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  other: { label: 'Lainnya', className: 'bg-slate-100 text-slate-700 border-slate-200' },
+}
+
 /**
- * Tab pembelajaran grammatik: materi terkelompok + latihan Richtig/Falsch.
+ * Tab pembelajaran grammatik: materi pola kalimat + latihan Richtig/Falsch.
  *
- * Semua soal diturunkan dari vocabClues skenario, jadi tidak ada panggilan AI
- * tambahan. Hasil latihan dikirim sebagai submission berjenis 'grammar' agar
- * terpisah dari nilai kuis di analitik guru.
+ * Materi (pola kalimat S-P-O dll.) dihasilkan AI saat generate skenario. Soal
+ * latihan tetap diturunkan dari vocabClues, jadi tidak ada panggilan AI saat
+ * siswa belajar. Hasil latihan dikirim sebagai submission berjenis 'grammar'
+ * agar terpisah dari nilai kuis di analitik guru.
  */
 export default function GrammarPanel({
   vocabClues,
   dialogue = [],
+  grammarPatterns = [],
   sessionTitle,
   sessionId,
   accessKey = '',
   isTeacher = false,
 }: GrammarPanelProps) {
   const [tab, setTab] = useState<Tab>('materi')
-  const [openTopic, setOpenTopic] = useState<string | null>(null)
 
   // Jawaban siswa per id soal: 'richtig' | 'falsch'
   const [answers, setAnswers] = useState<Record<string, 'richtig' | 'falsch'>>({})
@@ -57,10 +70,6 @@ export default function GrammarPanel({
   const [saveError, setSaveError] = useState('')
   const [saved, setSaved] = useState(false)
 
-  const topics: GrammarTopic[] = useMemo(
-    () => buildTopics(vocabClues, dialogue),
-    [vocabClues, dialogue]
-  )
   const questions: GrammarQuestion[] = useMemo(
     () => buildQuestions(vocabClues, dialogue),
     [vocabClues, dialogue]
@@ -130,13 +139,13 @@ export default function GrammarPanel({
     }
   }
 
-  if (topics.length === 0) {
+  if (grammarPatterns.length === 0 && questions.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-10 text-center">
         <GraduationCap size={40} className="mx-auto text-slate-300 mb-3" />
-        <p className="text-slate-600 font-medium">Skenario ini belum memiliki catatan grammatik.</p>
+        <p className="text-slate-600 font-medium">Skenario ini belum memiliki materi grammatik.</p>
         <p className="text-sm text-slate-400 mt-1">
-          Grammatik diambil dari catatan tata bahasa pada kosakata skenario.
+          Buat ulang skenario untuk menghasilkan pola kalimat dan soal latihan.
         </p>
       </div>
     )
@@ -151,13 +160,13 @@ export default function GrammarPanel({
             📚 Grammatik
           </span>
           <span className="text-xs text-indigo-200 font-medium">
-            {topics.length} topik · {vocabClues.length} kosakata
+            {grammarPatterns.length} pola · {questions.length} soal latihan
           </span>
         </div>
         <h2 className="text-xl sm:text-2xl font-extrabold mb-1">Belajar Tata Bahasa Skenario</h2>
         <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed opacity-90">
-          Pelajari catatan tata bahasa dari kosakata skenario ini, lalu uji pemahamanmu dengan
-          latihan <strong>Richtig oder Falsch</strong> (benar atau salah).
+          Pelajari pola kalimat dari skenario ini, lalu uji pemahamanmu dengan latihan{' '}
+          <strong>Richtig oder Falsch</strong> (benar atau salah).
         </p>
         {sessionTitle && (
           <p className="text-[11px] text-indigo-200/80 mt-2">Skenario: {sessionTitle}</p>
@@ -186,91 +195,99 @@ export default function GrammarPanel({
         </button>
       </div>
 
-      {/* ============ MATERI ============ */}
+      {/* ============ MATERI: POLA KALIMAT ============ */}
       {tab === 'materi' && (
-        <div className="space-y-3">
-          {topics.map((topic) => {
-            const isOpen = openTopic === topic.category
+        <div className="space-y-4">
+          {grammarPatterns.length === 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
+              <GraduationCap size={32} className="mx-auto text-slate-300 mb-2" />
+              <p className="text-sm text-slate-600 font-medium">
+                Skenario ini belum memiliki pola kalimat.
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Buat ulang skenario untuk menghasilkan pola kalimat.
+              </p>
+            </div>
+          )}
+
+          {grammarPatterns.map((pattern, idx) => {
+            const covered = segmentsCoverExample(pattern)
             return (
-              <div key={topic.category} className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenTopic(isOpen ? null : topic.category)}
-                  className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-800 text-sm sm:text-base">{topic.label}</h3>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100">
-                        {topic.items.length}
-                      </span>
+              <div
+                key={`${pattern.name}-${idx}`}
+                className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden"
+              >
+                {/* Judul pola + rumus */}
+                <div className="p-4 border-b border-slate-100 bg-slate-50/60">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-bold text-slate-800 text-sm sm:text-base">
+                      {pattern.name}
+                    </h3>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100">
+                      {pattern.nameId}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1.5 font-mono">{pattern.formula}</p>
+                </div>
+
+                <div className="p-4 space-y-3">
+                  {/* Contoh kalimat dengan pewarnaan peran */}
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Contoh
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handlePlay(pattern.exampleGerman)}
+                        className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-semibold transition-colors cursor-pointer"
+                        title="Dengarkan contoh kalimat"
+                      >
+                        <Volume2
+                          size={12}
+                          className={playingWord === pattern.exampleGerman ? 'animate-pulse' : ''}
+                        />
+                        <span>Kalimat</span>
+                      </button>
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">{topic.description}</p>
+
+                    {covered ? (
+                      <p className="text-sm leading-loose">
+                        {pattern.segments.map((seg, i) => (
+                          <span
+                            key={i}
+                            className={`px-1 py-0.5 rounded-md border ${ROLE_STYLE[seg.role].className}`}
+                            title={ROLE_STYLE[seg.role].label}
+                          >
+                            {seg.text}
+                          </span>
+                        ))}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        „{pattern.exampleGerman}“
+                      </p>
+                    )}
                   </div>
-                  <span className={`text-slate-400 text-xs font-bold shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
 
-                {isOpen && (
-                  <div className="border-t border-slate-100 divide-y divide-slate-100">
-                    {topic.items.map((item) => (
-                      <div key={item.germanWord} className="p-4 bg-slate-50/50">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {item.article && (
-                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 font-bold">
-                                  {item.article}
-                                </span>
-                              )}
-                              <span className="font-bold text-slate-800 text-sm">{item.noun || item.germanWord}</span>
-                              <button
-                                type="button"
-                                onClick={() => handlePlay(item.germanWord)}
-                                className="p-1 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
-                                title="Dengarkan pengucapan"
-                              >
-                                <Volume2 size={14} className={playingWord === item.germanWord ? 'animate-pulse text-indigo-600' : ''} />
-                              </button>
-                            </div>
-                            <p className="text-xs text-slate-600 mt-1">{item.indonesianMeaning}</p>
-                          </div>
-                        </div>
+                  <p className="text-xs text-slate-600 italic">{pattern.exampleIndonesian}</p>
 
-                        {/* Contoh pemakaian dari dialog + audio kalimat utuh */}
-                        {item.exampleSentence && (
-                          <div className="mt-2.5 bg-white border border-slate-200 rounded-xl p-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                                  Contoh dalam Skenario
-                                </p>
-                                <p className="text-xs text-slate-700 italic leading-relaxed">
-                                  „{item.exampleSentence}“
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handlePlay(item.exampleSentence!)}
-                                className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-semibold transition-colors cursor-pointer"
-                                title="Dengarkan kalimat contoh"
-                              >
-                                <Volume2 size={12} className={playingWord === item.exampleSentence ? 'animate-pulse' : ''} />
-                                <span>Kalimat</span>
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="mt-2.5 flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3">
-                          <Lightbulb size={14} className="text-amber-600 shrink-0 mt-0.5" />
-                          <p className="text-xs text-amber-900 leading-relaxed">{item.grammarTip}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  {/* Legenda warna */}
+                  {covered && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {(['subjekt', 'praedikat', 'objekt', 'other'] as const)
+                        .filter((role) => pattern.segments.some((s) => s.role === role))
+                        .map((role) => (
+                          <span
+                            key={role}
+                            className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${ROLE_STYLE[role].className}`}
+                          >
+                            {ROLE_STYLE[role].label}
+                          </span>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}

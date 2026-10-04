@@ -25,6 +25,31 @@ export const ComprehensionQuestionSchema = Schema.Struct({
   explanation: Schema.String,
 })
 
+/**
+ * Peran gramatikal satu potongan kalimat, dipakai UI untuk memberi warna.
+ * 'other' menampung bagian lain seperti kata tanya, kata bantu, atau negasi.
+ */
+export const GrammarSegmentSchema = Schema.Struct({
+  text: Schema.String,
+  role: Schema.Literal('subjekt', 'praedikat', 'objekt', 'other'),
+})
+
+/**
+ * Satu pola kalimat untuk tab Materi grammatik.
+ *
+ * `segments` memecah contoh kalimat per peran agar bisa diwarnai. Gabungan
+ * segments sengaja TIDAK diwajibkan sama persis dengan exampleGerman: itu hanya
+ * urusan tampilan, dan menolaknya akan menggagalkan generate tanpa alasan kuat.
+ */
+export const GrammarPatternSchema = Schema.Struct({
+  name: Schema.String,
+  nameId: Schema.String,
+  formula: Schema.String,
+  exampleGerman: Schema.String,
+  exampleIndonesian: Schema.String,
+  segments: Schema.Array(GrammarSegmentSchema),
+})
+
 export const GeneratedLessonSchema = Schema.Struct({
   title: Schema.String,
   sceneDescription: Schema.String,
@@ -35,4 +60,9 @@ export const GeneratedLessonSchema = Schema.Struct({
    * lama tidak punya field ini, sehingga dekode tetap berhasil.
    */
   comprehensionQuestions: Schema.optional(Schema.Array(ComprehensionQuestionSchema)),
+  /**
+   * Opsional: pola kalimat (S-P-O dll.) untuk tab Materi grammatik.
+   * Sengaja opsional agar data lama tetap bisa dibaca.
+   */
+  grammarPatterns: Schema.optional(Schema.Array(GrammarPatternSchema)),
 })

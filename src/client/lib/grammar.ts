@@ -29,15 +29,6 @@ export interface GrammarVocabItem {
   exampleSentence?: string
 }
 
-export interface GrammarTopic {
-  category: GrammarCategory
-  /** Label kategori dalam bahasa Indonesia. */
-  label: string
-  /** Penjelasan singkat kategori. */
-  description: string
-  items: GrammarVocabItem[]
-}
-
 export type GrammarQuestionKind = 'sentence' | 'concept'
 
 export interface GrammarQuestion {
@@ -57,33 +48,6 @@ export interface GrammarQuestion {
    * terjemahan Indonesia yang akan salah diucapkan mesin TTS Jerman.
    */
   audioText: string
-}
-
-const CATEGORY_META: Record<GrammarCategory, { label: string; description: string }> = {
-  Verb: {
-    label: 'Kata Kerja (Verb)',
-    description: 'Konjugasi, kata kerja terpisah, dan penggunaan dalam kalimat.',
-  },
-  Nomen: {
-    label: 'Kata Benda (Nomen)',
-    description: 'Artikel (der/die/das) dan bentuk jamak.',
-  },
-  Adjektiv: {
-    label: 'Kata Sifat (Adjektiv)',
-    description: 'Penggunaan sifat dan kata depan yang menyertainya.',
-  },
-  Konjunktion: {
-    label: 'Kata Sambung (Konjunktion)',
-    description: 'Penghubung klausa dan pengaruhnya pada susunan kalimat.',
-  },
-  Präposition: {
-    label: 'Kata Depan (Präposition)',
-    description: 'Kata depan dan kasus yang diwajibkannya.',
-  },
-  Sonstiges: {
-    label: 'Ungkapan & Lainnya',
-    description: 'Frasa dan catatan bahasa lain dari skenario ini.',
-  },
 }
 
 const ARTICLES = ['der', 'die', 'das'] as const
@@ -198,32 +162,6 @@ export function findExampleSentence(germanWord: string, sentences: string[]): st
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-/** Kelompokkan vocab menjadi topik-topik grammar, hanya kategori yang terisi. */
-export function buildTopics(
-  vocabClues: { germanWord: string; indonesianMeaning: string; grammarTip: string }[],
-  dialogue: { germanText: string }[] = []
-): GrammarTopic[] {
-  const sentences = (dialogue || []).map((d) => d.germanText || '')
-  const items = (vocabClues || []).map((v) => toVocabItem(v, sentences))
-  const order: GrammarCategory[] = [
-    'Verb',
-    'Nomen',
-    'Adjektiv',
-    'Konjunktion',
-    'Präposition',
-    'Sonstiges',
-  ]
-
-  return order
-    .map((category) => ({
-      category,
-      label: CATEGORY_META[category].label,
-      description: CATEGORY_META[category].description,
-      items: items.filter((i) => i.category === category),
-    }))
-    .filter((topic) => topic.items.length > 0)
 }
 
 /**

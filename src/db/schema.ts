@@ -39,6 +39,11 @@ export const learningSession = pgTable('learning_session', {
    * NULL untuk skenario A1/A2 dan data lama sebelum fitur ini.
    */
   comprehensionQuestionsJson: text('comprehension_questions_json'),
+  /**
+   * Pola kalimat (S-P-O, W-Frage, Ja/Nein-Frage) hasil AI untuk tab Materi
+   * grammatik, sebagai JSON array. NULL untuk data lama sebelum fitur ini.
+   */
+  grammarPatternsJson: text('grammar_patterns_json'),
   imageUrl: text('image_url'),
   published: boolean('published').notNull().default(true),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),

@@ -184,3 +184,72 @@ describe('POST /api/generate — soal Richtig/Falsch level B1', () => {
     expect(body.lesson.comprehensionQuestions).toHaveLength(1)
   })
 })
+
+describe('POST /api/generate — pola kalimat untuk tab Materi', () => {
+  it('meminta tiga pola kalimat dasar beserta pemecahan peran', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+
+    const prompt = lastPromptSentToGemini()
+    expect(prompt).toContain('Aussagesatz')
+    expect(prompt).toContain('W-Frage')
+    expect(prompt).toContain('Ja/Nein-Frage')
+    expect(prompt).toContain('subjekt')
+    expect(prompt).toContain('praedikat')
+    expect(prompt).toContain('objekt')
+  })
+
+  it('menginstruksikan memakai kalimat dari dialog bila ada', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+
+    expect(lastPromptSentToGemini()).toContain('dialog')
+  })
+
+  it('mewajibkan grammarPatterns di responseSchema dengan role terbatas', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+
+    const schema = lastResponseSchema()
+    const gp = schema.properties.grammarPatterns
+    expect(gp.type).toBe('ARRAY')
+    expect(schema.required).toContain('grammarPatterns')
+
+    const item = gp.items
+    expect(item.required).toEqual([
+      'name',
+      'nameId',
+      'formula',
+      'exampleGerman',
+      'exampleIndonesian',
+      'segments',
+    ])
+
+    const segment = item.properties.segments.items
+    expect(segment.properties.role.enum).toEqual([
+      'subjekt',
+      'praedikat',
+      'objekt',
+      'other',
+    ])
+  })
+
+  it('menolak pola dengan role yang tidak dikenal', async () => {
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        ...JSON.parse(VALID_LESSON),
+        grammarPatterns: [
+          {
+            name: 'Aussagesatz',
+            nameId: 'Kalimat Berita',
+            formula: 'S-P-O',
+            exampleGerman: 'Der Mann trinkt Kaffee.',
+            exampleIndonesian: 'Pria itu minum kopi.',
+            segments: [{ text: 'Der Mann', role: 'verb' }],
+          },
+        ],
+      }),
+    })
+
+    const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+
+    expect(res.status).toBe(500)
+  })
+})

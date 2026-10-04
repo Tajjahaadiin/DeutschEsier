@@ -12,6 +12,7 @@ import {
   parseComprehensionQuestions,
   type ComprehensionQuestion,
 } from '../lib/comprehension'
+import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPatterns'
 import {
   Volume2,
   Share2,
@@ -50,6 +51,7 @@ interface Session {
   dialogueJson: string
   vocabCluesJson: string
   comprehensionQuestionsJson?: string | null
+  grammarPatternsJson?: string | null
 }
 
 export default function ViewPage({ id, navigate }: { id: string; navigate: (path: string) => void }) {
@@ -60,6 +62,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
       dialogue: DialogTurn[]
       vocabClues: VocabClue[]
       comprehensionQuestions: ComprehensionQuestion[]
+      grammarPatterns: GrammarPattern[]
     }) | null
   >(null)
   const [loading, setLoading] = useState(true)
@@ -126,6 +129,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
           dialogue: JSON.parse(data.dialogueJson) as DialogTurn[],
           vocabClues: JSON.parse(data.vocabCluesJson) as VocabClue[],
           comprehensionQuestions: parseComprehensionQuestions(data.comprehensionQuestionsJson),
+          grammarPatterns: parseGrammarPatterns(data.grammarPatternsJson),
         })
       })
       .catch((err) => setError(err.message))
@@ -846,6 +850,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
               <GrammarPanel
                 vocabClues={session.vocabClues}
                 dialogue={session.dialogue}
+                grammarPatterns={session.grammarPatterns}
                 sessionTitle={session.title}
                 sessionId={id}
                 accessKey={validKey}

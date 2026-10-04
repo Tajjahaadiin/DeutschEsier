@@ -28,6 +28,16 @@ function comprehensionQuestionsColumn(
   return { comprehensionQuestionsJson: JSON.stringify(raw) }
 }
 
+/**
+ * Kolom pola kalimat (tab Materi grammatik) untuk operasi tulis.
+ * Aturan sama dengan comprehensionQuestionsColumn: undefined = jangan sentuh.
+ */
+function grammarPatternsColumn(raw: unknown): { grammarPatternsJson?: string | null } {
+  if (raw === undefined) return {}
+  if (raw === null) return { grammarPatternsJson: null }
+  return { grammarPatternsJson: JSON.stringify(raw) }
+}
+
 sessionsRouter.get('/', async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt))
@@ -56,6 +66,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
 
     const dialogueCount = normalizeDialogueCount(body.dialogueCount)
     const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions)
+    const grammarPatternsCol = grammarPatternsColumn(body.grammarPatterns)
     
     // Check if exists
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1)
@@ -70,6 +81,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
         dialogueCount,
         ...comprehensionCol,
+        ...grammarPatternsCol,
         updatedAt: new Date().toISOString(),
       }).where(eq(learningSession.id, body.id))
     } else {
@@ -83,6 +95,7 @@ sessionsRouter.post('/', requireTeacherAuth, async (c) => {
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
         dialogueCount,
         ...comprehensionCol,
+        ...grammarPatternsCol,
       })
     }
     
@@ -106,6 +119,7 @@ sessionsRouter.put('/:id', requireTeacherAuth, async (c) => {
       vocabCluesJson: JSON.stringify(body.vocabCluesJson),
       dialogueCount: normalizeDialogueCount(body.dialogueCount),
       ...comprehensionQuestionsColumn(body.comprehensionQuestions),
+      ...grammarPatternsColumn(body.grammarPatterns),
       updatedAt: new Date().toISOString(),
     }).where(eq(learningSession.id, id))
     return c.json({ success: true, id })
