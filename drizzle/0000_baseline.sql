@@ -10,6 +10,7 @@ CREATE TABLE "learning_session" (
 	"comprehension_questions_json" text,
 	"grammar_patterns_json" text,
 	"grammar_topics_json" text,
+	"grammar_questions_json" text,
 	"image_url" text,
 	"published" boolean DEFAULT true NOT NULL,
 	"created_at" text NOT NULL,

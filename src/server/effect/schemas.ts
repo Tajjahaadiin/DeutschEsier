@@ -101,6 +101,55 @@ const GrammarTopicsSchema = Schema.transform(
   }
 )
 
+/**
+ * Satu soal latihan tata bahasa: kalimat Jerman yang harus dinilai benar/salah
+ * secara tata bahasa, penjelasan aturan (Indonesia), dan bentuk yang benar.
+ */
+export const GrammarQuestionItemSchema = Schema.Struct({
+  sentence: Schema.String,
+  isCorrect: Schema.Boolean,
+  explanationId: Schema.String,
+  correctedSentence: Schema.String,
+  topicId: Schema.String,
+  segments: Schema.Array(GrammarSegmentSchema),
+})
+
+/**
+ * Buang soal yang bentuknya tidak lengkap ATAU topiknya tidak dikenal, satu per
+ * satu, supaya satu entri cacat tidak menggagalkan seluruh hasil generate.
+ * `correctedSentence` yang kosong pada soal benar diisi kalimatnya sendiri,
+ * sehingga UI selalu punya bentuk benar untuk ditampilkan.
+ */
+const GrammarQuestionsSchema = Schema.transform(
+  Schema.Array(Schema.Unknown),
+  Schema.Array(GrammarQuestionItemSchema),
+  {
+    strict: false,
+    decode: (entries) =>
+      entries.flatMap((entry) => {
+        try {
+          const decoded = Schema.decodeUnknownSync(GrammarQuestionItemSchema)(entry)
+          if (!isGrammarTopicId(decoded.topicId)) return []
+          if (decoded.sentence.trim() === '' || decoded.explanationId.trim() === '') return []
+          return [
+            {
+              ...decoded,
+              correctedSentence:
+                decoded.correctedSentence.trim() !== ''
+                  ? decoded.correctedSentence
+                  : decoded.isCorrect
+                  ? decoded.sentence
+                  : '',
+            },
+          ]
+        } catch {
+          return []
+        }
+      }),
+    encode: (entries) => entries.filter((e) => isGrammarTopicId(e.topicId)),
+  }
+)
+
 export const GeneratedLessonSchema = Schema.Struct({
   title: Schema.String,
   sceneDescription: Schema.String,
@@ -121,4 +170,9 @@ export const GeneratedLessonSchema = Schema.Struct({
    * Hanya ada bila guru memilih topik; data lama tidak punya field ini.
    */
   grammarTopics: Schema.optional(GrammarTopicsSchema),
+  /**
+   * Opsional: soal latihan tata bahasa, hanya ada bila guru memilih topik B1.
+   * Data lama dan level A1/A2 tidak punya field ini.
+   */
+  grammarQuestions: Schema.optional(GrammarQuestionsSchema),
 })

@@ -50,6 +50,56 @@ describe('GeneratedLessonSchema — soal Richtig/Falsch level B1', () => {  it('
   })
 })
 
+describe('GeneratedLessonSchema — soal latihan tata bahasa (Latihan)', () => {
+  const question = {
+    sentence: 'Ich bin gestern die Küche geputzt.',
+    isCorrect: false,
+    explanationId: 'Putzen memakai haben, bukan sein.',
+    correctedSentence: 'Ich habe gestern die Küche geputzt.',
+    topicId: 'tempus-perfekt',
+    segments: [
+      { text: 'Ich ', role: 'subjekt' },
+      { text: 'bin ', role: 'praedikat' },
+      { text: 'gestern die Küche geputzt.', role: 'objekt' },
+    ],
+  }
+
+  it('menerima pelajaran dengan soal latihan tata bahasa', async () => {
+    const lesson = await decode({ ...baseLesson, grammarQuestions: [question] })
+
+    expect(lesson.grammarQuestions).toHaveLength(1)
+    expect(lesson.grammarQuestions?.[0].isCorrect).toBe(false)
+    expect(lesson.grammarQuestions?.[0].topicId).toBe('tempus-perfekt')
+  })
+
+  it('menerima pelajaran tanpa soal latihan (data lama & level lain)', async () => {
+    const lesson = await decode(baseLesson)
+
+    expect(lesson.grammarQuestions).toBeUndefined()
+  })
+
+  it('membuang hanya entri yang rusak, sisanya tetap', async () => {
+    const broken = { sentence: 'X' }
+    const lesson = await decode({ ...baseLesson, grammarQuestions: [question, broken] })
+
+    expect(lesson.grammarQuestions).toHaveLength(1)
+  })
+
+  it('membuang soal dengan topicId yang tidak dikenal', async () => {
+    const unknown = { ...question, topicId: 'topik-karangan' }
+    const lesson = await decode({ ...baseLesson, grammarQuestions: [unknown] })
+
+    expect(lesson.grammarQuestions).toEqual([])
+  })
+
+  it('menormalkan correctedSentence kosong pada soal yang benar', async () => {
+    const correct = { ...question, isCorrect: true, correctedSentence: '' }
+    const lesson = await decode({ ...baseLesson, grammarQuestions: [correct] })
+
+    expect(lesson.grammarQuestions?.[0].correctedSentence).toBe(question.sentence)
+  })
+})
+
 describe('GeneratedLessonSchema — pola kalimat (S-P-O dll.)', () => {
   const pattern = {
     name: 'Aussagesatz',

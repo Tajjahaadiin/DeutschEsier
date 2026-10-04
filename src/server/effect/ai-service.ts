@@ -175,6 +175,46 @@ export function generateLesson(
                     },
                   }
                 : {}),
+              // Soal latihan tata bahasa, hanya bila guru memilih topik B1.
+              ...(wantsGrammarTopics
+                ? {
+                    grammarQuestions: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          sentence: { type: Type.STRING },
+                          isCorrect: { type: Type.BOOLEAN },
+                          explanationId: { type: Type.STRING },
+                          correctedSentence: { type: Type.STRING },
+                          topicId: { type: Type.STRING },
+                          segments: {
+                            type: Type.ARRAY,
+                            items: {
+                              type: Type.OBJECT,
+                              properties: {
+                                text: { type: Type.STRING },
+                                role: {
+                                  type: Type.STRING,
+                                  enum: ['subjekt', 'praedikat', 'objekt', 'other'],
+                                },
+                              },
+                              required: ['text', 'role'],
+                            },
+                          },
+                        },
+                        required: [
+                          'sentence',
+                          'isCorrect',
+                          'explanationId',
+                          'correctedSentence',
+                          'topicId',
+                          'segments',
+                        ],
+                      },
+                    },
+                  }
+                : {}),
             },
             required: [
               'title',
@@ -184,6 +224,7 @@ export function generateLesson(
               'grammarPatterns',
               ...(wantsComprehension ? ['comprehensionQuestions'] : []),
               ...(wantsGrammarTopics ? ['grammarTopics'] : []),
+              ...(wantsGrammarTopics ? ['grammarQuestions'] : []),
             ],
           },
           temperature: 0.4,
@@ -237,6 +278,22 @@ export function buildGrammarTopicsBlock(topicIds: string[]): string {
   return `\n\nMateri tata bahasa untuk topik berikut (level B1):\n${list}\n\nUntuk SETIAP topik di atas, isi satu entri pada "grammarTopics":\n1. topicId: salin persis dari daftar di atas\n2. name: nama Jerman topik tersebut\n3. nameId: label Indonesia\n4. explanationId: penjelasan konsep 2-4 kalimat dalam bahasa Indonesia, sesuai keterangan di daftar\n5. formula: rumus/pola singkat memakai istilah Jerman\n6. examples: tepat 2 contoh { german, indonesian, note } — kalimat Jerman yang benar, terjemahan Indonesia, dan catatan singkat\n7. Usahakan minimal satu baris dialog di atas memakai tiap topik bila wajar untuk skenarionya`
 }
 
+/**
+ * Susun instruksi prompt untuk soal latihan tata bahasa (level B1).
+ *
+ * Inti fiturnya: soal bertanya "apakah kalimat ini gramatikal?" dan setiap
+ * kalimat yang salah WAJIB disertai bentuk yang benar, karena tidak ada mesin
+ * tata bahasa di proyek ini yang bisa memverifikasi keluaran AI.
+ */
+export function buildGrammarQuestionsBlock(topicIds: string[]): string {
+  const topics = topicsForPrompt(topicIds)
+  if (topics.length === 0) return ''
+
+  const list = topics.map((t) => `- topicId "${t.id}": ${t.german} (${t.nameId})`).join('\n')
+
+  return `\n\nSoal latihan tata bahasa (level B1) — isi "grammarQuestions":\nSetiap soal menanyakan: "Apakah kalimat ini gramatikal?" (benar atau salah secara tata bahasa).\nTopik yang diuji:\n${list}\n\nAturan:\n1. Buat tepat 10 soal. Sekitar separuh kalimatnya SALAH secara tata bahasa, dan benar/salah dibuat berselang-seling\n2. Setiap soal berisi satu kalimat Jerman pada field "sentence"\n3. Kalimat yang salah harus punya TEPAT SATU kesalahan tata bahasa yang berkaitan dengan topiknya (mis. auxiliary salah: "Ich bin gestern die Küche geputzt." seharusnya "Ich habe gestern die Küche geputzt.")\n4. isCorrect diisi true bila kalimat itu benar secara tata bahasa, false bila salah\n5. correctedSentence WAJIB diisi: bentuk kalimat yang benar. Bila isCorrect true, salin "sentence" persis ke correctedSentence\n6. explanationId diisi penjelasan aturannya dalam bahasa Indonesia, 1-2 kalimat, menyebut aturan yang dilanggar\n7. topicId disalin persis dari daftar di atas\n8. segments memecah "sentence" menjadi potongan berurutan; tiap potongan punya "text" dan "role" (salah satu dari "subjekt", "praedikat", "objekt", "other"); gabungan semua "text" harus sama dengan "sentence"`
+}
+
 export function buildPrompt(
   prompt: string,
   level: string,
@@ -247,6 +304,8 @@ export function buildPrompt(
   const cognateList = cognates.length > 0 ? `\nKata kognate yang WAJIB digunakan: ${cognates.join(', ')}` : ''
   const grammarTopicsBlock =
     level === 'B1' ? buildGrammarTopicsBlock(grammarTopicIds) : ''
+  const grammarQuestionsBlock =
+    level === 'B1' ? buildGrammarQuestionsBlock(grammarTopicIds) : ''
 
   // Level B1: kuis pemahaman digantikan soal Richtig/Falsch (Benar/Salah).
   const comprehensionBlock =
@@ -254,5 +313,5 @@ export function buildPrompt(
       ? `\n\nTambahan untuk level B1 — soal Richtig/Falsch (Benar/Salah):\n9. Buat tepat 10 soal Richtig oder Falsch berdasarkan dialog di atas\n10. Sebagian soal harus SALAH: ubah satu fakta penting dari dialog (subjek, objek, tempat, waktu, atau angka) sehingga pernyataannya tidak sesuai dialog\n11. Sebagian soal lainnya harus BENAR: pernyataannya sesuai dialog\n12. statement diisi pernyataan bahasa Jerman yang harus dinilai Benar atau Salah\n13. indonesianText adalah terjemahan Indonesia dari statement\n14. isCorrect diisi true bila pernyataan sesuai dialog, false bila tidak\n15. explanation menjelaskan singkat mengapa jawabannya demikian berdasarkan dialog`
       : ''
 
-  return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.\n\nSkenario: ${prompt}${cognateList}\n\nPanduan:\n1. Dialog harus natural dan relevan dengan skenario\n2. Speaker adalah "Sprecher A" und "Sprecher B"\n3. Teks Jerman harus sesuai level ${level} CEFR\n4. Terjemahan Indonesia harus natural\n5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu\n6. sceneDescription menggambarkan latar tempat dan konteks dialog\n7. Sertakan tepat ${dialogueCount} baris dialog\n8. vocabClues minimal 4-6 kata${comprehensionBlock}\n\nPola kalimat untuk tab Materi grammatik — sertakan tepat 3 pola berikut:\n- name "Aussagesatz", nameId "Kalimat Berita": pola Subjekt – Prädikat – Objekt dengan kata kerja di posisi kedua\n- name "W-Frage", nameId "Kalimat Tanya W": kata tanya (wer, was, wo, wann) di awal, kata kerja di posisi kedua\n- name "Ja/Nein-Frage", nameId "Kalimat Tanya Ya/Tidak": kata kerja di posisi pertama\n\nAturan pengisian tiap pola:\n1. formula diisi rumus singkat memakai istilah Jerman, mis. "Subjekt – Prädikat – Objekt"\n2. exampleGerman: UTAMAKAN kalimat yang sudah ada di dialog di atas bila cocok dengan polanya. Bila tidak ada yang cocok, buat kalimat baru yang sederhana dan sesuai skenario\n3. exampleIndonesian diisi terjemahan Indonesia dari exampleGerman\n4. segments memecah exampleGerman menjadi potongan berurutan; setiap potongan punya "text" dan "role"\n5. role hanya boleh salah satu dari: "subjekt", "praedikat", "objekt", atau "other" (untuk kata tanya, kata bantu, negasi, dan bagian lain)\n6. Gabungan semua "text" pada segments harus sama dengan exampleGerman${grammarTopicsBlock}`
+  return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.\n\nSkenario: ${prompt}${cognateList}\n\nPanduan:\n1. Dialog harus natural dan relevan dengan skenario\n2. Speaker adalah "Sprecher A" und "Sprecher B"\n3. Teks Jerman harus sesuai level ${level} CEFR\n4. Terjemahan Indonesia harus natural\n5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu\n6. sceneDescription menggambarkan latar tempat dan konteks dialog\n7. Sertakan tepat ${dialogueCount} baris dialog\n8. vocabClues minimal 4-6 kata${comprehensionBlock}\n\nPola kalimat untuk tab Materi grammatik — sertakan tepat 3 pola berikut:\n- name "Aussagesatz", nameId "Kalimat Berita": pola Subjekt – Prädikat – Objekt dengan kata kerja di posisi kedua\n- name "W-Frage", nameId "Kalimat Tanya W": kata tanya (wer, was, wo, wann) di awal, kata kerja di posisi kedua\n- name "Ja/Nein-Frage", nameId "Kalimat Tanya Ya/Tidak": kata kerja di posisi pertama\n\nAturan pengisian tiap pola:\n1. formula diisi rumus singkat memakai istilah Jerman, mis. "Subjekt – Prädikat – Objekt"\n2. exampleGerman: UTAMAKAN kalimat yang sudah ada di dialog di atas bila cocok dengan polanya. Bila tidak ada yang cocok, buat kalimat baru yang sederhana dan sesuai skenario\n3. exampleIndonesian diisi terjemahan Indonesia dari exampleGerman\n4. segments memecah exampleGerman menjadi potongan berurutan; setiap potongan punya "text" dan "role"\n5. role hanya boleh salah satu dari: "subjekt", "praedikat", "objekt", atau "other" (untuk kata tanya, kata bantu, negasi, dan bagian lain)\n6. Gabungan semua "text" pada segments harus sama dengan exampleGerman${grammarTopicsBlock}${grammarQuestionsBlock}`
 }

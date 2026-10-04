@@ -49,6 +49,11 @@ export const learningSession = pgTable('learning_session', {
    * {"selected": string[], "content": [...]}. NULL untuk A1/A2 dan data lama.
    */
   grammarTopicsJson: text('grammar_topics_json'),
+  /**
+   * Soal latihan tata bahasa hasil AI (JSON array) untuk B1. NULL untuk A1/A2
+   * dan data lama; tab Latihan memakai soal lama sebagai cadangan bila kosong.
+   */
+  grammarQuestionsJson: text('grammar_questions_json'),
   imageUrl: text('image_url'),
   published: boolean('published').notNull().default(true),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),

@@ -336,6 +336,112 @@ describe('POST /api/generate — pemilihan topik grammar B1', () => {
   })
 })
 
+describe('POST /api/generate — soal latihan tata bahasa', () => {
+  const topics = ['tempus-perfekt']
+
+  it('meminta soal latihan tata bahasa saat B1 dengan topik', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'B1', grammarTopics: topics })
+
+    const prompt = lastPromptSentToGemini()
+    expect(prompt).toContain('gramatikal')
+    expect(prompt).toContain('correctedSentence')
+    expect(prompt).toContain('10 soal')
+  })
+
+  it('mewajibkan grammarQuestions di responseSchema saat B1 dengan topik', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'B1', grammarTopics: topics })
+
+    const schema = lastResponseSchema()
+    expect(schema.properties.grammarQuestions).toBeDefined()
+    expect(schema.properties.grammarQuestions.type).toBe('ARRAY')
+    expect(schema.required).toContain('grammarQuestions')
+
+    const item = schema.properties.grammarQuestions.items
+    expect(item.required).toEqual([
+      'sentence',
+      'isCorrect',
+      'explanationId',
+      'correctedSentence',
+      'topicId',
+      'segments',
+    ])
+    expect(item.properties.isCorrect.type).toBe('BOOLEAN')
+  })
+
+  it('tidak meminta soal latihan bila tidak ada topik dipilih', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'B1' })
+
+    expect(lastPromptSentToGemini()).not.toContain('gramatikal')
+    const schema = lastResponseSchema()
+    expect(schema.properties.grammarQuestions).toBeUndefined()
+    expect(schema.required).not.toContain('grammarQuestions')
+  })
+
+  it('tidak meminta soal latihan pada level A1/A2', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+    expect(lastResponseSchema().properties.grammarQuestions).toBeUndefined()
+    expect(lastResponseSchema().required).not.toContain('grammarQuestions')
+
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A2' })
+    expect(lastResponseSchema().properties.grammarQuestions).toBeUndefined()
+    expect(lastResponseSchema().required).not.toContain('grammarQuestions')
+  })
+
+  it('tetap mewajibkan grammarPatterns di semua level (tidak boleh rusak)', async () => {
+    for (const level of ['A1', 'A2', 'B1']) {
+      await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: level })
+      expect(lastResponseSchema().required).toContain('grammarPatterns')
+    }
+  })
+
+  it('mengembalikan soal latihan ke klien saat B1 dengan topik', async () => {
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        ...JSON.parse(VALID_LESSON),
+        grammarQuestions: [
+          {
+            sentence: 'Ich bin gestern die Küche geputzt.',
+            isCorrect: false,
+            explanationId: 'Putzen memakai haben.',
+            correctedSentence: 'Ich habe gestern die Küche geputzt.',
+            topicId: 'tempus-perfekt',
+            segments: [{ text: 'Ich bin gestern die Küche geputzt.', role: 'other' }],
+          },
+        ],
+      }),
+    })
+
+    const res = await postGenerate({
+      prompt: 'Di kafe Berlin',
+      cefrLevel: 'B1',
+      grammarTopics: topics,
+    })
+    const body = (await res.json()) as any
+
+    expect(res.status).toBe(200)
+    expect(body.lesson.grammarQuestions).toHaveLength(1)
+    expect(body.lesson.grammarQuestions[0].isCorrect).toBe(false)
+  })
+})
+
+describe('buildGrammarQuestionsBlock — isi instruksi', () => {
+  it('mencantumkan topik dan aturan kunci', async () => {
+    const { buildGrammarQuestionsBlock } = await import('../effect/ai-service')
+    const block = buildGrammarQuestionsBlock(['tempus-perfekt'])
+
+    expect(block).toContain('Perfekt')
+    expect(block).toContain('10 soal')
+    expect(block).toContain('correctedSentence')
+    expect(block).toContain('topicId')
+  })
+
+  it('mengembalikan string kosong bila tidak ada topik', async () => {
+    const { buildGrammarQuestionsBlock } = await import('../effect/ai-service')
+
+    expect(buildGrammarQuestionsBlock([])).toBe('')
+  })
+})
+
 describe('POST /api/generate — pola kalimat untuk tab Materi', () => {
   it('meminta tiga pola kalimat dasar beserta pemecahan peran', async () => {
     await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
