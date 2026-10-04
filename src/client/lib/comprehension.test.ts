@@ -43,4 +43,14 @@ describe('isCorrectAnswer', () => {
     expect(isCorrectAnswer(valid, 'falsch')).toBe(true)
     expect(isCorrectAnswer(valid, 'richtig')).toBe(false)
   })
+
+  it('menolak jawaban kosong/tidak valid sebagai salah', () => {
+    // Soal berkunci Falsch tidak boleh dianggap benar hanya karena siswa
+    // belum menjawab (undefined).
+    const q = { ...valid, isCorrect: false }
+
+    expect(isCorrectAnswer(q, undefined as any)).toBe(false)
+    expect(isCorrectAnswer(q, '' as any)).toBe(false)
+    expect(isCorrectAnswer(q, 'x' as any)).toBe(false)
+  })
 })

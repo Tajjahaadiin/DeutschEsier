@@ -12,6 +12,7 @@ vi.mock('@google/genai', () => ({
     OBJECT: 'OBJECT',
     STRING: 'STRING',
     ARRAY: 'ARRAY',
+    BOOLEAN: 'BOOLEAN',
   },
 }))
 
@@ -135,6 +136,22 @@ describe('POST /api/generate — soal Richtig/Falsch level B1', () => {
     expect(schema.properties.comprehensionQuestions).toBeDefined()
     expect(schema.properties.comprehensionQuestions.type).toBe('ARRAY')
     expect(schema.required).toContain('comprehensionQuestions')
+
+    // Bentuk tiap soal harus benar-benar dideklarasikan, bukan hanya tipenya.
+    const item = schema.properties.comprehensionQuestions.items
+    expect(item.required).toEqual([
+      'statement',
+      'indonesianText',
+      'isCorrect',
+      'explanation',
+    ])
+    expect(item.properties.isCorrect.type).toBe('BOOLEAN')
+    expect(item.properties.statement.type).toBe('STRING')
+    expect(item.properties.explanation.type).toBe('STRING')
+
+    // Jumlah soal dibatasi struktural, bukan hanya lewat teks prompt.
+    expect(schema.properties.comprehensionQuestions.minItems).toBe('10')
+    expect(schema.properties.comprehensionQuestions.maxItems).toBe('10')
   })
 
   it('tidak meminta soal Richtig/Falsch pada level A1', async () => {

@@ -150,9 +150,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         dialogueCount,
         dialogueJson: editedDialogue,
         vocabCluesJson: editedVocab,
-        // Selalu kirim field ini (termasuk null) agar mode edit tidak
-        // menghapus soal Richtig/Falsch yang sudah ada.
-        comprehensionQuestions: lesson.comprehensionQuestions ?? null,
+        // Kirim array soal bila ada; selain itu null, supaya skenario A1/A2
+        // menyimpan NULL (bukan string "[]") dan soal B1 tetap dipertahankan.
+        comprehensionQuestions: lesson.comprehensionQuestions?.length
+          ? lesson.comprehensionQuestions
+          : null,
       }
 
       const url = editId ? `/api/sessions/${id}` : '/api/sessions'

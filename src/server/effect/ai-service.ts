@@ -75,6 +75,11 @@ export function generateLesson(
                 ? {
                     comprehensionQuestions: {
                       type: Type.ARRAY,
+                      // Petunjuk jumlah ke model; bukan jaminan keras, karena
+                      // Effect Schema sengaja tetap toleran (lihat schemas.ts).
+                      // SDK @google/genai mengetikkan minItems/maxItems sebagai string.
+                      minItems: '10',
+                      maxItems: '10',
                       items: {
                         type: Type.OBJECT,
                         properties: {

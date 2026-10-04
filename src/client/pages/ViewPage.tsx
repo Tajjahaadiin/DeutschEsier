@@ -815,11 +815,12 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
           )}
 
           {/* TAB 3: KUIS INTERAKTIF */}
-          {/* Level B1 memakai soal Richtig/Falsch hasil AI (menggantikan
-              Hörverstehen/Lückentext); level lain tetap seperti semula. */}
+          {/* Level B1 memakai soal Richtig/Falsch hasil AI. Bila skenario B1 lama
+              belum punya soal tersebut, jatuh kembali ke kuis Hörverstehen/
+              Lückentext supaya tidak jadi jalan buntu. */}
           {activeTab === 'quiz' && (
             <div className="flex-1 py-4">
-              {session.cefrLevel === 'B1' ? (
+              {session.cefrLevel === 'B1' && session.comprehensionQuestions.length > 0 ? (
                 <ComprehensionQuiz
                   questions={session.comprehensionQuestions}
                   sessionId={id}

@@ -48,10 +48,16 @@ export function parseComprehensionQuestions(raw: string | null | undefined): Com
   }
 }
 
-/** Nilai jawaban siswa terhadap kunci soal. */
+/**
+ * Nilai jawaban siswa terhadap kunci soal.
+ *
+ * Jawaban yang bukan 'richtig'/'falsch' (mis. belum dijawab) dianggap salah,
+ * supaya soal berkunci Falsch tidak otomatis dinilai benar.
+ */
 export function isCorrectAnswer(
   question: ComprehensionQuestion,
   answer: ComprehensionAnswer
 ): boolean {
+  if (answer !== 'richtig' && answer !== 'falsch') return false
   return (answer === 'richtig') === question.isCorrect
 }
