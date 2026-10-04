@@ -8860,6 +8860,11 @@ var learningSession = pgTable("learning_session", {
    * grammatik, sebagai JSON array. NULL untuk data lama sebelum fitur ini.
    */
   grammarPatternsJson: text("grammar_patterns_json"),
+  /**
+   * Pilihan topik grammar B1 guru beserta materi AI-nya, sebagai JSON
+   * {"selected": string[], "content": [...]}. NULL untuk A1/A2 dan data lama.
+   */
+  grammarTopicsJson: text("grammar_topics_json"),
   imageUrl: text("image_url"),
   published: boolean("published").notNull().default(true),
   createdAt: text("created_at").$defaultFn(() => (/* @__PURE__ */ new Date()).toISOString()).notNull(),
@@ -9037,6 +9042,11 @@ function grammarPatternsColumn(raw2) {
   if (raw2 === null) return { grammarPatternsJson: null };
   return { grammarPatternsJson: JSON.stringify(raw2) };
 }
+function grammarTopicsColumn(raw2) {
+  if (raw2 === void 0) return {};
+  if (raw2 === null) return { grammarTopicsJson: null };
+  return { grammarTopicsJson: JSON.stringify(raw2) };
+}
 sessionsRouter.get("/", async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt));
@@ -9062,6 +9072,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
     const dialogueCount = normalizeDialogueCount(body.dialogueCount);
     const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions);
     const grammarPatternsCol = grammarPatternsColumn(body.grammarPatterns);
+    const grammarTopicsCol = grammarTopicsColumn(body.grammarTopics);
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1);
     if (existing) {
       await db.update(learningSession).set({
@@ -9074,6 +9085,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         dialogueCount,
         ...comprehensionCol,
         ...grammarPatternsCol,
+        ...grammarTopicsCol,
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
       }).where(eq(learningSession.id, body.id));
     } else {
@@ -9087,7 +9099,8 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
         dialogueCount,
         ...comprehensionCol,
-        ...grammarPatternsCol
+        ...grammarPatternsCol,
+        ...grammarTopicsCol
       });
     }
     return c.json({ success: true, id: body.id });
@@ -9110,6 +9123,7 @@ sessionsRouter.put("/:id", requireTeacherAuth, async (c) => {
       dialogueCount: normalizeDialogueCount(body.dialogueCount),
       ...comprehensionQuestionsColumn(body.comprehensionQuestions),
       ...grammarPatternsColumn(body.grammarPatterns),
+      ...grammarTopicsColumn(body.grammarTopics),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     }).where(eq(learningSession.id, id));
     return c.json({ success: true, id });
@@ -37263,6 +37277,418 @@ var ArrayFormatterIssue = class extends (/* @__PURE__ */ Struct({
 // src/server/effect/ai-service.ts
 import { GoogleGenAI, Type as Type3 } from "@google/genai";
 
+// src/shared/grammarTopics.ts
+var MAX_GRAMMAR_TOPICS = 8;
+var GRAMMAR_TOPICS = [
+  // --- Verba ---
+  {
+    id: "tempus-perfekt",
+    german: "Perfekt",
+    nameId: "Perfekt (Lampau Percakapan)",
+    section: "Verba",
+    descriptionId: "Lampau untuk percakapan; memakai haben/sein + Partizip II.",
+    latihanCategory: "Verb"
+  },
+  {
+    id: "tempus-praeteritum",
+    german: "Pr\xE4teritum",
+    nameId: "Pr\xE4teritum (Lampau Tulisan)",
+    section: "Verba",
+    descriptionId: "Lampau untuk cerita/tulisan; wajib untuk sein, haben, modalverben.",
+    latihanCategory: "Verb"
+  },
+  {
+    id: "tempus-plusquamperfekt",
+    german: "Plusquamperfekt",
+    nameId: "Plusquamperfekt (Lampau Sebelum Lampau)",
+    section: "Verba",
+    descriptionId: "Lampau sebelum lampau, biasanya berpasangan dengan nachdem.",
+    latihanCategory: "Verb"
+  },
+  {
+    id: "futur-1",
+    german: "Futur I",
+    nameId: "Futur I (Masa Depan & Dugaan)",
+    section: "Verba",
+    descriptionId: "werden + Infinitiv, untuk masa depan sekaligus dugaan.",
+    latihanCategory: "Verb"
+  },
+  {
+    id: "konjunktiv-2",
+    german: "Konjunktiv II",
+    nameId: "Konjunktiv II (Pengandaian & Sopan)",
+    section: "Verba",
+    descriptionId: "Kondisi tidak nyata, harapan, saran, permintaan sopan (w\xFCrde, h\xE4tte, w\xE4re, k\xF6nnte)."
+  },
+  {
+    id: "konjunktiv-2-vergangenheit",
+    german: "Konjunktiv II der Vergangenheit",
+    nameId: "Konjunktiv II Bentuk Lampau (Penyesalan)",
+    section: "Verba",
+    descriptionId: "Menyesali/mengandaikan masa lampau: h\xE4tte \u2026 gemacht, w\xE4re \u2026 gegangen."
+  },
+  {
+    id: "passiv",
+    german: "Passiv",
+    nameId: "Passiv (Kalimat Pasif)",
+    section: "Verba",
+    descriptionId: "Fokus ke kejadian/objek, bukan pelaku: werden + Partizip II.",
+    latihanCategory: "Verb"
+  },
+  {
+    id: "passiv-modalverben",
+    german: "Passiv mit Modalverben",
+    nameId: "Passiv dengan Kata Kerja Modal",
+    section: "Verba",
+    descriptionId: "Passiv yang digabung modalverben: muss gemacht werden.",
+    latihanCategory: "Verb"
+  },
+  {
+    id: "verben-mit-praepositionen",
+    german: "Verben mit Pr\xE4positionen",
+    nameId: "Kata Kerja Berpreposisi",
+    section: "Verba",
+    descriptionId: "warten auf, sich interessieren f\xFCr, abh\xE4ngen von + objek preposisional."
+  },
+  {
+    id: "reflexive-verben",
+    german: "Reflexive Verben",
+    nameId: "Kata Kerja Refleksif",
+    section: "Verba",
+    descriptionId: "Kata kerja dengan sich, baik refleksif murni maupun resiprokal.",
+    latihanCategory: "Verb"
+  },
+  {
+    id: "trennbare-verben",
+    german: "Trennbare und untrennbare Verben",
+    nameId: "Kata Kerja Terpisah & Tak Terpisah",
+    section: "Verba",
+    descriptionId: "Awalan yang bisa terpisah (aufstehen) dan yang tidak (bezahlen).",
+    latihanCategory: "Verb"
+  },
+  {
+    id: "infinitiv-mit-zu",
+    german: "Infinitiv mit zu",
+    nameId: "Infinitiv dengan zu",
+    section: "Verba",
+    descriptionId: "zu + Infinitiv serta varian um \u2026 zu, anstatt \u2026 zu, ohne \u2026 zu."
+  },
+  // --- Nomen & Artikel ---
+  {
+    id: "artikel-kasus",
+    german: "Artikel im Nominativ, Akkusativ, Dativ",
+    nameId: "Artikel dalam Kasus Nominatif/Akusatif/Datif",
+    section: "Nomen & Artikel",
+    descriptionId: "Perubahan bentuk artikel mengikuti kasus (der/die/das \u2192 den/dem/der).",
+    latihanCategory: "Nomen"
+  },
+  {
+    id: "genitiv",
+    german: "Genitiv",
+    nameId: "Genitiv (Kepemilikan)",
+    section: "Nomen & Artikel",
+    descriptionId: "Genitiv sebagai atribut dan setelah wegen, trotz, w\xE4hrend, statt.",
+    latihanCategory: "Nomen"
+  },
+  {
+    id: "n-deklination",
+    german: "n-Deklination",
+    nameId: "Deklinasi-n (Nomina Lemah)",
+    section: "Nomen & Artikel",
+    descriptionId: "Nomina lemah: der Kollege \u2192 den Kollegen, der Junge, der Mensch.",
+    latihanCategory: "Nomen"
+  },
+  {
+    id: "pluralbildung",
+    german: "Pluralbildung",
+    nameId: "Pembentukan Bentuk Jamak",
+    section: "Nomen & Artikel",
+    descriptionId: "Lima pola utama pembentukan jamak beserta pengecualiannya.",
+    latihanCategory: "Nomen"
+  },
+  {
+    id: "negation-nicht-kein",
+    german: "Negation: nicht oder kein",
+    nameId: "Negasi: nicht atau kein",
+    section: "Nomen & Artikel",
+    descriptionId: "Perbedaan pemakaian nicht dan kein, serta doch sebagai jawaban positif."
+  },
+  {
+    id: "nominalisierung",
+    german: "Nominalisierung",
+    nameId: "Nominalisasi",
+    section: "Nomen & Artikel",
+    descriptionId: "Mengubah verba/adjektiva menjadi nomina: das Lesen, die M\xF6glichkeit.",
+    latihanCategory: "Nomen"
+  },
+  // --- Adjektiva ---
+  {
+    id: "adjektivdeklination",
+    german: "Adjektivdeklination",
+    nameId: "Deklinasi Adjektiva",
+    section: "Adjektiva",
+    descriptionId: "Tiga tipe deklinasi: lemah, kuat, dan campuran.",
+    latihanCategory: "Adjektiv"
+  },
+  {
+    id: "komparativ-superlativ",
+    german: "Komparativ und Superlativ",
+    nameId: "Komparatif & Superlatif",
+    section: "Adjektiva",
+    descriptionId: "Tingkat perbandingan termasuk bentuk tak beraturan (gut\u2013besser\u2013best).",
+    latihanCategory: "Adjektiv"
+  },
+  {
+    id: "vergleich-als-wie",
+    german: "Vergleich mit als und wie",
+    nameId: "Perbandingan dengan als & wie",
+    section: "Adjektiva",
+    descriptionId: "als untuk berbeda, wie untuk sama; serta je \u2026 desto/umso.",
+    latihanCategory: "Adjektiv"
+  },
+  {
+    id: "adjektiv-mit-praeposition",
+    german: "Adjektiv mit Pr\xE4position",
+    nameId: "Adjektiva Berpreposisi",
+    section: "Adjektiva",
+    descriptionId: "abh\xE4ngig von, stolz auf, zufrieden mit.",
+    latihanCategory: "Adjektiv"
+  },
+  {
+    id: "partizip-als-adjektiv",
+    german: "Partizip I und II als Adjektiv",
+    nameId: "Partisip sebagai Adjektiva",
+    section: "Adjektiva",
+    descriptionId: "das laufende Kind, das geschriebene Buch.",
+    latihanCategory: "Adjektiv"
+  },
+  // --- Pronomina ---
+  {
+    id: "personalpronomen-kasus",
+    german: "Personalpronomen im Dativ und Akkusativ",
+    nameId: "Pronomina Persona (Datif & Akusatif)",
+    section: "Pronomina",
+    descriptionId: "Bentuk datif/akusatif dan urutannya: Ich gebe es ihm."
+  },
+  {
+    id: "reflexivpronomen",
+    german: "Reflexivpronomen",
+    nameId: "Pronomina Refleksif",
+    section: "Pronomina",
+    descriptionId: "mich/mir, dich/dir, sich dan pemakaiannya."
+  },
+  {
+    id: "relativpronomen",
+    german: "Relativpronomen",
+    nameId: "Pronomina Relatif",
+    section: "Pronomina",
+    descriptionId: "der/die/das sebagai penghubung, termasuk dengan preposisi."
+  },
+  {
+    id: "indefinitpronomen",
+    german: "Indefinitpronomen",
+    nameId: "Pronomina Tak Tentu",
+    section: "Pronomina",
+    descriptionId: "man, jemand, niemand, etwas, nichts, jeder, alle."
+  },
+  {
+    id: "possessivartikel",
+    german: "Possessivartikel",
+    nameId: "Kata Milik (Possesif)",
+    section: "Pronomina",
+    descriptionId: "mein, dein, sein, ihr dan penggantinya sebagai pronomina."
+  },
+  // --- Präpositionen ---
+  {
+    id: "praeposition-wechsel",
+    german: "Wechselpr\xE4positionen",
+    nameId: "Preposisi Berganti (Wohin/Wo)",
+    section: "Pr\xE4positionen",
+    descriptionId: "Logika Wohin (Akkusativ) vs Wo (Dativ): legen/liegen, stellen/stehen.",
+    latihanCategory: "Pr\xE4position"
+  },
+  {
+    id: "praeposition-temporal",
+    german: "Temporale Pr\xE4positionen",
+    nameId: "Preposisi Waktu",
+    section: "Pr\xE4positionen",
+    descriptionId: "vor, nach, in, seit, bis, ab untuk keterangan waktu.",
+    latihanCategory: "Pr\xE4position"
+  },
+  {
+    id: "praeposition-lokal",
+    german: "Lokale Pr\xE4positionen",
+    nameId: "Preposisi Tempat",
+    section: "Pr\xE4positionen",
+    descriptionId: "Preposisi penunjuk tempat dan kasus yang diwajibkannya.",
+    latihanCategory: "Pr\xE4position"
+  },
+  {
+    id: "praepositionaladverbien",
+    german: "Pr\xE4positionaladverbien",
+    nameId: "Adverbia Preposisional (da-/wo-)",
+    section: "Pr\xE4positionen",
+    descriptionId: "daf\xFCr, damit, davon dan bentuk tanya worauf, womit, wovon."
+  },
+  // --- Satzbau ---
+  {
+    id: "nebensatz-weil-dass",
+    german: "Nebensatz mit weil und dass",
+    nameId: "Anak Kalimat dengan weil & dass",
+    section: "Satzbau",
+    descriptionId: "Kata kerja berpindah ke akhir kalimat pada anak kalimat.",
+    latihanCategory: "Konjunktion"
+  },
+  {
+    id: "nebensatz-als-wenn",
+    german: "Nebensatz mit als und wenn",
+    nameId: "Anak Kalimat dengan als & wenn",
+    section: "Satzbau",
+    descriptionId: "als untuk satu kejadian lampau, wenn untuk berulang/ kondisi.",
+    latihanCategory: "Konjunktion"
+  },
+  {
+    id: "nebensatz-nachdem",
+    german: "Nebensatz mit nachdem",
+    nameId: "Anak Kalimat dengan nachdem",
+    section: "Satzbau",
+    descriptionId: "Urutan waktu dengan Plusquamperfekt pada klausa nachdem.",
+    latihanCategory: "Konjunktion"
+  },
+  {
+    id: "relativsatz",
+    german: "Relativsatz",
+    nameId: "Kalimat Relatif",
+    section: "Satzbau",
+    descriptionId: "Anak kalimat penjelas dengan pronomina relatif.",
+    latihanCategory: "Konjunktion"
+  },
+  {
+    id: "tekamolo",
+    german: "TeKaMoLo",
+    nameId: "Urutan Keterangan TeKaMoLo",
+    section: "Satzbau",
+    descriptionId: "Urutan Temporal\u2013Kausal\u2013Modal\u2013Lokal dalam kalimat."
+  },
+  {
+    id: "wortstellung-nicht",
+    german: "Stellung von nicht",
+    nameId: "Posisi nicht dalam Kalimat",
+    section: "Satzbau",
+    descriptionId: "Penempatan nicht sesuai bagian kalimat yang dinegasikan."
+  },
+  // --- Konnektoren ---
+  {
+    id: "konnektor-deshalb",
+    german: "Konjunktionaladverbien",
+    nameId: "Adverbia Penghubung (deshalb, trotzdem)",
+    section: "Konnektoren",
+    descriptionId: "Kata kerja tetap di posisi kedua sehingga terjadi inversi.",
+    latihanCategory: "Konjunktion"
+  },
+  {
+    id: "konnektor-obwohl",
+    german: "Konzessivsatz mit obwohl",
+    nameId: "Kalimat Konsesif dengan obwohl",
+    section: "Konnektoren",
+    descriptionId: "obwohl (anak kalimat) dibedakan dari trotzdem (adverbia penghubung).",
+    latihanCategory: "Konjunktion"
+  },
+  {
+    id: "konnektor-damit-umzu",
+    german: "damit und um \u2026 zu",
+    nameId: "Tujuan: damit & um \u2026 zu",
+    section: "Konnektoren",
+    descriptionId: "Ungkapan tujuan; pilih damit atau um \u2026 zu sesuai subjek.",
+    latihanCategory: "Konjunktion"
+  },
+  {
+    id: "konnektor-zweiteilig",
+    german: "Zweiteilige Konnektoren",
+    nameId: "Konjungsi Berpasangan",
+    section: "Konnektoren",
+    descriptionId: "entweder\u2026oder, weder\u2026noch, sowohl\u2026als auch, je\u2026desto.",
+    latihanCategory: "Konjunktion"
+  },
+  // --- Wortbildung ---
+  {
+    id: "wortbildung-suffixe",
+    german: "Suffixe: -ung, -heit, -keit",
+    nameId: "Akhiran Pembentuk Kata",
+    section: "Wortbildung",
+    descriptionId: "Akhiran -ung, -heit, -keit, -schaft, -lich, -ig, -bar, -los."
+  },
+  {
+    id: "wortbildung-komposita",
+    german: "Komposita",
+    nameId: "Kata Majemuk",
+    section: "Wortbildung",
+    descriptionId: "Gabungan kata seperti die Hausaufgabe, arbeitslos.",
+    latihanCategory: "Nomen"
+  },
+  {
+    id: "wortbildung-praefixe",
+    german: "Pr\xE4fixe: un-, miss-, vor-",
+    nameId: "Awalan Pembentuk Kata",
+    section: "Wortbildung",
+    descriptionId: "Awalan un-, miss-, vor-, nach-, wieder- dan perubahan maknanya."
+  },
+  // --- Partikeln ---
+  {
+    id: "modalpartikeln",
+    german: "Modalpartikeln",
+    nameId: "Partikel Modal (doch, mal, ja)",
+    section: "Partikeln",
+    descriptionId: "doch, mal, denn, ja, eigentlich, wohl yang membuat bahasa terdengar natural."
+  },
+  {
+    id: "gradpartikeln",
+    german: "Gradpartikeln",
+    nameId: "Partikel Tingkat (sehr, ziemlich)",
+    section: "Partikeln",
+    descriptionId: "sehr, ziemlich, recht, ganz, total untuk menyatakan kadar."
+  },
+  // --- Fungsional ---
+  {
+    id: "fungsional-meinung",
+    german: "Meinung \xE4u\xDFern",
+    nameId: "Menyampaikan Pendapat",
+    section: "Fungsional",
+    descriptionId: "Ich finde\u2026, Meiner Meinung nach\u2026, einerseits\u2026andererseits."
+  },
+  {
+    id: "fungsional-rat",
+    german: "Ratschl\xE4ge geben",
+    nameId: "Memberi Saran",
+    section: "Fungsional",
+    descriptionId: "Memakai Konjunktiv II: Du solltest \u2026, An deiner Stelle w\xFCrde ich \u2026"
+  },
+  {
+    id: "fungsional-vermutung",
+    german: "Vermutungen \xE4u\xDFern",
+    nameId: "Menyatakan Dugaan",
+    section: "Fungsional",
+    descriptionId: "Futur I dan modalverben subjektif untuk menduga."
+  },
+  {
+    id: "fungsional-erzaehlen",
+    german: "Vergangenes erz\xE4hlen",
+    nameId: "Menceritakan Kejadian Lampau",
+    section: "Fungsional",
+    descriptionId: "Perfekt/Pr\xE4teritum + Plusquamperfekt + nachdem."
+  }
+];
+var GRAMMAR_TOPIC_IDS = new Set(GRAMMAR_TOPICS.map((t) => t.id));
+function isGrammarTopicId(value3) {
+  return typeof value3 === "string" && GRAMMAR_TOPIC_IDS.has(value3);
+}
+function validateTopicIds(raw2) {
+  if (!Array.isArray(raw2)) return null;
+  if (raw2.length > MAX_GRAMMAR_TOPICS) return null;
+  if (raw2.some((v) => typeof v !== "string" || !GRAMMAR_TOPIC_IDS.has(v))) return null;
+  return [...new Set(raw2)];
+}
+
 // src/server/effect/schemas.ts
 var DialogLineSchema = Schema_exports.Struct({
   speaker: Schema_exports.String,
@@ -37292,6 +37718,28 @@ var GrammarPatternSchema = Schema_exports.Struct({
   exampleIndonesian: Schema_exports.String,
   segments: Schema_exports.Array(GrammarSegmentSchema)
 });
+var GrammarTopicExampleSchema = Schema_exports.Struct({
+  german: Schema_exports.String,
+  indonesian: Schema_exports.String,
+  note: Schema_exports.String
+});
+var GrammarTopicContentSchema = Schema_exports.Struct({
+  topicId: Schema_exports.String,
+  name: Schema_exports.String,
+  nameId: Schema_exports.String,
+  explanationId: Schema_exports.String,
+  formula: Schema_exports.String,
+  examples: Schema_exports.Array(GrammarTopicExampleSchema)
+});
+var GrammarTopicsSchema = Schema_exports.transform(
+  Schema_exports.Array(GrammarTopicContentSchema),
+  Schema_exports.Array(GrammarTopicContentSchema),
+  {
+    strict: false,
+    decode: (entries2) => entries2.filter((e) => isGrammarTopicId(e.topicId)),
+    encode: (entries2) => entries2
+  }
+);
 var GeneratedLessonSchema = Schema_exports.Struct({
   title: Schema_exports.String,
   sceneDescription: Schema_exports.String,
@@ -37306,7 +37754,12 @@ var GeneratedLessonSchema = Schema_exports.Struct({
    * Opsional: pola kalimat (S-P-O dll.) untuk tab Materi grammatik.
    * Sengaja opsional agar data lama tetap bisa dibaca.
    */
-  grammarPatterns: Schema_exports.optional(Schema_exports.Array(GrammarPatternSchema))
+  grammarPatterns: Schema_exports.optional(Schema_exports.Array(GrammarPatternSchema)),
+  /**
+   * Opsional: materi per topik tata bahasa B1 yang dipilih guru.
+   * Hanya ada bila guru memilih topik; data lama tidak punya field ini.
+   */
+  grammarTopics: Schema_exports.optional(GrammarTopicsSchema)
 });
 
 // src/server/effect/ai-service.ts
@@ -37329,9 +37782,11 @@ function getAiClient() {
 var retryPolicy = Schedule_exports.exponential(Duration_exports.millis(500), 2).pipe(
   Schedule_exports.intersect(Schedule_exports.recurs(3))
 );
-function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
-  const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords, dialogueCount);
+function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, grammarTopicIds = []) {
+  const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords, dialogueCount, grammarTopicIds);
   const wantsComprehension = cefrLevel === "B1";
+  const topics = topicsForPrompt(grammarTopicIds);
+  const wantsGrammarTopics = cefrLevel === "B1" && topics.length > 0;
   const callGemini = Effect_exports.tryPromise({
     try: async () => {
       const ai = getAiClient();
@@ -37425,7 +37880,47 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
                     "segments"
                   ]
                 }
-              }
+              },
+              // Materi per topik tata bahasa, hanya diminta bila guru memilih topik.
+              ...wantsGrammarTopics ? {
+                grammarTopics: {
+                  type: Type3.ARRAY,
+                  minItems: String(topics.length),
+                  maxItems: String(topics.length),
+                  items: {
+                    type: Type3.OBJECT,
+                    properties: {
+                      topicId: { type: Type3.STRING },
+                      name: { type: Type3.STRING },
+                      nameId: { type: Type3.STRING },
+                      explanationId: { type: Type3.STRING },
+                      formula: { type: Type3.STRING },
+                      examples: {
+                        type: Type3.ARRAY,
+                        minItems: "2",
+                        maxItems: "3",
+                        items: {
+                          type: Type3.OBJECT,
+                          properties: {
+                            german: { type: Type3.STRING },
+                            indonesian: { type: Type3.STRING },
+                            note: { type: Type3.STRING }
+                          },
+                          required: ["german", "indonesian", "note"]
+                        }
+                      }
+                    },
+                    required: [
+                      "topicId",
+                      "name",
+                      "nameId",
+                      "explanationId",
+                      "formula",
+                      "examples"
+                    ]
+                  }
+                }
+              } : {}
             },
             required: [
               "title",
@@ -37433,7 +37928,8 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
               "dialogue",
               "vocabClues",
               "grammarPatterns",
-              ...wantsComprehension ? ["comprehensionQuestions"] : []
+              ...wantsComprehension ? ["comprehensionQuestions"] : [],
+              ...wantsGrammarTopics ? ["grammarTopics"] : []
             ]
           },
           temperature: 0.4
@@ -37460,9 +37956,32 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
   );
   return pipeline.pipe(Effect_exports.retry(retryPolicy));
 }
-function buildPrompt(prompt, level, cognates, dialogueCount) {
+function topicsForPrompt(topicIds) {
+  const wanted = new Set(topicIds);
+  return GRAMMAR_TOPICS.filter((t) => wanted.has(t.id)).slice(0, MAX_GRAMMAR_TOPICS);
+}
+function buildGrammarTopicsBlock(topicIds) {
+  const topics = topicsForPrompt(topicIds);
+  if (topics.length === 0) return "";
+  const list = topics.map((t) => `- topicId "${t.id}": ${t.german} (${t.nameId}) \u2014 ${t.descriptionId}`).join("\n");
+  return `
+
+Materi tata bahasa untuk topik berikut (level B1):
+${list}
+
+Untuk SETIAP topik di atas, isi satu entri pada "grammarTopics":
+1. topicId: salin persis dari daftar di atas
+2. name: nama Jerman topik tersebut
+3. nameId: label Indonesia
+4. explanationId: penjelasan konsep 2-4 kalimat dalam bahasa Indonesia, sesuai keterangan di daftar
+5. formula: rumus/pola singkat memakai istilah Jerman
+6. examples: tepat 2 contoh { german, indonesian, note } \u2014 kalimat Jerman yang benar, terjemahan Indonesia, dan catatan singkat
+7. Usahakan minimal satu baris dialog di atas memakai tiap topik bila wajar untuk skenarionya`;
+}
+function buildPrompt(prompt, level, cognates, dialogueCount, grammarTopicIds = []) {
   const cognateList = cognates.length > 0 ? `
 Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
+  const grammarTopicsBlock = buildGrammarTopicsBlock(grammarTopicIds);
   const comprehensionBlock = level === "B1" ? `
 
 Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):
@@ -37498,7 +38017,7 @@ Aturan pengisian tiap pola:
 3. exampleIndonesian diisi terjemahan Indonesia dari exampleGerman
 4. segments memecah exampleGerman menjadi potongan berurutan; setiap potongan punya "text" dan "role"
 5. role hanya boleh salah satu dari: "subjekt", "praedikat", "objekt", atau "other" (untuk kata tanya, kata bantu, negasi, dan bagian lain)
-6. Gabungan semua "text" pada segments harus sama dengan exampleGerman`;
+6. Gabungan semua "text" pada segments harus sama dengan exampleGerman${grammarTopicsBlock}`;
 }
 
 // src/server/routes/generate.ts
@@ -37509,7 +38028,7 @@ var DEFAULT_DIALOGUE_COUNT = 8;
 generateRouter.post("/", requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json();
-    const { prompt, cefrLevel, wordIds, dialogueCount } = body;
+    const { prompt, cefrLevel, wordIds, dialogueCount, grammarTopics } = body;
     if (!prompt || !cefrLevel) {
       return c.json({ error: "Missing prompt or cefrLevel" }, 400);
     }
@@ -37525,13 +38044,32 @@ generateRouter.post("/", requireTeacherAuth, async (c) => {
       }
       count3 = dialogueCount;
     }
+    let topicIds = [];
+    if (grammarTopics !== void 0) {
+      const valid = validateTopicIds(grammarTopics);
+      if (valid === null) {
+        return c.json(
+          {
+            error: `Daftar topik grammar tidak valid. Maksimal ${MAX_GRAMMAR_TOPICS} topik yang dikenal.`
+          },
+          400
+        );
+      }
+      if (valid.length > 0 && cefrLevel !== "B1") {
+        return c.json(
+          { error: "Topik grammar hanya tersedia untuk level B1." },
+          400
+        );
+      }
+      topicIds = valid;
+    }
     let cognateWords = [];
     if (wordIds && Array.isArray(wordIds) && wordIds.length > 0) {
       const words = await db.select({ word: wordBank.germanWord }).from(wordBank).where(inArray(wordBank.id, wordIds));
       cognateWords = words.map((w) => w.word);
     }
     const result = await Effect_exports.runPromise(
-      generateLesson(prompt, cefrLevel, cognateWords, count3)
+      generateLesson(prompt, cefrLevel, cognateWords, count3, topicIds)
     );
     return c.json({ lesson: result });
   } catch (error) {

@@ -26,6 +26,11 @@ npm run build
 npm start
 ```
 
+> **Konvensi impor `src/shared/`**: taksonomi bersama (mis. topik tata bahasa B1) ada di
+> `src/shared/`. Kode klien boleh memakai alias `@/shared/...`, tetapi kode server dan test
+> **wajib** memakai jalur relatif (`../../shared/...`) karena esbuild (`build:server` /
+> `build:api`) tidak membaca `paths` dari tsconfig.
+
 > **Catatan skema database**: migrasi di `drizzle/` kini berupa baseline **PostgreSQL**
 > (`0000_baseline.sql`, hasil `drizzle-kit generate`). Riwayat migrasi Drizzle **tidak** dipakai
 > di database Neon (tabel `drizzle.__drizzle_migrations` kosong), jadi `npm run db:migrate`

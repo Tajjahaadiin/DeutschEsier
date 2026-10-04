@@ -13,6 +13,7 @@ import {
   type ComprehensionQuestion,
 } from '../lib/comprehension'
 import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPatterns'
+import { parseGrammarTopics, type GrammarTopicContent } from '../lib/grammarTopicsParser'
 import {
   Volume2,
   Share2,
@@ -52,6 +53,7 @@ interface Session {
   vocabCluesJson: string
   comprehensionQuestionsJson?: string | null
   grammarPatternsJson?: string | null
+  grammarTopicsJson?: string | null
 }
 
 export default function ViewPage({ id, navigate }: { id: string; navigate: (path: string) => void }) {
@@ -63,6 +65,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
       vocabClues: VocabClue[]
       comprehensionQuestions: ComprehensionQuestion[]
       grammarPatterns: GrammarPattern[]
+      grammarTopics: GrammarTopicContent[]
     }) | null
   >(null)
   const [loading, setLoading] = useState(true)
@@ -130,6 +133,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
           vocabClues: JSON.parse(data.vocabCluesJson) as VocabClue[],
           comprehensionQuestions: parseComprehensionQuestions(data.comprehensionQuestionsJson),
           grammarPatterns: parseGrammarPatterns(data.grammarPatternsJson),
+          grammarTopics: parseGrammarTopics(data.grammarTopicsJson),
         })
       })
       .catch((err) => setError(err.message))
@@ -851,6 +855,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                 vocabClues={session.vocabClues}
                 dialogue={session.dialogue}
                 grammarPatterns={session.grammarPatterns}
+                grammarTopics={session.grammarTopics}
                 sessionTitle={session.title}
                 sessionId={id}
                 accessKey={validKey}

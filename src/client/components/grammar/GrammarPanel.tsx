@@ -20,12 +20,16 @@ import {
   type GrammarPattern,
   type GrammarSegmentRole,
 } from '../../lib/grammarPatterns'
+import { type GrammarTopicContent } from '../../lib/grammarTopicsParser'
+import { GRAMMAR_TOPICS } from '../../../shared/grammarTopics'
 
 export interface GrammarPanelProps {
   vocabClues: { germanWord: string; indonesianMeaning: string; grammarTip: string }[]
   dialogue?: { germanText: string }[]
   /** Pola kalimat hasil AI untuk tab Materi; kosong = tampilkan empty state. */
   grammarPatterns?: GrammarPattern[]
+  /** Materi per topik tata bahasa B1 yang dipilih guru. */
+  grammarTopics?: GrammarTopicContent[]
   sessionTitle?: string
   sessionId?: string
   accessKey?: string
@@ -54,6 +58,7 @@ export default function GrammarPanel({
   vocabClues,
   dialogue = [],
   grammarPatterns = [],
+  grammarTopics = [],
   sessionTitle,
   sessionId,
   accessKey = '',
@@ -71,8 +76,8 @@ export default function GrammarPanel({
   const [saved, setSaved] = useState(false)
 
   const questions: GrammarQuestion[] = useMemo(
-    () => buildQuestions(vocabClues, dialogue),
-    [vocabClues, dialogue]
+    () => buildQuestions(vocabClues, dialogue, grammarTopics.map((t) => t.topicId)),
+    [vocabClues, dialogue, grammarTopics]
   )
 
   const answeredCount = Object.keys(answers).length
@@ -139,7 +144,7 @@ export default function GrammarPanel({
     }
   }
 
-  if (grammarPatterns.length === 0 && questions.length === 0) {
+  if (grammarPatterns.length === 0 && grammarTopics.length === 0 && questions.length === 0) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-10 text-center">
         <GraduationCap size={40} className="mx-auto text-slate-300 mb-3" />
@@ -291,6 +296,73 @@ export default function GrammarPanel({
               </div>
             )
           })}
+
+          {/* Materi per topik tata bahasa B1 (additive, di bawah pola kalimat) */}
+          {grammarTopics.length > 0 && (
+            <div className="pt-2">
+              <h3 className="text-sm font-extrabold text-slate-800 mb-3">
+                Topik Tata Bahasa Pilihan
+              </h3>
+              <div className="space-y-4">
+                {grammarTopics.map((topic) => (
+                  <div
+                    key={topic.topicId}
+                    className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden"
+                  >
+                    <div className="p-4 border-b border-slate-100 bg-slate-50/60">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-slate-800 text-sm sm:text-base">
+                          {topic.name}
+                        </h4>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold border border-violet-100">
+                          {topic.nameId}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1.5 font-mono">
+                        {topic.formula}
+                      </p>
+                    </div>
+
+                    <div className="p-4 space-y-3">
+                      <p className="text-xs text-slate-700 leading-relaxed">
+                        {topic.explanationId}
+                      </p>
+
+                      <div className="space-y-2">
+                        {topic.examples.map((ex, i) => (
+                          <div
+                            key={i}
+                            className="bg-slate-50 border border-slate-200 rounded-xl p-3"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm text-slate-800 leading-relaxed">
+                                {ex.german}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => handlePlay(ex.german)}
+                                className="shrink-0 p-1 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                                title="Dengarkan contoh"
+                              >
+                                <Volume2
+                                  size={14}
+                                  className={playingWord === ex.german ? 'animate-pulse text-indigo-600' : ''}
+                                />
+                              </button>
+                            </div>
+                            <p className="text-xs text-slate-600 mt-1 italic">{ex.indonesian}</p>
+                            {ex.note && (
+                              <p className="text-[11px] text-amber-800 mt-1.5">💡 {ex.note}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -388,6 +460,14 @@ export default function GrammarPanel({
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       {q.kind === 'sentence' ? 'Kalimat Skenario' : 'Konsep Tata Bahasa'}
                     </span>
+                    {q.topicIds?.map((id) => (
+                      <span
+                        key={id}
+                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold border border-violet-100"
+                      >
+                        {GRAMMAR_TOPICS.find((t) => t.id === id)?.german ?? id}
+                      </span>
+                    ))}
                   </div>
                   {submitted && (
                     <span
@@ -480,6 +560,12 @@ export default function GrammarPanel({
               </button>
               <p className="text-center text-xs text-slate-400 mt-2">
                 Latihan mandiri — tidak memengaruhi nilai kuis.
+                {grammarTopics.length > 0 && (
+                  <span className="block mt-1">
+                    Soal disusun dari kosakata skenario; topik pilihan hanya memengaruhi urutan
+                    soal.
+                  </span>
+                )}
               </p>
             </div>
           )}

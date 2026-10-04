@@ -8,6 +8,10 @@
  * Semua fungsi di sini murni (pure) agar mudah diuji.
  */
 
+// Jalur relatif (bukan alias @/) karena berkas ini juga dijalankan di
+// lingkungan test node dan dibundel esbuild yang tidak membaca paths tsconfig.
+import { GRAMMAR_TOPICS } from '../../shared/grammarTopics'
+
 export type GrammarCategory =
   | 'Verb'
   | 'Nomen'
@@ -42,6 +46,8 @@ export interface GrammarQuestion {
   explanation: string
   /** Kata kunci sumber soal. */
   source: string
+  /** Topik terpilih yang benar-benar dilatih soal ini (bila ada). */
+  topicIds?: string[]
   /**
    * Teks yang layak dibacakan TTS Jerman.
    * Sengaja dipisah dari `statement` karena sebagian pernyataan memuat
@@ -186,11 +192,14 @@ export const GRAMMAR_QUESTION_COUNT = 10
  */
 export function buildQuestions(
   vocabClues: { germanWord: string; indonesianMeaning: string; grammarTip: string }[],
-  dialogue: { germanText: string }[]
+  dialogue: { germanText: string }[],
+  topicIds: string[] = []
 ): GrammarQuestion[] {
   const sentences = (dialogue || []).map((d) => d.germanText || '')
   const items = (vocabClues || []).map((v) => toVocabItem(v, sentences))
-  const candidates: Omit<GrammarQuestion, 'id'>[] = []
+  // `category` ikut disimpan di kandidat agar bisa dicocokkan dengan
+  // latihanCategory milik topik terpilih; tidak ikut dirender.
+  const candidates: (Omit<GrammarQuestion, 'id'> & { category?: GrammarCategory })[] = []
 
   const ALL_CATEGORIES: GrammarCategory[] = [
     'Verb',
@@ -216,6 +225,7 @@ export function buildQuestions(
           explanation: item.grammarTip,
           source: item.germanWord,
           audioText: sentence,
+          category: item.category,
         })
         // Hanya bila mutasi benar-benar mengubah kalimat.
         if (mutatedSentence !== sentence) {
@@ -226,6 +236,7 @@ export function buildQuestions(
             explanation: item.grammarTip,
             source: item.germanWord,
             audioText: mutatedSentence,
+            category: item.category,
           })
         }
       }
@@ -241,6 +252,7 @@ export function buildQuestions(
           explanation: item.grammarTip,
           source: item.germanWord,
           audioText: `${article} ${item.noun}`,
+          category: item.category,
         })
       }
     }
@@ -256,6 +268,7 @@ export function buildQuestions(
           explanation: item.grammarTip,
           source: item.germanWord,
           audioText: item.germanWord,
+          category: item.category,
         })
       }
     }
@@ -268,6 +281,7 @@ export function buildQuestions(
       explanation: item.grammarTip,
       source: item.germanWord,
       audioText: item.germanWord,
+      category: item.category,
     })
     candidates.push({
       kind: 'concept',
@@ -276,6 +290,7 @@ export function buildQuestions(
       explanation: item.grammarTip,
       source: item.germanWord,
       audioText: item.germanWord,
+      category: item.category,
     })
   }
 
@@ -287,10 +302,32 @@ export function buildQuestions(
     return true
   })
 
+  // --- Prioritisasi topik terpilih ---
+  // Topik hanya mengubah URUTAN dan memberi label; jumlah soal tidak berubah.
+  // Hanya topik yang punya latihanCategory yang berpengaruh, sehingga tidak ada
+  // soal yang mengklaim melatih topik yang tidak benar-benar dilatih.
+  const categoryTopics = new Map<string, string[]>()
+  for (const id of topicIds) {
+    const topic = GRAMMAR_TOPICS.find((t) => t.id === id)
+    if (!topic?.latihanCategory) continue
+    const list = categoryTopics.get(topic.latihanCategory) ?? []
+    list.push(topic.id)
+    categoryTopics.set(topic.latihanCategory, list)
+  }
+
+  const topicsFor = (c: { category?: GrammarCategory }): string[] =>
+    c.category ? categoryTopics.get(c.category) ?? [] : []
+
+  // Partisi stabil: yang cocok topik didahulukan, urutan relatif tetap.
+  const ordered =
+    categoryTopics.size === 0
+      ? unique
+      : [...unique.filter((c) => topicsFor(c).length > 0), ...unique.filter((c) => topicsFor(c).length === 0)]
+
   // Pilih sampai 10 soal dengan urutan benar/salah bergantian.
-  const correct = unique.filter((c) => c.isCorrect)
-  const incorrect = unique.filter((c) => !c.isCorrect)
-  const picked: Omit<GrammarQuestion, 'id'>[] = []
+  const correct = ordered.filter((c) => c.isCorrect)
+  const incorrect = ordered.filter((c) => !c.isCorrect)
+  const picked: (Omit<GrammarQuestion, 'id'> & { category?: GrammarCategory })[] = []
   let ci = 0
   let ii = 0
   while (picked.length < GRAMMAR_QUESTION_COUNT && (ci < correct.length || ii < incorrect.length)) {
@@ -299,7 +336,15 @@ export function buildQuestions(
     if (ii < incorrect.length) picked.push(incorrect[ii++])
   }
 
-  return picked.map((c, i) => ({ id: `grammar-${c.kind}-${i}`, ...c }))
+  return picked.map((c, i) => {
+    const matched = topicsFor(c)
+    const { category: _category, ...question } = c
+    return {
+      id: `grammar-${c.kind}-${i}`,
+      ...question,
+      ...(matched.length > 0 ? { topicIds: matched } : {}),
+    }
+  })
 }
 
 /** Nilai jawaban siswa: 'richtig' benar bila soal memang benar, dan sebaliknya. */
