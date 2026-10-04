@@ -7,6 +7,12 @@ import { nanoid } from 'nanoid'
 import { getAuthHeaders } from '../lib/auth'
 import { parseComprehensionQuestions, type ComprehensionQuestion } from '../lib/comprehension'
 import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPatterns'
+import {
+  parseGrammarTopics,
+  parseGrammarTopicIds,
+  type GrammarTopicContent,
+} from '../lib/grammarTopicsParser'
+import GrammarTopicPicker from '../components/generator/GrammarTopicPicker'
 
 interface DialogTurn {
   speaker: string
@@ -28,6 +34,7 @@ interface GeneratedLesson {
   vocabClues: VocabClue[]
   comprehensionQuestions?: ComprehensionQuestion[]
   grammarPatterns?: GrammarPattern[]
+  grammarTopics?: GrammarTopicContent[]
 }
 
 export default function GeneratorPage({ editId, navigate }: { editId?: string; navigate: (path: string) => void }) {
@@ -36,6 +43,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [prompt, setPrompt] = useState('Di sebuah kafe di Berlin, memesan kopi dan kue.')
   const [cefrLevel, setCefrLevel] = useState('A1')
   const [dialogueCount, setDialogueCount] = useState(8)
+  // Pilihan topik grammar B1. Disimpan di sini (bukan di dalam picker) supaya
+  // tidak hilang saat level CEFR ditukar sementara.
+  const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -82,6 +92,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         setEditedSceneDesc(data.sceneDescription || '')
         setCefrLevel(data.cefrLevel || 'A1')
         if (typeof data.dialogueCount === 'number') setDialogueCount(data.dialogueCount)
+        setSelectedTopicIds(parseGrammarTopicIds(data.grammarTopicsJson))
         setEditedDialogue(parsedDialogue)
         setEditedVocab(parsedVocab)
         setLesson({
@@ -91,6 +102,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           vocabClues: parsedVocab,
           comprehensionQuestions: parseComprehensionQuestions(data.comprehensionQuestionsJson),
           grammarPatterns: parseGrammarPatterns(data.grammarPatternsJson),
+          grammarTopics: parseGrammarTopics(data.grammarTopicsJson),
         })
 
         const turnA = parsedDialogue.find(t => t.speaker === 'Sprecher A')
@@ -118,7 +130,16 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ prompt, cefrLevel, wordIds: selectedWords, dialogueCount })
+        body: JSON.stringify({
+          prompt,
+          cefrLevel,
+          wordIds: selectedWords,
+          dialogueCount,
+          // Topik hanya berlaku untuk B1; jangan kirim kunci sama sekali bila kosong.
+          ...(cefrLevel === 'B1' && selectedTopicIds.length > 0
+            ? { grammarTopics: selectedTopicIds }
+            : {}),
+        })
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -160,6 +181,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           : null,
         // Kirim ulang pola kalimat agar mode edit tidak menghapusnya.
         grammarPatterns: lesson.grammarPatterns?.length ? lesson.grammarPatterns : null,
+        // Pilihan topik + materi AI-nya dalam satu kolom.
+        grammarTopics:
+          cefrLevel === 'B1' && selectedTopicIds.length > 0
+            ? { selected: selectedTopicIds, content: lesson.grammarTopics ?? [] }
+            : null,
       }
 
       const url = editId ? `/api/sessions/${id}` : '/api/sessions'
@@ -333,6 +359,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               <option value="B1">B1 - Menengah</option>
             </select>
           </div>
+          {cefrLevel === 'B1' && (
+            <GrammarTopicPicker selected={selectedTopicIds} onChange={setSelectedTopicIds} />
+          )}
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-700 mb-1">
               Jumlah Dialog

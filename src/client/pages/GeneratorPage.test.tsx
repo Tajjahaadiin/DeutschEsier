@@ -59,8 +59,7 @@ describe('GeneratorPage — kontrol jumlah dialog', () => {
     await waitFor(() => expect(lastGenerateBody().dialogueCount).toBe(12))
   })
 
-  it('memuat jumlah dialog tersimpan saat membuka skenario untuk diedit', async () => {
-    globalThis.fetch = vi.fn(async (url: string | URL) => {
+  it('memuat jumlah dialog tersimpan saat membuka skenario untuk diedit', async () => {    globalThis.fetch = vi.fn(async (url: string | URL) => {
       if (String(url).includes('/api/sessions/sess-14')) {
         return new Response(
           JSON.stringify({
@@ -85,5 +84,69 @@ describe('GeneratorPage — kontrol jumlah dialog', () => {
       const input = document.querySelector('input[type="number"]') as HTMLInputElement | null
       expect(input?.value).toBe('14')
     })
+  })
+
+  it('menyembunyikan pemilih topik grammar pada level A1', () => {
+    render(<GeneratorPage navigate={() => {}} />)
+
+    expect(screen.queryByText(/Topik Tata Bahasa/)).toBeNull()
+  })
+
+  it('menampilkan pemilih topik grammar saat level B1', () => {
+    render(<GeneratorPage navigate={() => {}} />)
+
+    fireEvent.change(document.querySelector('select') as HTMLSelectElement, {
+      target: { value: 'B1' },
+    })
+
+    expect(screen.getByText(/Topik Tata Bahasa/)).toBeTruthy()
+    // Daftar topik muncul setelah pemilih dibuka.
+    fireEvent.click(screen.getByText('Pilih topik (opsional)'))
+    expect(screen.getByText('Konjunktiv II')).toBeTruthy()
+  })
+
+  it('mengirim topik terpilih ke server saat generate di level B1', async () => {
+    render(<GeneratorPage navigate={() => {}} />)
+    fireEvent.change(document.querySelector('select') as HTMLSelectElement, {
+      target: { value: 'B1' },
+    })
+
+    fireEvent.click(screen.getByText('Pilih topik (opsional)'))
+    fireEvent.click(screen.getByTestId('topic-passiv'))
+    fireEvent.click(screen.getByText('Generate dengan AI'))
+
+    await waitFor(() => expect(lastGenerateBody().grammarTopics).toEqual(['passiv']))
+  })
+
+  it('mempertahankan pilihan topik saat level berpindah B1 -> A2 -> B1', () => {
+    render(<GeneratorPage navigate={() => {}} />)
+    const select = document.querySelector('select') as HTMLSelectElement
+
+    fireEvent.change(select, { target: { value: 'B1' } })
+    fireEvent.click(screen.getByText('Pilih topik (opsional)'))
+    fireEvent.click(screen.getByTestId('topic-passiv'))
+
+    fireEvent.change(select, { target: { value: 'A2' } })
+    expect(screen.queryByText(/Topik Tata Bahasa/)).toBeNull()
+
+    fireEvent.change(select, { target: { value: 'B1' } })
+    fireEvent.click(screen.getByText('1 topik dipilih'))
+    expect((screen.getByTestId('topic-passiv') as HTMLInputElement).checked).toBe(true)
+  })
+
+  it('tidak mengirim grammarTopics saat level bukan B1', async () => {
+    render(<GeneratorPage navigate={() => {}} />)
+    const select = document.querySelector('select') as HTMLSelectElement
+
+    // Pilih topik di B1, lalu turunkan level ke A2.
+    fireEvent.change(select, { target: { value: 'B1' } })
+    fireEvent.click(screen.getByText('Pilih topik (opsional)'))
+    fireEvent.click(screen.getByTestId('topic-passiv'))
+    fireEvent.change(select, { target: { value: 'A2' } })
+
+    fireEvent.click(screen.getByText('Generate dengan AI'))
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
+    expect(lastGenerateBody()).not.toHaveProperty('grammarTopics')
   })
 })
