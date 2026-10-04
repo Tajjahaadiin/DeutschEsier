@@ -6,7 +6,12 @@ import KeyManagerModal from '../components/access/KeyManagerModal'
 import SubmissionAnalyticsModal from '../components/analytics/SubmissionAnalyticsModal'
 import ScenarioFlashcards from '../components/flashcard/ScenarioFlashcards'
 import ScenarioQuiz from '../components/quiz/ScenarioQuiz'
+import ComprehensionQuiz from '../components/quiz/ComprehensionQuiz'
 import GrammarPanel from '../components/grammar/GrammarPanel'
+import {
+  parseComprehensionQuestions,
+  type ComprehensionQuestion,
+} from '../lib/comprehension'
 import {
   Volume2,
   Share2,
@@ -44,12 +49,19 @@ interface Session {
   scenarioPrompt: string
   dialogueJson: string
   vocabCluesJson: string
+  comprehensionQuestionsJson?: string | null
 }
 
 export default function ViewPage({ id, navigate }: { id: string; navigate: (path: string) => void }) {
   const isTeacher = isTeacherAuthenticated()
 
-  const [session, setSession] = useState<(Session & { dialogue: DialogTurn[]; vocabClues: VocabClue[] }) | null>(null)
+  const [session, setSession] = useState<
+    (Session & {
+      dialogue: DialogTurn[]
+      vocabClues: VocabClue[]
+      comprehensionQuestions: ComprehensionQuestion[]
+    }) | null
+  >(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
@@ -113,6 +125,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
           ...data,
           dialogue: JSON.parse(data.dialogueJson) as DialogTurn[],
           vocabClues: JSON.parse(data.vocabCluesJson) as VocabClue[],
+          comprehensionQuestions: parseComprehensionQuestions(data.comprehensionQuestionsJson),
         })
       })
       .catch((err) => setError(err.message))
@@ -802,14 +815,27 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
           )}
 
           {/* TAB 3: KUIS INTERAKTIF */}
+          {/* Level B1 memakai soal Richtig/Falsch hasil AI (menggantikan
+              Hörverstehen/Lückentext); level lain tetap seperti semula. */}
           {activeTab === 'quiz' && (
             <div className="flex-1 py-4">
-              <ScenarioQuiz
-                session={session}
-                sessionId={id}
-                accessKey={validKey}
-                isTeacher={isTeacher}
-              />
+              {session.cefrLevel === 'B1' ? (
+                <ComprehensionQuiz
+                  questions={session.comprehensionQuestions}
+                  sessionId={id}
+                  sessionTitle={session.title}
+                  accessKey={validKey}
+                  isTeacher={isTeacher}
+                  cefrLevel={session.cefrLevel}
+                />
+              ) : (
+                <ScenarioQuiz
+                  session={session}
+                  sessionId={id}
+                  accessKey={validKey}
+                  isTeacher={isTeacher}
+                />
+              )}
             </div>
           )}
 

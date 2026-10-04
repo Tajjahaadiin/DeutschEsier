@@ -362,6 +362,8 @@ export default function SubmissionAnalyticsModal({
                               ? 'Diktat'
                               : ans.type === 'cloze'
                               ? 'Lückentext'
+                              : ans.type === 'comprehension'
+                              ? 'Richtig/Falsch'
                               : ans.type?.startsWith('grammar')
                               ? 'Grammatik'
                               : 'Soal'})

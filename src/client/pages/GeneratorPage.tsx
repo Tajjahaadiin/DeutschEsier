@@ -5,6 +5,7 @@ import { Trash2, Plus, Volume2, ChevronLeft, Save, Sparkles, Play, Square } from
 import { speakGerman, stopSpeech } from '../lib/audio'
 import { nanoid } from 'nanoid'
 import { getAuthHeaders } from '../lib/auth'
+import { parseComprehensionQuestions, type ComprehensionQuestion } from '../lib/comprehension'
 
 interface DialogTurn {
   speaker: string
@@ -24,6 +25,7 @@ interface GeneratedLesson {
   sceneDescription: string
   dialogue: DialogTurn[]
   vocabClues: VocabClue[]
+  comprehensionQuestions?: ComprehensionQuestion[]
 }
 
 export default function GeneratorPage({ editId, navigate }: { editId?: string; navigate: (path: string) => void }) {
@@ -85,6 +87,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           sceneDescription: data.sceneDescription || '',
           dialogue: parsedDialogue,
           vocabClues: parsedVocab,
+          comprehensionQuestions: parseComprehensionQuestions(data.comprehensionQuestionsJson),
         })
 
         const turnA = parsedDialogue.find(t => t.speaker === 'Sprecher A')
@@ -147,6 +150,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         dialogueCount,
         dialogueJson: editedDialogue,
         vocabCluesJson: editedVocab,
+        // Selalu kirim field ini (termasuk null) agar mode edit tidak
+        // menghapus soal Richtig/Falsch yang sudah ada.
+        comprehensionQuestions: lesson.comprehensionQuestions ?? null,
       }
 
       const url = editId ? `/api/sessions/${id}` : '/api/sessions'
