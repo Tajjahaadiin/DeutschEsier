@@ -366,6 +366,10 @@ describe('POST /api/generate — soal latihan tata bahasa', () => {
       'segments',
     ])
     expect(item.properties.isCorrect.type).toBe('BOOLEAN')
+
+    // Jumlah soal dibatasi struktural, bukan hanya lewat teks prompt.
+    expect(schema.properties.grammarQuestions.minItems).toBe('10')
+    expect(schema.properties.grammarQuestions.maxItems).toBe('10')
   })
 
   it('tidak meminta soal latihan bila tidak ada topik dipilih', async () => {

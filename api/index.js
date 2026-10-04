@@ -37983,6 +37983,11 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, gram
               ...wantsGrammarTopics ? {
                 grammarQuestions: {
                   type: Type3.ARRAY,
+                  // Petunjuk jumlah ke model; bukan jaminan keras, karena
+                  // Effect Schema sengaja tetap toleran (lihat schemas.ts).
+                  // SDK @google/genai mengetikkan minItems/maxItems sebagai string.
+                  minItems: "10",
+                  maxItems: "10",
                   items: {
                     type: Type3.OBJECT,
                     properties: {
