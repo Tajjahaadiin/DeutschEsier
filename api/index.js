@@ -8855,6 +8855,11 @@ var learningSession = pgTable("learning_session", {
    * NULL untuk skenario A1/A2 dan data lama sebelum fitur ini.
    */
   comprehensionQuestionsJson: text("comprehension_questions_json"),
+  /**
+   * Pola kalimat (S-P-O, W-Frage, Ja/Nein-Frage) hasil AI untuk tab Materi
+   * grammatik, sebagai JSON array. NULL untuk data lama sebelum fitur ini.
+   */
+  grammarPatternsJson: text("grammar_patterns_json"),
   imageUrl: text("image_url"),
   published: boolean("published").notNull().default(true),
   createdAt: text("created_at").$defaultFn(() => (/* @__PURE__ */ new Date()).toISOString()).notNull(),
@@ -9027,6 +9032,11 @@ function comprehensionQuestionsColumn(raw2) {
   if (raw2 === null) return { comprehensionQuestionsJson: null };
   return { comprehensionQuestionsJson: JSON.stringify(raw2) };
 }
+function grammarPatternsColumn(raw2) {
+  if (raw2 === void 0) return {};
+  if (raw2 === null) return { grammarPatternsJson: null };
+  return { grammarPatternsJson: JSON.stringify(raw2) };
+}
 sessionsRouter.get("/", async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt));
@@ -9051,6 +9061,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
     if (!body.id || !body.title) return c.json({ error: "Invalid data" }, 400);
     const dialogueCount = normalizeDialogueCount(body.dialogueCount);
     const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions);
+    const grammarPatternsCol = grammarPatternsColumn(body.grammarPatterns);
     const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1);
     if (existing) {
       await db.update(learningSession).set({
@@ -9062,6 +9073,7 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
         dialogueCount,
         ...comprehensionCol,
+        ...grammarPatternsCol,
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
       }).where(eq(learningSession.id, body.id));
     } else {
@@ -9074,7 +9086,8 @@ sessionsRouter.post("/", requireTeacherAuth, async (c) => {
         dialogueJson: JSON.stringify(body.dialogueJson),
         vocabCluesJson: JSON.stringify(body.vocabCluesJson),
         dialogueCount,
-        ...comprehensionCol
+        ...comprehensionCol,
+        ...grammarPatternsCol
       });
     }
     return c.json({ success: true, id: body.id });
@@ -9096,6 +9109,7 @@ sessionsRouter.put("/:id", requireTeacherAuth, async (c) => {
       vocabCluesJson: JSON.stringify(body.vocabCluesJson),
       dialogueCount: normalizeDialogueCount(body.dialogueCount),
       ...comprehensionQuestionsColumn(body.comprehensionQuestions),
+      ...grammarPatternsColumn(body.grammarPatterns),
       updatedAt: (/* @__PURE__ */ new Date()).toISOString()
     }).where(eq(learningSession.id, id));
     return c.json({ success: true, id });
@@ -37266,6 +37280,18 @@ var ComprehensionQuestionSchema = Schema_exports.Struct({
   isCorrect: Schema_exports.Boolean,
   explanation: Schema_exports.String
 });
+var GrammarSegmentSchema = Schema_exports.Struct({
+  text: Schema_exports.String,
+  role: Schema_exports.Literal("subjekt", "praedikat", "objekt", "other")
+});
+var GrammarPatternSchema = Schema_exports.Struct({
+  name: Schema_exports.String,
+  nameId: Schema_exports.String,
+  formula: Schema_exports.String,
+  exampleGerman: Schema_exports.String,
+  exampleIndonesian: Schema_exports.String,
+  segments: Schema_exports.Array(GrammarSegmentSchema)
+});
 var GeneratedLessonSchema = Schema_exports.Struct({
   title: Schema_exports.String,
   sceneDescription: Schema_exports.String,
@@ -37275,7 +37301,12 @@ var GeneratedLessonSchema = Schema_exports.Struct({
    * Opsional: hanya diisi untuk skenario level B1. Skenario A1/A2 dan data
    * lama tidak punya field ini, sehingga dekode tetap berhasil.
    */
-  comprehensionQuestions: Schema_exports.optional(Schema_exports.Array(ComprehensionQuestionSchema))
+  comprehensionQuestions: Schema_exports.optional(Schema_exports.Array(ComprehensionQuestionSchema)),
+  /**
+   * Opsional: pola kalimat (S-P-O dll.) untuk tab Materi grammatik.
+   * Sengaja opsional agar data lama tetap bisa dibaca.
+   */
+  grammarPatterns: Schema_exports.optional(Schema_exports.Array(GrammarPatternSchema))
 });
 
 // src/server/effect/ai-service.ts
@@ -37358,13 +37389,50 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8) {
                     required: ["statement", "indonesianText", "isCorrect", "explanation"]
                   }
                 }
-              } : {}
+              } : {},
+              // Pola kalimat untuk tab Materi grammatik (semua level).
+              grammarPatterns: {
+                type: Type3.ARRAY,
+                items: {
+                  type: Type3.OBJECT,
+                  properties: {
+                    name: { type: Type3.STRING },
+                    nameId: { type: Type3.STRING },
+                    formula: { type: Type3.STRING },
+                    exampleGerman: { type: Type3.STRING },
+                    exampleIndonesian: { type: Type3.STRING },
+                    segments: {
+                      type: Type3.ARRAY,
+                      items: {
+                        type: Type3.OBJECT,
+                        properties: {
+                          text: { type: Type3.STRING },
+                          role: {
+                            type: Type3.STRING,
+                            enum: ["subjekt", "praedikat", "objekt", "other"]
+                          }
+                        },
+                        required: ["text", "role"]
+                      }
+                    }
+                  },
+                  required: [
+                    "name",
+                    "nameId",
+                    "formula",
+                    "exampleGerman",
+                    "exampleIndonesian",
+                    "segments"
+                  ]
+                }
+              }
             },
             required: [
               "title",
               "sceneDescription",
               "dialogue",
               "vocabClues",
+              "grammarPatterns",
               ...wantsComprehension ? ["comprehensionQuestions"] : []
             ]
           },
@@ -37417,7 +37485,20 @@ Panduan:
 5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu
 6. sceneDescription menggambarkan latar tempat dan konteks dialog
 7. Sertakan tepat ${dialogueCount} baris dialog
-8. vocabClues minimal 4-6 kata${comprehensionBlock}`;
+8. vocabClues minimal 4-6 kata${comprehensionBlock}
+
+Pola kalimat untuk tab Materi grammatik \u2014 sertakan tepat 3 pola berikut:
+- name "Aussagesatz", nameId "Kalimat Berita": pola Subjekt \u2013 Pr\xE4dikat \u2013 Objekt dengan kata kerja di posisi kedua
+- name "W-Frage", nameId "Kalimat Tanya W": kata tanya (wer, was, wo, wann) di awal, kata kerja di posisi kedua
+- name "Ja/Nein-Frage", nameId "Kalimat Tanya Ya/Tidak": kata kerja di posisi pertama
+
+Aturan pengisian tiap pola:
+1. formula diisi rumus singkat memakai istilah Jerman, mis. "Subjekt \u2013 Pr\xE4dikat \u2013 Objekt"
+2. exampleGerman: UTAMAKAN kalimat yang sudah ada di dialog di atas bila cocok dengan polanya. Bila tidak ada yang cocok, buat kalimat baru yang sederhana dan sesuai skenario
+3. exampleIndonesian diisi terjemahan Indonesia dari exampleGerman
+4. segments memecah exampleGerman menjadi potongan berurutan; setiap potongan punya "text" dan "role"
+5. role hanya boleh salah satu dari: "subjekt", "praedikat", "objekt", atau "other" (untuk kata tanya, kata bantu, negasi, dan bagian lain)
+6. Gabungan semua "text" pada segments harus sama dengan exampleGerman`;
 }
 
 // src/server/routes/generate.ts
