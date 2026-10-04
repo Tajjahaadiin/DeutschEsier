@@ -37,9 +37,17 @@ export interface GrammarTopic {
   /** Penjelasan konsep singkat dalam bahasa Indonesia (juga jadi acuan AI). */
   descriptionId: string
   /**
-   * Kategori latihan yang bisa disasar, bila soal untuk topik ini dapat
-   * diturunkan dari kosakata skenario tanpa risiko tata bahasa salah.
-   * Topik tanpa field ini TIDAK memengaruhi urutan soal latihan.
+   * Kategori latihan internal yang bisa disasar, bila soal untuk topik ini dapat
+   * diturunkan dari kosakata skenario.
+   *
+   * CATATAN: pemetaan ini KASAR. Kategori internal hanya tersedia untuk
+   * Verb/Nomen/Adjektiv/Konjunktion/Präposition, sehingga topik seperti
+   * anak kalimat (relativsatz, nebensatz-*) memakai 'Konjunktion' sebagai
+   * penampung, bukan karena benar-benar sejenis kata sambung. Karena itu
+   * pemetaan ini HANYA dipakai untuk mengurutkan soal, tidak pernah
+   * ditampilkan sebagai klaim "soal ini melatih topik X".
+   *
+   * Topik tanpa field ini tidak memengaruhi soal sama sekali.
    */
   latihanCategory?: LatihanCategory
 }
@@ -76,7 +84,7 @@ export const GRAMMAR_TOPICS: readonly GrammarTopic[] = [
     german: 'Präteritum',
     nameId: 'Präteritum (Lampau Tulisan)',
     section: 'Verba',
-    descriptionId: 'Lampau untuk cerita/tulisan; wajib untuk sein, haben, modalverben.',
+    descriptionId: 'Lampau untuk cerita/tulisan; wajib untuk sein, haben, Modalverben.',
     latihanCategory: 'Verb',
   },
   {
@@ -122,7 +130,7 @@ export const GRAMMAR_TOPICS: readonly GrammarTopic[] = [
     german: 'Passiv mit Modalverben',
     nameId: 'Passiv dengan Kata Kerja Modal',
     section: 'Verba',
-    descriptionId: 'Passiv yang digabung modalverben: muss gemacht werden.',
+    descriptionId: 'Passiv yang digabung Modalverben: muss gemacht werden.',
     latihanCategory: 'Verb',
   },
   {
@@ -279,7 +287,7 @@ export const GRAMMAR_TOPICS: readonly GrammarTopic[] = [
   {
     id: 'possessivartikel',
     german: 'Possessivartikel',
-    nameId: 'Kata Milik (Possesif)',
+    nameId: 'Kata Milik (Posesif)',
     section: 'Pronomina',
     descriptionId: 'mein, dein, sein, ihr dan penggantinya sebagai pronomina.',
   },
@@ -331,7 +339,7 @@ export const GRAMMAR_TOPICS: readonly GrammarTopic[] = [
     german: 'Nebensatz mit als und wenn',
     nameId: 'Anak Kalimat dengan als & wenn',
     section: 'Satzbau',
-    descriptionId: 'als untuk satu kejadian lampau, wenn untuk berulang/ kondisi.',
+    descriptionId: 'als untuk satu kejadian lampau, wenn untuk berulang/kondisi.',
     latihanCategory: 'Konjunktion',
   },
   {
@@ -412,7 +420,7 @@ export const GRAMMAR_TOPICS: readonly GrammarTopic[] = [
     german: 'Komposita',
     nameId: 'Kata Majemuk',
     section: 'Wortbildung',
-    descriptionId: 'Gabungan kata seperti die Hausaufgabe, arbeitslos.',
+    descriptionId: 'Gabungan dua kata benda menjadi satu, seperti die Hausaufgabe oder das Wörterbuch.',
     latihanCategory: 'Nomen',
   },
   {
@@ -459,7 +467,7 @@ export const GRAMMAR_TOPICS: readonly GrammarTopic[] = [
     german: 'Vermutungen äußern',
     nameId: 'Menyatakan Dugaan',
     section: 'Fungsional',
-    descriptionId: 'Futur I dan modalverben subjektif untuk menduga.',
+    descriptionId: 'Futur I dan Modalverben subjektif untuk menduga.',
   },
   {
     id: 'fungsional-erzaehlen',
@@ -491,10 +499,11 @@ export function topicsBySection(
 /**
  * Validasi KETAT untuk input dari klien.
  *
- * Berbeda dari normalizeTopicIds yang membuang ID tak dikenal (dipakai untuk
- * output AI), fungsi ini MENOLAK seluruh input bila ada satu ID tak dikenal,
- * supaya kesalahan klien terlihat jelas sebagai 400 dan bukan diam-diam
- * diabaikan. Mengembalikan null bila tidak sah.
+ * MENOLAK seluruh input bila ada satu ID tak dikenal, supaya kesalahan klien
+ * terlihat jelas sebagai 400 dan bukan diam-diam diabaikan. (Penyaringan ID
+ * yang mengarang pada keluaran AI dilakukan oleh Effect Schema di
+ * src/server/effect/schemas.ts dan parser klien, bukan di sini.)
+ * Mengembalikan null bila tidak sah.
  */
 export function validateTopicIds(raw: unknown): string[] | null {
   if (!Array.isArray(raw)) return null
@@ -502,27 +511,4 @@ export function validateTopicIds(raw: unknown): string[] | null {
   if (raw.some((v) => typeof v !== 'string' || !GRAMMAR_TOPIC_IDS.has(v))) return null
 
   return [...new Set(raw as string[])]
-}
-
-/**
- * Validasi & normalisasi pilihan topik dari klien.
- *
- * Mengembalikan null bila bentuknya tidak sah (bukan array, ada elemen bukan
- * string, atau melebihi MAX_GRAMMAR_TOPICS) supaya pemanggil bisa menjawab 400.
- * ID tak dikenal dibuang, duplikat dibuang, urutan kemunculan pertama dijaga
- * agar hasilnya deterministik.
- */
-export function normalizeTopicIds(raw: unknown): string[] | null {
-  if (!Array.isArray(raw)) return null
-  if (raw.some((v) => typeof v !== 'string')) return null
-  if (raw.length > MAX_GRAMMAR_TOPICS) return null
-
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const id of raw as string[]) {
-    if (!GRAMMAR_TOPIC_IDS.has(id) || seen.has(id)) continue
-    seen.add(id)
-    out.push(id)
-  }
-  return out
 }

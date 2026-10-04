@@ -21,7 +21,6 @@ import {
   type GrammarSegmentRole,
 } from '../../lib/grammarPatterns'
 import { type GrammarTopicContent } from '../../lib/grammarTopicsParser'
-import { GRAMMAR_TOPICS } from '../../../shared/grammarTopics'
 
 export interface GrammarPanelProps {
   vocabClues: { germanWord: string; indonesianMeaning: string; grammarTip: string }[]
@@ -460,14 +459,6 @@ export default function GrammarPanel({
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       {q.kind === 'sentence' ? 'Kalimat Skenario' : 'Konsep Tata Bahasa'}
                     </span>
-                    {q.topicIds?.map((id) => (
-                      <span
-                        key={id}
-                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold border border-violet-100"
-                      >
-                        {GRAMMAR_TOPICS.find((t) => t.id === id)?.german ?? id}
-                      </span>
-                    ))}
                   </div>
                   {submitted && (
                     <span
@@ -562,8 +553,8 @@ export default function GrammarPanel({
                 Latihan mandiri — tidak memengaruhi nilai kuis.
                 {grammarTopics.length > 0 && (
                   <span className="block mt-1">
-                    Soal disusun dari kosakata skenario; topik pilihan hanya memengaruhi urutan
-                    soal.
+                    Soal tetap disusun dari kosakata skenario. Topik pilihan hanya memengaruhi
+                    soal mana yang dipilih, bukan jenis soalnya.
                   </span>
                 )}
               </p>

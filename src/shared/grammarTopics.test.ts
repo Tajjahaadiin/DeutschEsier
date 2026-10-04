@@ -6,7 +6,6 @@ import {
   MAX_GRAMMAR_TOPICS,
   isGrammarTopicId,
   topicsBySection,
-  normalizeTopicIds,
   validateTopicIds,
 } from './grammarTopics'
 
@@ -64,51 +63,6 @@ describe('topicsBySection', () => {
 
   it('mempertahankan urutan seksi sesuai taksonomi', () => {
     expect([...topicsBySection().keys()]).toEqual([...SECTIONS])
-  })
-})
-
-describe('normalizeTopicIds', () => {
-  it('mengembalikan array kosong untuk array kosong', () => {
-    expect(normalizeTopicIds([])).toEqual([])
-  })
-
-  it('menerima ID yang dikenal dan membuang yang tidak dikenal', () => {
-    expect(normalizeTopicIds(['passiv', 'tidak-ada', 'relativsatz'])).toEqual([
-      'passiv',
-      'relativsatz',
-    ])
-  })
-
-  it('membuang duplikat dan mempertahankan urutan kemunculan pertama', () => {
-    expect(normalizeTopicIds(['relativsatz', 'passiv', 'relativsatz'])).toEqual([
-      'relativsatz',
-      'passiv',
-    ])
-  })
-
-  it('menolak nilai yang bukan array', () => {
-    expect(normalizeTopicIds('passiv')).toBeNull()
-    expect(normalizeTopicIds(42)).toBeNull()
-    expect(normalizeTopicIds(null)).toBeNull()
-    expect(normalizeTopicIds(undefined)).toBeNull()
-  })
-
-  it('menolak array yang berisi elemen bukan string', () => {
-    expect(normalizeTopicIds(['passiv', 7])).toBeNull()
-    expect(normalizeTopicIds(['passiv', null])).toBeNull()
-  })
-
-  it('menolak lebih dari batas maksimum', () => {
-    const tooMany = GRAMMAR_TOPICS.slice(0, MAX_GRAMMAR_TOPICS + 1).map((t) => t.id)
-
-    expect(tooMany.length).toBeGreaterThan(MAX_GRAMMAR_TOPICS)
-    expect(normalizeTopicIds(tooMany)).toBeNull()
-  })
-
-  it('menerima tepat sebanyak batas maksimum', () => {
-    const atLimit = GRAMMAR_TOPICS.slice(0, MAX_GRAMMAR_TOPICS).map((t) => t.id)
-
-    expect(normalizeTopicIds(atLimit)).toEqual(atLimit)
   })
 })
 

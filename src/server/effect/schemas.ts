@@ -74,17 +74,30 @@ export const GrammarTopicContentSchema = Schema.Struct({
 })
 
 /**
- * Buang entri yang `topicId`-nya tidak ada di taksonomi (AI kadang mengarang).
- * Sengaja dibuang, bukan digagalkan: satu entri keliru tidak boleh membatalkan
- * seluruh hasil generate yang sudah ditunggu guru.
+ * Buang entri yang bentuknya tidak lengkap ATAU `topicId`-nya tidak ada di
+ * taksonomi.
+ *
+ * Tiap entri didekode satu per satu supaya satu entri cacat hanya membuang
+ * dirinya sendiri, bukan menggagalkan seluruh hasil generate yang sudah
+ * ditunggu guru. Karena itu array mentah didekode dulu, bukan langsung
+ * Schema.Array(GrammarTopicContentSchema).
  */
 const GrammarTopicsSchema = Schema.transform(
-  Schema.Array(GrammarTopicContentSchema),
+  Schema.Array(Schema.Unknown),
   Schema.Array(GrammarTopicContentSchema),
   {
     strict: false,
-    decode: (entries) => entries.filter((e) => isGrammarTopicId(e.topicId)),
-    encode: (entries) => entries,
+    decode: (entries) =>
+      entries.flatMap((entry) => {
+        try {
+          const decoded = Schema.decodeUnknownSync(GrammarTopicContentSchema)(entry)
+          return isGrammarTopicId(decoded.topicId) ? [decoded] : []
+        } catch {
+          return []
+        }
+      }),
+    encode: (entries) =>
+      entries.filter((e) => isGrammarTopicId(e.topicId)),
   }
 )
 

@@ -237,7 +237,7 @@ export function buildGrammarTopicsBlock(topicIds: string[]): string {
   return `\n\nMateri tata bahasa untuk topik berikut (level B1):\n${list}\n\nUntuk SETIAP topik di atas, isi satu entri pada "grammarTopics":\n1. topicId: salin persis dari daftar di atas\n2. name: nama Jerman topik tersebut\n3. nameId: label Indonesia\n4. explanationId: penjelasan konsep 2-4 kalimat dalam bahasa Indonesia, sesuai keterangan di daftar\n5. formula: rumus/pola singkat memakai istilah Jerman\n6. examples: tepat 2 contoh { german, indonesian, note } — kalimat Jerman yang benar, terjemahan Indonesia, dan catatan singkat\n7. Usahakan minimal satu baris dialog di atas memakai tiap topik bila wajar untuk skenarionya`
 }
 
-function buildPrompt(
+export function buildPrompt(
   prompt: string,
   level: string,
   cognates: string[],
@@ -245,7 +245,8 @@ function buildPrompt(
   grammarTopicIds: string[] = []
 ): string {
   const cognateList = cognates.length > 0 ? `\nKata kognate yang WAJIB digunakan: ${cognates.join(', ')}` : ''
-  const grammarTopicsBlock = buildGrammarTopicsBlock(grammarTopicIds)
+  const grammarTopicsBlock =
+    level === 'B1' ? buildGrammarTopicsBlock(grammarTopicIds) : ''
 
   // Level B1: kuis pemahaman digantikan soal Richtig/Falsch (Benar/Salah).
   const comprehensionBlock =

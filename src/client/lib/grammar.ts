@@ -46,7 +46,12 @@ export interface GrammarQuestion {
   explanation: string
   /** Kata kunci sumber soal. */
   source: string
-  /** Topik terpilih yang benar-benar dilatih soal ini (bila ada). */
+  /**
+   * Topik terpilih yang kategorinya cocok dengan soal ini.
+   *
+   * PERINGATAN: ini hanya kecocokan KATEGORI (mis. 'passiv' -> 'Verb'), bukan
+   * bukti soal melatih topik tersebut. Jangan ditampilkan sebagai klaim per soal.
+   */
   topicIds?: string[]
   /**
    * Teks yang layak dibacakan TTS Jerman.
@@ -303,9 +308,9 @@ export function buildQuestions(
   })
 
   // --- Prioritisasi topik terpilih ---
-  // Topik hanya mengubah URUTAN dan memberi label; jumlah soal tidak berubah.
-  // Hanya topik yang punya latihanCategory yang berpengaruh, sehingga tidak ada
-  // soal yang mengklaim melatih topik yang tidak benar-benar dilatih.
+  // Topik hanya mengubah soal mana yang terpilih dan urutannya, BUKAN jenis
+  // soalnya: tidak ada soal yang benar-benar melatih Passiv atau Konjunktiv II.
+  // Yang dipakai hanya kecocokan kategori kata yang kasar.
   const categoryTopics = new Map<string, string[]>()
   for (const id of topicIds) {
     const topic = GRAMMAR_TOPICS.find((t) => t.id === id)

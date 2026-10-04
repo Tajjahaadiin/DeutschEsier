@@ -37294,7 +37294,7 @@ var GRAMMAR_TOPICS = [
     german: "Pr\xE4teritum",
     nameId: "Pr\xE4teritum (Lampau Tulisan)",
     section: "Verba",
-    descriptionId: "Lampau untuk cerita/tulisan; wajib untuk sein, haben, modalverben.",
+    descriptionId: "Lampau untuk cerita/tulisan; wajib untuk sein, haben, Modalverben.",
     latihanCategory: "Verb"
   },
   {
@@ -37340,7 +37340,7 @@ var GRAMMAR_TOPICS = [
     german: "Passiv mit Modalverben",
     nameId: "Passiv dengan Kata Kerja Modal",
     section: "Verba",
-    descriptionId: "Passiv yang digabung modalverben: muss gemacht werden.",
+    descriptionId: "Passiv yang digabung Modalverben: muss gemacht werden.",
     latihanCategory: "Verb"
   },
   {
@@ -37494,7 +37494,7 @@ var GRAMMAR_TOPICS = [
   {
     id: "possessivartikel",
     german: "Possessivartikel",
-    nameId: "Kata Milik (Possesif)",
+    nameId: "Kata Milik (Posesif)",
     section: "Pronomina",
     descriptionId: "mein, dein, sein, ihr dan penggantinya sebagai pronomina."
   },
@@ -37544,7 +37544,7 @@ var GRAMMAR_TOPICS = [
     german: "Nebensatz mit als und wenn",
     nameId: "Anak Kalimat dengan als & wenn",
     section: "Satzbau",
-    descriptionId: "als untuk satu kejadian lampau, wenn untuk berulang/ kondisi.",
+    descriptionId: "als untuk satu kejadian lampau, wenn untuk berulang/kondisi.",
     latihanCategory: "Konjunktion"
   },
   {
@@ -37623,7 +37623,7 @@ var GRAMMAR_TOPICS = [
     german: "Komposita",
     nameId: "Kata Majemuk",
     section: "Wortbildung",
-    descriptionId: "Gabungan kata seperti die Hausaufgabe, arbeitslos.",
+    descriptionId: "Gabungan dua kata benda menjadi satu, seperti die Hausaufgabe oder das W\xF6rterbuch.",
     latihanCategory: "Nomen"
   },
   {
@@ -37668,7 +37668,7 @@ var GRAMMAR_TOPICS = [
     german: "Vermutungen \xE4u\xDFern",
     nameId: "Menyatakan Dugaan",
     section: "Fungsional",
-    descriptionId: "Futur I dan modalverben subjektif untuk menduga."
+    descriptionId: "Futur I dan Modalverben subjektif untuk menduga."
   },
   {
     id: "fungsional-erzaehlen",
@@ -37732,12 +37732,19 @@ var GrammarTopicContentSchema = Schema_exports.Struct({
   examples: Schema_exports.Array(GrammarTopicExampleSchema)
 });
 var GrammarTopicsSchema = Schema_exports.transform(
-  Schema_exports.Array(GrammarTopicContentSchema),
+  Schema_exports.Array(Schema_exports.Unknown),
   Schema_exports.Array(GrammarTopicContentSchema),
   {
     strict: false,
-    decode: (entries2) => entries2.filter((e) => isGrammarTopicId(e.topicId)),
-    encode: (entries2) => entries2
+    decode: (entries2) => entries2.flatMap((entry) => {
+      try {
+        const decoded = Schema_exports.decodeUnknownSync(GrammarTopicContentSchema)(entry);
+        return isGrammarTopicId(decoded.topicId) ? [decoded] : [];
+      } catch {
+        return [];
+      }
+    }),
+    encode: (entries2) => entries2.filter((e) => isGrammarTopicId(e.topicId))
   }
 );
 var GeneratedLessonSchema = Schema_exports.Struct({
@@ -37981,7 +37988,7 @@ Untuk SETIAP topik di atas, isi satu entri pada "grammarTopics":
 function buildPrompt(prompt, level, cognates, dialogueCount, grammarTopicIds = []) {
   const cognateList = cognates.length > 0 ? `
 Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
-  const grammarTopicsBlock = buildGrammarTopicsBlock(grammarTopicIds);
+  const grammarTopicsBlock = level === "B1" ? buildGrammarTopicsBlock(grammarTopicIds) : "";
   const comprehensionBlock = level === "B1" ? `
 
 Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):

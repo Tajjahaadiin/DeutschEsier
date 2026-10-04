@@ -427,3 +427,19 @@ describe('buildGrammarTopicsBlock — batas & isi', () => {
     expect(buildGrammarTopicsBlock(['tidak-ada'])).toBe('')
   })
 })
+
+describe('buildPrompt — guard level untuk topik grammar', () => {
+  it('tidak menyelipkan blok topik B1 ke prompt A1', async () => {
+    const { buildPrompt } = await import('../effect/ai-service')
+    const prompt = buildPrompt('Di kafe', 'A1', [], 8, ['passiv'])
+
+    expect(prompt).not.toContain('Materi tata bahasa untuk topik berikut')
+  })
+
+  it('menyelipkan blok topik pada prompt B1', async () => {
+    const { buildPrompt } = await import('../effect/ai-service')
+    const prompt = buildPrompt('Di kafe', 'B1', [], 8, ['passiv'])
+
+    expect(prompt).toContain('Materi tata bahasa untuk topik berikut')
+  })
+})
