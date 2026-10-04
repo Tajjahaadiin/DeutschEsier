@@ -1,5 +1,5 @@
 {
-  "id": "c1035137-fb4b-49cb-af35-fb101420ba88",
+  "id": "be676cfd-0064-4ef9-b7e0-94a087f35a89",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -67,6 +67,12 @@
         },
         "grammar_patterns_json": {
           "name": "grammar_patterns_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grammar_topics_json": {
+          "name": "grammar_topics_json",
           "type": "text",
           "primaryKey": false,
           "notNull": false

@@ -9,6 +9,7 @@ CREATE TABLE "learning_session" (
 	"dialogue_count" integer DEFAULT 8 NOT NULL,
 	"comprehension_questions_json" text,
 	"grammar_patterns_json" text,
+	"grammar_topics_json" text,
 	"image_url" text,
 	"published" boolean DEFAULT true NOT NULL,
 	"created_at" text NOT NULL,

@@ -5,6 +5,7 @@ import { db } from '../../db/client'
 import { wordBank } from '../../db/schema'
 import { inArray } from 'drizzle-orm'
 import { requireTeacherAuth } from './auth'
+import { validateTopicIds, MAX_GRAMMAR_TOPICS } from '../../shared/grammarTopics'
 
 const generateRouter = new Hono()
 
@@ -16,7 +17,7 @@ export const DEFAULT_DIALOGUE_COUNT = 8
 generateRouter.post('/', requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json()
-    const { prompt, cefrLevel, wordIds, dialogueCount } = body
+    const { prompt, cefrLevel, wordIds, dialogueCount, grammarTopics } = body
     
     if (!prompt || !cefrLevel) {
       return c.json({ error: 'Missing prompt or cefrLevel' }, 400)
@@ -40,6 +41,28 @@ generateRouter.post('/', requireTeacherAuth, async (c) => {
       count = dialogueCount
     }
 
+    // Topik grammar hanya berlaku untuk level B1. Daftar harus sah seluruhnya
+    // (bukan sebagian) supaya kesalahan klien terlihat sebagai 400.
+    let topicIds: string[] = []
+    if (grammarTopics !== undefined) {
+      const valid = validateTopicIds(grammarTopics)
+      if (valid === null) {
+        return c.json(
+          {
+            error: `Daftar topik grammar tidak valid. Maksimal ${MAX_GRAMMAR_TOPICS} topik yang dikenal.`,
+          },
+          400
+        )
+      }
+      if (valid.length > 0 && cefrLevel !== 'B1') {
+        return c.json(
+          { error: 'Topik grammar hanya tersedia untuk level B1.' },
+          400
+        )
+      }
+      topicIds = valid
+    }
+
     let cognateWords: string[] = []
     if (wordIds && Array.isArray(wordIds) && wordIds.length > 0) {
       const words = await db.select({ word: wordBank.germanWord }).from(wordBank).where(inArray(wordBank.id, wordIds))
@@ -47,7 +70,7 @@ generateRouter.post('/', requireTeacherAuth, async (c) => {
     }
 
     const result = await Effect.runPromise(
-      generateLesson(prompt, cefrLevel, cognateWords, count)
+      generateLesson(prompt, cefrLevel, cognateWords, count, topicIds)
     )
     
     return c.json({ lesson: result })

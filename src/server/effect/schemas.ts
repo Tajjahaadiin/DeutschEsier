@@ -1,4 +1,5 @@
 import { Schema } from 'effect'
+import { isGrammarTopicId } from '../../shared/grammarTopics'
 
 export const DialogLineSchema = Schema.Struct({
   speaker: Schema.String,
@@ -50,6 +51,43 @@ export const GrammarPatternSchema = Schema.Struct({
   segments: Schema.Array(GrammarSegmentSchema),
 })
 
+/** Satu contoh pemakaian untuk sebuah topik tata bahasa. */
+export const GrammarTopicExampleSchema = Schema.Struct({
+  german: Schema.String,
+  indonesian: Schema.String,
+  note: Schema.String,
+})
+
+/**
+ * Materi satu topik tata bahasa hasil AI (mis. Passiv, Konjunktiv II).
+ *
+ * Bentuknya sengaja TIDAK memakai `segments` seperti pola kalimat, karena
+ * topik abstrak bukan pola S-P-O.
+ */
+export const GrammarTopicContentSchema = Schema.Struct({
+  topicId: Schema.String,
+  name: Schema.String,
+  nameId: Schema.String,
+  explanationId: Schema.String,
+  formula: Schema.String,
+  examples: Schema.Array(GrammarTopicExampleSchema),
+})
+
+/**
+ * Buang entri yang `topicId`-nya tidak ada di taksonomi (AI kadang mengarang).
+ * Sengaja dibuang, bukan digagalkan: satu entri keliru tidak boleh membatalkan
+ * seluruh hasil generate yang sudah ditunggu guru.
+ */
+const GrammarTopicsSchema = Schema.transform(
+  Schema.Array(GrammarTopicContentSchema),
+  Schema.Array(GrammarTopicContentSchema),
+  {
+    strict: false,
+    decode: (entries) => entries.filter((e) => isGrammarTopicId(e.topicId)),
+    encode: (entries) => entries,
+  }
+)
+
 export const GeneratedLessonSchema = Schema.Struct({
   title: Schema.String,
   sceneDescription: Schema.String,
@@ -65,4 +103,9 @@ export const GeneratedLessonSchema = Schema.Struct({
    * Sengaja opsional agar data lama tetap bisa dibaca.
    */
   grammarPatterns: Schema.optional(Schema.Array(GrammarPatternSchema)),
+  /**
+   * Opsional: materi per topik tata bahasa B1 yang dipilih guru.
+   * Hanya ada bila guru memilih topik; data lama tidak punya field ini.
+   */
+  grammarTopics: Schema.optional(GrammarTopicsSchema),
 })

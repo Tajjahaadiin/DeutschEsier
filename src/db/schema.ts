@@ -44,6 +44,11 @@ export const learningSession = pgTable('learning_session', {
    * grammatik, sebagai JSON array. NULL untuk data lama sebelum fitur ini.
    */
   grammarPatternsJson: text('grammar_patterns_json'),
+  /**
+   * Pilihan topik grammar B1 guru beserta materi AI-nya, sebagai JSON
+   * {"selected": string[], "content": [...]}. NULL untuk A1/A2 dan data lama.
+   */
+  grammarTopicsJson: text('grammar_topics_json'),
   imageUrl: text('image_url'),
   published: boolean('published').notNull().default(true),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()).notNull(),

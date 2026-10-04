@@ -185,6 +185,157 @@ describe('POST /api/generate — soal Richtig/Falsch level B1', () => {
   })
 })
 
+describe('POST /api/generate — pemilihan topik grammar B1', () => {
+  it('menerima daftar topik yang valid untuk level B1', async () => {
+    const res = await postGenerate({
+      prompt: 'Di kafe Berlin',
+      cefrLevel: 'B1',
+      grammarTopics: ['passiv', 'relativsatz'],
+    })
+
+    expect(res.status).toBe(200)
+  })
+
+  it('menolak grammarTopics yang bukan array', async () => {
+    const res = await postGenerate({
+      prompt: 'Di kafe Berlin',
+      cefrLevel: 'B1',
+      grammarTopics: 'passiv',
+    })
+
+    expect(res.status).toBe(400)
+    expect(generateContent).not.toHaveBeenCalled()
+  })
+
+  it('menolak ID topik yang tidak dikenal', async () => {
+    const res = await postGenerate({
+      prompt: 'Di kafe Berlin',
+      cefrLevel: 'B1',
+      grammarTopics: ['konjunktiv-2', 'topik-karangan'],
+    })
+
+    expect(res.status).toBe(400)
+    expect(generateContent).not.toHaveBeenCalled()
+  })
+
+  it('menolak lebih dari 8 topik', async () => {
+    const tooMany = [
+      'passiv',
+      'relativsatz',
+      'konjunktiv-2',
+      'tekamolo',
+      'modalpartikeln',
+      'genitiv',
+      'futur-1',
+      'praeposition-wechsel',
+      'pluralbildung',
+    ]
+    const res = await postGenerate({
+      prompt: 'Di kafe Berlin',
+      cefrLevel: 'B1',
+      grammarTopics: tooMany,
+    })
+
+    expect(res.status).toBe(400)
+    expect(generateContent).not.toHaveBeenCalled()
+  })
+
+  it('menolak topik grammar saat level bukan B1', async () => {
+    const res = await postGenerate({
+      prompt: 'Di kafe Berlin',
+      cefrLevel: 'A1',
+      grammarTopics: ['passiv'],
+    })
+
+    expect(res.status).toBe(400)
+    expect(generateContent).not.toHaveBeenCalled()
+  })
+
+  it('tetap berjalan bila grammarTopics tidak dikirim', async () => {
+    const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'B1' })
+
+    expect(res.status).toBe(200)
+  })
+
+  it('mengirim topik terpilih ke prompt dan responseSchema', async () => {
+    await postGenerate({
+      prompt: 'Di kafe Berlin',
+      cefrLevel: 'B1',
+      grammarTopics: ['passiv', 'relativsatz'],
+    })
+
+    const prompt = lastPromptSentToGemini()
+    expect(prompt).toContain('Passiv')
+    expect(prompt).toContain('Relativsatz')
+    expect(prompt).toContain('grammarTopics')
+
+    const schema = lastResponseSchema()
+    expect(schema.properties.grammarTopics).toBeDefined()
+    expect(schema.properties.grammarTopics.type).toBe('ARRAY')
+    expect(schema.required).toContain('grammarTopics')
+
+    const item = schema.properties.grammarTopics.items
+    expect(item.required).toEqual([
+      'topicId',
+      'name',
+      'nameId',
+      'explanationId',
+      'formula',
+      'examples',
+    ])
+  })
+
+  it('tidak meminta grammarTopics bila tidak ada topik dipilih', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'B1' })
+
+    expect(lastPromptSentToGemini()).not.toContain('grammarTopics')
+    expect(lastResponseSchema().properties.grammarTopics).toBeUndefined()
+  })
+
+  it('tidak meminta grammarTopics pada level A1', async () => {
+    await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+
+    expect(lastResponseSchema().properties.grammarTopics).toBeUndefined()
+  })
+
+  it('membuang topik yang tidak dikenal dari keluaran AI, tanpa gagal', async () => {
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        ...JSON.parse(VALID_LESSON),
+        grammarTopics: [
+          {
+            topicId: 'passiv',
+            name: 'Passiv',
+            nameId: 'Passiv',
+            explanationId: 'Fokus ke kejadian.',
+            formula: 'werden + Partizip II',
+            examples: [{ german: 'Das Haus wird gebaut.', indonesian: 'Rumah itu dibangun.', note: '' }],
+          },
+          {
+            topicId: 'topik-karangan',
+            name: 'Erfunden',
+            nameId: 'Karangan',
+            explanationId: 'x',
+            formula: 'x',
+            examples: [{ german: 'x', indonesian: 'x', note: '' }],
+          },
+        ],
+      }),
+    })
+
+    const res = await postGenerate({
+      prompt: 'Di kafe Berlin',
+      cefrLevel: 'B1',
+      grammarTopics: ['passiv'],
+    })
+    const body = (await res.json()) as any
+
+    expect(res.status).toBe(200)
+    expect(body.lesson.grammarTopics).toHaveLength(1)
+    expect(body.lesson.grammarTopics[0].topicId).toBe('passiv')
+  })
+})
+
 describe('POST /api/generate — pola kalimat untuk tab Materi', () => {
   it('meminta tiga pola kalimat dasar beserta pemecahan peran', async () => {
     await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
@@ -251,5 +402,28 @@ describe('POST /api/generate — pola kalimat untuk tab Materi', () => {
     const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
 
     expect(res.status).toBe(500)
+  })
+})
+
+describe('buildGrammarTopicsBlock — batas & isi', () => {
+  it('mencetak nama Jerman dan label Indonesia dari taksonomi', async () => {
+    const { buildGrammarTopicsBlock } = await import('../effect/ai-service')
+    const block = buildGrammarTopicsBlock(['passiv'])
+
+    expect(block).toContain('Passiv')
+    expect(block).toContain('passiv')
+    expect(block).toContain('grammarTopics')
+  })
+
+  it('mengembalikan string kosong bila tidak ada topik', async () => {
+    const { buildGrammarTopicsBlock } = await import('../effect/ai-service')
+
+    expect(buildGrammarTopicsBlock([])).toBe('')
+  })
+
+  it('mengabaikan ID yang tidak dikenal', async () => {
+    const { buildGrammarTopicsBlock } = await import('../effect/ai-service')
+
+    expect(buildGrammarTopicsBlock(['tidak-ada'])).toBe('')
   })
 })
