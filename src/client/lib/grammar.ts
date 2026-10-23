@@ -95,15 +95,31 @@ const CATEGORY_ARTICLE: Record<GrammarCategory, string> = {
 export function detectCategory(grammarTip: string, germanWord = ''): GrammarCategory {
   const t = (grammarTip || '').toLowerCase()
 
+  // Urutan penting. Istilah yang lebih spesifik lebih dulu supaya tidak tertelan
+  // awalan kata lain: "pronomen" mengandung "nomen", dan "adverb" berakhiran "verb".
   if (/kata sambung|subjunktion|konjunktion/.test(t)) return 'Konjunktion'
-  if (/kata depan|preposisi|praposition|präposition/.test(t)) return 'Präposition'
-  if (/kata benda|substantiv|nomen|jamaknya/.test(t)) return 'Nomen'
+  if (/kata depan|preposisi|praeposition|präposition/.test(t)) return 'Präposition'
   if (/kata sifat|adjektiv/.test(t)) return 'Adjektiv'
-  if (/kata kerja|verb\b|verben|konjugasi|trennbare|regelmassig|regelmäßig/.test(t)) return 'Verb'
+  // "Pronomen" bukan kata benda. Dicek sebelum pola Nomen.
+  if (/pronomen|personalpronomen|possessivartikel|relativpronomen/.test(t)) return 'Sonstiges'
+  if (/kata benda|substantiv|\bnomen\b|jamaknya/.test(t)) return 'Nomen'
+  // "Adverb" bukan kata kerja. Dicek sebelum pola Verb, dan "verb" wajib kata utuh.
+  if (/adverb/.test(t)) return 'Sonstiges'
+  if (/kata kerja|\bverben\b|\bverb\b|konjugasi|trennbare|regelmassig|regelmäßig/.test(t)) {
+    return 'Verb'
+  }
 
   // Fallback: kata berhuruf kecil yang berakhiran -en/-n hampir pasti infinitif
   // verba, karena semua kata benda Jerman ditulis dengan huruf kapital.
-  const w = (germanWord || '').trim()
+  //
+  // Artikel dibuang dulu: "der Garten" bukan infinitif. Dan bila inti katanya
+  // masih berhuruf kapital, itu nomina Jerman — bukan infinitif — walau
+  // akhirannya -en (Garten, Kuchen, Wagen, Hafen, Ofen).
+  const stripped = (germanWord || '').trim()
+  const withArticle = /^(der|die|das)\s+/i.test(stripped)
+  const w = stripped.replace(/^(der|die|das)\s+/i, '').trim()
+
+  if (withArticle && /^[A-ZÄÖÜ]/.test(w)) return 'Nomen'
   if (/^[a-zäöüß]/.test(w) && /(en|n)$/.test(w)) return 'Verb'
 
   return 'Sonstiges'
