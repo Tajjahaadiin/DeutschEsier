@@ -89,7 +89,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
                 </div>
                 {/* Hint */}
                 <p className="mt-2 text-xs text-slate-400">
-                  Hint: Password default: <code className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 font-mono text-[11px]">guru123</code> (dikonfigurasi melalui file .env)
+                  Hint: Password default: <code className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 font-mono text-label">guru123</code> (dikonfigurasi melalui file .env)
                 </p>
               </div>
 

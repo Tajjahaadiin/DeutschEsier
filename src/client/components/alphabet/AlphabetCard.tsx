@@ -61,12 +61,12 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
     >
       {/* Top Badges */}
       <div className="flex items-center justify-between gap-1 mb-2">
-        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${categoryBadgeClass}`}>
+        <span className={`text-label font-semibold px-2 py-0.5 rounded-full border ${categoryBadgeClass}`}>
           {categoryName}
         </span>
         {item.isCriticalForId && (
           <span
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1"
+            className="text-label font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1"
             title="Sering salah diucapkan lidah Indonesia"
           >
             <AlertTriangle size={11} />
@@ -141,7 +141,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
             e.stopPropagation()
             onOpenDetail(item)
           }}
-          className="w-full flex items-center justify-center gap-1 py-1 text-[11px] font-medium text-slate-500 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors"
+          className="w-full flex items-center justify-center gap-1 py-1 text-label font-medium text-slate-500 hover:text-blue-600 hover:bg-slate-50 rounded-md transition-colors"
         >
           <Info size={12} />
           <span>Detail Fonetik & Tips</span>

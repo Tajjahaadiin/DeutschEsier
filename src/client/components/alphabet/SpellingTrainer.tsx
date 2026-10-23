@@ -376,7 +376,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
                 >
                   <span>{item.word}</span>
                   {item.meaning && (
-                    <span className={`text-[10px] ${inputText === item.word ? 'text-blue-100' : 'text-slate-500'}`}>
+                    <span className={`text-label ${inputText === item.word ? 'text-blue-100' : 'text-slate-500'}`}>
                       ({item.meaning})
                     </span>
                   )}
@@ -498,7 +498,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
                     {char.upper}
                   </span>
                   <span
-                    className={`text-[11px] font-medium tracking-tight mt-0.5 truncate max-w-[64px] ${
+                    className={`text-label font-medium tracking-tight mt-0.5 truncate max-w-[64px] ${
                       isActive ? 'text-blue-100 font-bold' : 'text-slate-500'
                     }`}
                   >

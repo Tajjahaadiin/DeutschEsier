@@ -197,7 +197,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
                 <Lightbulb size={14} /> Contoh Kata A1
               </span>
               {item.example.isCognate && (
-                <span className="text-[11px] font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
+                <span className="text-label font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
                   Kognat (Mirip Indonesia)
                 </span>
               )}

@@ -314,7 +314,7 @@ export default function KeyManagerModal({
               <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl text-slate-400">
                 <Key size={28} className="mx-auto mb-2 opacity-30" />
                 <p className="text-xs font-medium">Belum ada kunci akses</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-label text-slate-400 mt-0.5">
                   Buat kunci akses pertama di atas untuk dibagikan ke murid.
                 </p>
               </div>
@@ -340,17 +340,17 @@ export default function KeyManagerModal({
                             </span>
                           )}
                           {isExpired ? (
-                            <span className="text-[11px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">
+                            <span className="text-label bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">
                               Kedaluwarsa
                             </span>
                           ) : (
-                            <span className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                            <span className="text-label bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                               {remaining.text}
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-label text-slate-400">
                           Berakhir:{' '}
                           {new Date(k.expiresAt).toLocaleString('id-ID', {
                             dateStyle: 'medium',

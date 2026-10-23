@@ -180,11 +180,11 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           >
             {/* Header Depan */}
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold tracking-wider uppercase text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
+              <span className="text-label font-semibold tracking-wider uppercase text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
                 Vorderseite (Jerman)
               </span>
               {isCurrentMastered && (
-                <span className="flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 font-semibold">
+                <span className="flex items-center gap-1 text-label text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 font-semibold">
                   <Star size={12} className="fill-amber-500 text-amber-500" />
                   Dikuasai
                 </span>
@@ -234,7 +234,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           >
             {/* Header Belakang */}
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold tracking-wider uppercase text-blue-200 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-xs">
+              <span className="text-label font-semibold tracking-wider uppercase text-blue-200 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-xs">
                 Rückseite (Arti & Tata Bahasa)
               </span>
               <button
@@ -263,7 +263,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
 
               {currentVocab?.grammarTip && (
                 <div className="mt-3 bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 text-left max-w-md mx-auto">
-                  <div className="text-[11px] font-semibold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <div className="text-label font-semibold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1">
                     💡 Catatan Tata Bahasa / Kognat:
                   </div>
                   <p className="text-xs text-blue-100 leading-relaxed font-normal">
@@ -328,7 +328,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
             ({masteredPercent}%)
           </span>
         </div>
-        <span className="text-slate-400 hidden sm:inline text-[11px]">
+        <span className="text-slate-400 hidden sm:inline text-label">
           Tip: Gunakan tombol panah keyboard ← → dan Spasi
         </span>
       </div>

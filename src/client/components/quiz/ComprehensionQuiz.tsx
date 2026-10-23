@@ -210,7 +210,7 @@ export default function ComprehensionQuiz({
             <strong>tidak sesuai (Falsch)</strong> dengan dialog.
           </p>
           {sessionTitle && (
-            <p className="text-[11px] text-indigo-200/80 mt-2">Skenario: {sessionTitle}</p>
+            <p className="text-label text-indigo-200/80 mt-2">Skenario: {sessionTitle}</p>
           )}
         </div>
 

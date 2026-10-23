@@ -304,7 +304,7 @@ export default function SubmissionAnalyticsModal({
 
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className="text-[11px] font-bold text-slate-400 uppercase">
+                    <div className="text-label font-bold text-slate-400 uppercase">
                       Nilai Siswa
                     </div>
                     <div className="text-3xl font-extrabold text-blue-600">
@@ -398,7 +398,7 @@ export default function SubmissionAnalyticsModal({
                               : 'bg-rose-100/50 border-rose-200 text-rose-900'
                           }`}
                         >
-                          <span className="block text-[10px] uppercase font-bold opacity-75">
+                          <span className="block text-label uppercase font-bold opacity-75">
                             Jawaban Siswa:
                           </span>
                           <span className="font-semibold text-sm">
@@ -407,7 +407,7 @@ export default function SubmissionAnalyticsModal({
                         </div>
 
                         <div className="p-2.5 rounded-lg border bg-white border-slate-200 text-slate-800">
-                          <span className="block text-[10px] uppercase font-bold text-slate-400">
+                          <span className="block text-label uppercase font-bold text-slate-400">
                             Kunci Jawaban Benar:
                           </span>
                           <span className="font-bold text-sm text-blue-700">
@@ -417,7 +417,7 @@ export default function SubmissionAnalyticsModal({
                       </div>
 
                       {(ans.indonesianHint || ans.grammarTip) && (
-                        <div className="text-[11px] text-slate-500 pt-1 space-y-0.5 border-t border-slate-200/60">
+                        <div className="text-label text-slate-500 pt-1 space-y-0.5 border-t border-slate-200/60">
                           {ans.indonesianHint && (
                             <div>
                               🇮🇩 <strong>Arti:</strong> {ans.indonesianHint}
@@ -451,7 +451,7 @@ export default function SubmissionAnalyticsModal({
                   <div className="text-2xl font-extrabold text-slate-900">
                     {activeStats?.totalSubmissions || 0}
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">Sudah mengumpulkan</div>
+                  <div className="text-label text-slate-400 mt-0.5">Sudah mengumpulkan</div>
                 </div>
 
                 {/* Rata-Rata Nilai */}
@@ -466,7 +466,7 @@ export default function SubmissionAnalyticsModal({
                     {activeStats?.averageScore || 0}
                     <span className="text-xs font-normal text-slate-400">/100</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">Nilai rata-rata kelas</div>
+                  <div className="text-label text-slate-400 mt-0.5">Nilai rata-rata kelas</div>
                 </div>
 
                 {/* Tingkat Kelulusan */}
@@ -480,7 +480,7 @@ export default function SubmissionAnalyticsModal({
                   <div className="text-2xl font-extrabold text-emerald-600">
                     {activeStats?.passRate || 0}%
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">Nilai KKM ≥ 70</div>
+                  <div className="text-label text-slate-400 mt-0.5">Nilai KKM ≥ 70</div>
                 </div>
 
                 {/* Nilai Tertinggi */}
@@ -495,7 +495,7 @@ export default function SubmissionAnalyticsModal({
                     {activeStats?.highestScore || 0}
                     <span className="text-xs font-normal text-slate-400">/100</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">Skor maksimal kelas</div>
+                  <div className="text-label text-slate-400 mt-0.5">Skor maksimal kelas</div>
                 </div>
               </div>
 
@@ -527,7 +527,7 @@ export default function SubmissionAnalyticsModal({
                             <span className={`text-xs sm:text-sm font-extrabold ${item.textColor}`}>
                               {item.count}
                             </span>
-                            <span className="block text-[10px] text-slate-400 font-medium">
+                            <span className="block text-label text-slate-400 font-medium">
                               ({percentOfTotal}%)
                             </span>
                           </div>
@@ -545,7 +545,7 @@ export default function SubmissionAnalyticsModal({
                             <span className="block text-xs font-bold text-slate-700">
                               {item.label}
                             </span>
-                            <span className="block text-[10px] text-slate-400 line-clamp-1">
+                            <span className="block text-label text-slate-400 line-clamp-1">
                               {item.sublabel}
                             </span>
                           </div>
@@ -594,7 +594,7 @@ export default function SubmissionAnalyticsModal({
                         ? 'Belum ada murid yang mengerjakan kuis.'
                         : 'Belum ada murid yang mengerjakan aktivitas ini.'}
                     </p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-label text-slate-400 mt-0.5">
                       Bagikan link atau kunci akses kepada murid untuk mulai mengumpulkan nilai.
                     </p>
                   </div>
@@ -606,7 +606,7 @@ export default function SubmissionAnalyticsModal({
                   <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
+                        <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider text-label">
                           <tr>
                             <th className="py-3 px-4">Nama Siswa</th>
                             <th className="py-3 px-3 text-center">Nilai</th>
@@ -637,7 +637,7 @@ export default function SubmissionAnalyticsModal({
                               <td className="py-3 px-3 text-center font-medium text-slate-600">
                                 {sub.correctAnswers} / {sub.totalQuestions}
                               </td>
-                              <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
+                              <td className="py-3 px-3 font-mono text-label text-slate-500">
                                 {sub.accessKey ? (
                                   <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                                     {sub.accessKey}
@@ -646,7 +646,7 @@ export default function SubmissionAnalyticsModal({
                                   <span className="text-slate-400">-</span>
                                 )}
                               </td>
-                              <td className="py-3 px-3 text-slate-500 text-[11px]">
+                              <td className="py-3 px-3 text-slate-500 text-label">
                                 {new Date(sub.submittedAt).toLocaleString('id-ID', {
                                   dateStyle: 'medium',
                                   timeStyle: 'short',

@@ -436,7 +436,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               }}
               className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
-            <p className="text-[11px] text-slate-400 mt-1">1 - 20 baris</p>
+            <p className="text-label text-slate-400 mt-1">1 - 20 baris</p>
           </div>
           <div className="flex-1">
             <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -451,7 +451,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                 <option key={n} value={n}>{n} Orang</option>
               ))}
             </select>
-            <p className="text-[11px] text-slate-400 mt-1">2 - 6 pembicara</p>
+            <p className="text-label text-slate-400 mt-1">2 - 6 pembicara</p>
           </div>
           <div className="text-sm text-slate-500 mt-5">
             <span className="font-medium text-blue-600">{selectedWords.length}</span> kata Bank

@@ -234,7 +234,7 @@ export default function GrammarPanel({
           <strong>Richtig oder Falsch</strong> (benar atau salah).
         </p>
         {sessionTitle && (
-          <p className="text-[11px] text-indigo-200/80 mt-2">Skenario: {sessionTitle}</p>
+          <p className="text-label text-indigo-200/80 mt-2">Skenario: {sessionTitle}</p>
         )}
       </div>
 
@@ -288,7 +288,7 @@ export default function GrammarPanel({
                     <h3 className="font-bold text-slate-800 text-sm sm:text-base">
                       {pattern.name}
                     </h3>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100">
+                    <span className="text-label px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-100">
                       {pattern.nameId}
                     </span>
                   </div>
@@ -299,13 +299,13 @@ export default function GrammarPanel({
                   {/* Contoh kalimat dengan pewarnaan peran */}
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <p className="text-label font-bold uppercase tracking-wider text-slate-400">
                         Contoh
                       </p>
                       <button
                         type="button"
                         onClick={() => handlePlay(pattern.exampleGerman)}
-                        className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-semibold transition-colors cursor-pointer"
+                        className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-label font-semibold transition-colors cursor-pointer"
                         title="Dengarkan contoh kalimat"
                       >
                         <Volume2
@@ -345,7 +345,7 @@ export default function GrammarPanel({
                         .map((role) => (
                           <span
                             key={role}
-                            className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${ROLE_STYLE[role].className}`}
+                            className={`text-label px-2 py-0.5 rounded-full border font-semibold ${ROLE_STYLE[role].className}`}
                           >
                             {ROLE_STYLE[role].label}
                           </span>
@@ -374,7 +374,7 @@ export default function GrammarPanel({
                         <h4 className="font-bold text-slate-800 text-sm sm:text-base">
                           {topic.name}
                         </h4>
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold border border-violet-100">
+                        <span className="text-label px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold border border-violet-100">
                           {topic.nameId}
                         </span>
                       </div>
@@ -412,7 +412,7 @@ export default function GrammarPanel({
                             </div>
                             <p className="text-xs text-slate-600 mt-1 italic">{ex.indonesian}</p>
                             {ex.note && (
-                              <p className="text-[11px] text-amber-800 mt-1.5">💡 {ex.note}</p>
+                              <p className="text-label text-amber-800 mt-1.5">💡 {ex.note}</p>
                             )}
                           </div>
                         ))}
@@ -452,7 +452,7 @@ export default function GrammarPanel({
               {/* Kirim hasil ke guru (submission terpisah dari nilai kuis) */}
               {sessionId && !saved && (
                 <div className="mt-4 pt-4 border-t border-slate-200/70 text-left max-w-sm mx-auto">
-                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                  <label className="block text-label font-bold text-slate-600 uppercase tracking-wider mb-1.5">
                     Kirim ke Guru (opsional)
                   </label>
                   <input
@@ -463,7 +463,7 @@ export default function GrammarPanel({
                     className="w-full text-xs px-3 py-2 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-slate-400"
                   />
                   {saveError && (
-                    <p className="text-[11px] text-rose-600 mt-1.5">{saveError}</p>
+                    <p className="text-label text-rose-600 mt-1.5">{saveError}</p>
                   )}
                   <button
                     type="button"
@@ -478,7 +478,7 @@ export default function GrammarPanel({
               )}
 
               {saved && (
-                <p className="mt-3 text-[11px] font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-xl px-3 py-2 inline-flex items-center gap-1.5">
+                <p className="mt-3 text-label font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-xl px-3 py-2 inline-flex items-center gap-1.5">
                   <CheckCircle2 size={13} />
                   <span>Hasil tersimpan di analitik guru.</span>
                 </p>
@@ -517,18 +517,18 @@ export default function GrammarPanel({
                     <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
                       {idx + 1}
                     </span>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    <span className="text-label font-bold uppercase tracking-wider text-slate-500">
                       {q.kindLabel}
                     </span>
                     {q.topicId && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
+                      <span className="text-label px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
                         {q.topicId}
                       </span>
                     )}
                   </div>
                   {submitted && (
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label font-bold ${
                         isRight ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
                       }`}
                     >
@@ -541,7 +541,7 @@ export default function GrammarPanel({
                 {/* Pernyataan */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-3">
                   {q.isAi && (
-                    <p className="text-[11px] font-semibold text-slate-500 mb-2">
+                    <p className="text-label font-semibold text-slate-500 mb-2">
                       Apakah kalimat ini gramatikal?
                     </p>
                   )}
@@ -570,7 +570,7 @@ export default function GrammarPanel({
                   <button
                     type="button"
                     onClick={() => handlePlay(q.audioText)}
-                    className="mt-2 inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold transition-colors cursor-pointer"
+                    className="mt-2 inline-flex items-center gap-1.5 text-label px-2.5 py-1 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold transition-colors cursor-pointer"
                     title="Dengarkan bagian bahasa Jerman"
                   >
                     <Volume2 size={12} className={playingWord === q.audioText ? 'animate-pulse' : ''} />
@@ -610,17 +610,17 @@ export default function GrammarPanel({
                 {/* Penjelasan setelah submit */}
                 {submitted && (
                   <div className="mt-3 pt-3 border-t border-slate-200/70">
-                    <p className="text-[11px] text-slate-600">
+                    <p className="text-label text-slate-600">
                       <strong className="text-slate-700">Kunci:</strong>{' '}
                       {q.isCorrect ? 'Richtig (benar)' : 'Falsch (salah)'}
                     </p>
-                    <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
+                    <p className="text-label text-amber-800 mt-1 leading-relaxed">
                       💡 {q.explanation}
                     </p>
                     {/* Selalu tampilkan bentuk yang benar agar kalimat yang salah
                         selalu berpasangan dengan koreksinya. */}
                     {q.isAi && q.correctedSentence && (
-                      <p className="text-[11px] text-emerald-800 mt-1 leading-relaxed">
+                      <p className="text-label text-emerald-800 mt-1 leading-relaxed">
                         ✏️ <strong>Bentuk benar:</strong> {q.correctedSentence}
                       </p>
                     )}
@@ -658,7 +658,7 @@ export default function GrammarPanel({
                 </span>
               </button>
               {submitError && (
-                <p className="text-center text-[11px] text-rose-600 font-semibold mt-2">
+                <p className="text-center text-label text-rose-600 font-semibold mt-2">
                   {submitError}
                 </p>
               )}

@@ -121,7 +121,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                 <button
                   type="button"
                   onClick={() => handlePlay(month.german)}
-                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-[11px] font-semibold transition-colors cursor-pointer"
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-label font-semibold transition-colors cursor-pointer"
                 >
                   <Volume2 size={12} className={playing === month.german ? 'animate-pulse' : ''} />
                   Dengarkan
@@ -143,8 +143,8 @@ export default function DayPage({ navigate }: DayPageProps) {
           <div className="grid grid-cols-7 border-b border-slate-100">
             {WEEKDAYS.map((d) => (
               <div key={d.german} className="py-2 text-center">
-                <p className="text-[11px] sm:text-xs font-bold text-slate-700">{d.german}</p>
-                <p className="text-[9px] text-slate-400">{d.meaningId}</p>
+                <p className="text-label sm:text-xs font-bold text-slate-700">{d.german}</p>
+                <p className="text-label text-slate-400">{d.meaningId}</p>
               </div>
             ))}
           </div>
@@ -170,7 +170,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                   <span className={`text-sm font-bold ${holiday ? 'text-rose-700' : 'text-slate-700'}`}>
                     {day}
                   </span>
-                  {holiday && <span className="text-[9px] text-rose-600 font-semibold">🎉</span>}
+                  {holiday && <span className="text-label text-rose-600 font-semibold">🎉</span>}
                 </button>
               )
             })}
@@ -178,10 +178,10 @@ export default function DayPage({ navigate }: DayPageProps) {
 
           {/* Legenda */}
           <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center gap-4 flex-wrap">
-            <span className="text-[11px] text-slate-500">
+            <span className="text-label text-slate-500">
               Klik tanggal untuk mendengar hari + tanggalnya dalam bahasa Jerman.
             </span>
-            <span className="text-[11px] text-rose-600 font-semibold">🎉 = hari libur</span>
+            <span className="text-label text-rose-600 font-semibold">🎉 = hari libur</span>
           </div>
         </div>
 
@@ -203,7 +203,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                   <div>
                     <p className="text-sm font-bold text-slate-800">{h.german}</p>
                     <p className="text-xs text-slate-500 mt-0.5">{h.meaningId}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">
+                    <p className="text-label text-slate-400 mt-1">
                       {h.day} {MONTHS[h.month].meaningId}
                     </p>
                   </div>
@@ -234,7 +234,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-slate-800 truncate">{t.german}</p>
-                    <p className="text-[11px] text-slate-400">{t.pronunciation}</p>
+                    <p className="text-label text-slate-400">{t.pronunciation}</p>
                     <p className="text-xs text-slate-500 mt-0.5">{t.meaningId}</p>
                   </div>
                   <Volume2

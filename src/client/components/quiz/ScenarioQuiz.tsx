@@ -605,7 +605,7 @@ export default function ScenarioQuiz({
                   {ans.isCorrect ? (
                     <>
                       <div className="p-3.5 rounded-xl border bg-emerald-100/70 border-emerald-200 text-emerald-950">
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-emerald-800 mb-1">
+                        <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
                           Jawaban Kamu:
                         </span>
                         <p className="font-bold text-sm flex items-center gap-1.5 text-emerald-900">
@@ -615,7 +615,7 @@ export default function ScenarioQuiz({
                       </div>
 
                       <div className="p-3.5 rounded-xl border bg-emerald-100/70 border-emerald-200 text-slate-800">
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-emerald-800 mb-1">
+                        <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
                           Kunci Jawaban yang Benar:
                         </span>
                         <p className="font-bold text-sm text-emerald-900">{ans.correctAnswer}</p>
@@ -624,7 +624,7 @@ export default function ScenarioQuiz({
                   ) : (
                     <>
                       <div className="p-3.5 rounded-xl border bg-rose-100/70 border-rose-200 text-rose-950">
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-rose-800 mb-1">
+                        <span className="block text-label font-bold uppercase tracking-wider text-rose-800 mb-1">
                           Jawaban Kamu:
                         </span>
                         <p className="font-semibold text-sm">
@@ -637,7 +637,7 @@ export default function ScenarioQuiz({
                       </div>
 
                       <div className="p-3.5 rounded-xl border bg-emerald-100/70 border-emerald-200 text-slate-800">
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-emerald-800 mb-1">
+                        <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
                           Kunci Jawaban yang Benar:
                         </span>
                         <p className="font-bold text-sm text-emerald-900">{ans.correctAnswer}</p>
@@ -648,7 +648,7 @@ export default function ScenarioQuiz({
 
                 {/* Petunjuk & Tips */}
                 {(ans.indonesianHint || ans.grammarTip) && (
-                  <div className="mt-3 pt-2.5 border-t border-slate-200/60 text-[11px] text-slate-600 flex flex-col gap-0.5">
+                  <div className="mt-3 pt-2.5 border-t border-slate-200/60 text-label text-slate-600 flex flex-col gap-0.5">
                     {ans.indonesianHint && (
                       <span>
                         🇮🇩 <strong>Arti:</strong> {ans.indonesianHint}
@@ -733,7 +733,7 @@ export default function ScenarioQuiz({
             className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
           />
           {accessKey && (
-            <p className="text-[11px] text-slate-400 mt-2 font-mono">
+            <p className="text-label text-slate-400 mt-2 font-mono">
               Kunci Akses Terverifikasi: <strong>{accessKey}</strong>
             </p>
           )}
@@ -784,7 +784,7 @@ export default function ScenarioQuiz({
                       <button
                         type="button"
                         onClick={() => handleSpeedToggle(q.id)}
-                        className="text-[11px] px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold transition-colors cursor-pointer"
+                        className="text-label px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold transition-colors cursor-pointer"
                         title="Ubah kecepatan audio (1.0x / 0.8x)"
                       >
                         {currentSpeed}x
@@ -805,7 +805,7 @@ export default function ScenarioQuiz({
                       </button>
                     </div>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-label font-medium border border-slate-200">
                       ✍️ Murni Teks (Tanpa Audio)
                     </span>
                   )}
@@ -839,7 +839,7 @@ export default function ScenarioQuiz({
                 </div>
 
                 {/* Petunjuk Arti & Tip */}
-                <div className="text-[11px] text-slate-500 space-y-0.5 pt-1">
+                <div className="text-label text-slate-500 space-y-0.5 pt-1">
                   {q.indonesianHint && (
                     <p>
                       🇮🇩 <strong>Arti / Konteks:</strong> {q.indonesianHint}

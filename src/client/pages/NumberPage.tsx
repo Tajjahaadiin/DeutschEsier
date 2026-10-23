@@ -145,8 +145,8 @@ export default function NumberPage({ navigate }: NumberPageProps) {
                   />
                 </div>
                 <p className="text-sm font-bold text-blue-700 mt-1">{item.german}</p>
-                <p className="text-[11px] text-slate-400">{item.pronunciation}</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">{item.meaningId}</p>
+                <p className="text-label text-slate-400">{item.pronunciation}</p>
+                <p className="text-label text-slate-500 mt-0.5">{item.meaningId}</p>
               </button>
             ))}
           </div>
@@ -204,7 +204,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
                   {objectSlot && (
                     <div className="text-center">
                       <div className="text-3xl">{objectSlot.emoji}</div>
-                      <div className="text-[11px] font-bold text-slate-600">{objectSlot.noun}</div>
+                      <div className="text-label font-bold text-slate-600">{objectSlot.noun}</div>
                     </div>
                   )}
                 </DropSlot>
@@ -230,7 +230,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
               {/* Hasil */}
               {generated && (
                 <div className="mt-5 bg-surface-muted border border-border rounded-2xl p-5 text-center">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600 mb-1">
+                  <p className="text-label font-bold uppercase tracking-wider text-blue-600 mb-1">
                     Hasil
                   </p>
                   <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">{generated}</p>
@@ -312,7 +312,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
                   >
                     <div className="text-2xl">{obj.emoji}</div>
                     <div
-                      className={`text-[11px] font-bold mt-1 ${
+                      className={`text-label font-bold mt-1 ${
                         objectSlot?.noun === obj.noun ? 'text-white' : 'text-slate-700'
                       }`}
                     >

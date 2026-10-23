@@ -43,7 +43,7 @@ export default function GrammarTopicPicker({ selected, onChange }: GrammarTopicP
           <button
             type="button"
             onClick={() => onChange([])}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-label font-semibold text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
           >
             <X size={12} /> Hapus semua
           </button>
@@ -67,7 +67,7 @@ export default function GrammarTopicPicker({ selected, onChange }: GrammarTopicP
         />
       </button>
 
-      <p className="text-[11px] text-slate-400 mt-1">
+      <p className="text-label text-slate-400 mt-1">
         Maksimal {MAX_GRAMMAR_TOPICS} topik. Topik terpilih dipakai untuk dialog dan materi
         grammatik.
       </p>
@@ -76,7 +76,7 @@ export default function GrammarTopicPicker({ selected, onChange }: GrammarTopicP
         <div className="mt-2 max-h-80 overflow-y-auto border border-slate-200 rounded-xl bg-white p-3 space-y-3">
           {[...grouped.entries()].map(([section, topics]) => (
             <div key={section}>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <p className="text-label font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                 {section}
               </p>
               <div className="space-y-1">
@@ -105,12 +105,12 @@ export default function GrammarTopicPicker({ selected, onChange }: GrammarTopicP
                             {topic.german}
                           </span>
                           {!topic.latihanCategory && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-medium">
+                            <span className="text-label px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-medium">
                               materi & dialog
                             </span>
                           )}
                         </span>
-                        <span className="block text-[11px] text-slate-500">{topic.nameId}</span>
+                        <span className="block text-label text-slate-500">{topic.nameId}</span>
                       </span>
                     </label>
                   )
