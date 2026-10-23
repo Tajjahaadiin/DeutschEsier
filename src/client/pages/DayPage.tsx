@@ -99,7 +99,7 @@ export default function DayPage({ navigate }: DayPageProps) {
         {/* ============ KALENDER DINDING ============ */}
         <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
           {/* Kepala kalender */}
-          <div className="bg-gradient-to-r from-indigo-600 to-violet-700 text-white p-5">
+          <div className="bg-primary text-on-primary p-5">
             <div className="flex items-center justify-between">
               <button
                 type="button"

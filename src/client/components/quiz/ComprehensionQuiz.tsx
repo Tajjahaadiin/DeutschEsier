@@ -195,7 +195,7 @@ export default function ComprehensionQuiz({
   return (
     <div className="max-w-2xl mx-auto w-full px-4 py-6">
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="bg-gradient-to-r from-violet-600 to-indigo-700 text-white p-5 sm:p-6 rounded-3xl shadow-lg">
+        <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-3xl shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
               ✅ Richtig oder Falsch
@@ -300,7 +300,7 @@ export default function ComprehensionQuiz({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-on-primary font-bold text-sm shadow-md transition-all disabled:opacity-50 cursor-pointer"
           >
             <Send size={16} />
             <span>{submitting ? 'Memeriksa & Mengirim Jawaban...' : 'Kumpulkan Jawaban Kuis'}</span>

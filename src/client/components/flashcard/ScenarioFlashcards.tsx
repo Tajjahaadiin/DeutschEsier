@@ -151,7 +151,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
       {/* Progress Bar Tipis */}
       <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mb-6">
         <div
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full transition-all duration-300 rounded-full"
+          className="bg-primary h-full transition-all duration-300 rounded-full"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -225,7 +225,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
 
           {/* Bagian Belakang (Rückseite) */}
           <div
-            className="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl"
+            className="absolute inset-0 w-full h-full bg-slate-900 text-on-primary rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',

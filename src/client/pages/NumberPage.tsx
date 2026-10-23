@@ -213,7 +213,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
                   type="button"
                   onClick={handleGenerate}
                   disabled={numberSlot === null || !objectSlot}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-primary hover:bg-primary/90 text-on-primary text-sm font-bold shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <Sparkles size={16} /> Generate
                 </button>
@@ -229,7 +229,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
 
               {/* Hasil */}
               {generated && (
-                <div className="mt-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 text-center">
+                <div className="mt-5 bg-surface-muted border border-border rounded-2xl p-5 text-center">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600 mb-1">
                     Hasil
                   </p>

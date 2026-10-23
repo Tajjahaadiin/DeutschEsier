@@ -29,12 +29,12 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-neutral flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Card Container */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white text-center relative">
+          <div className="bg-primary p-6 text-on-primary text-center relative">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm mb-3 shadow-inner">
               <BookOpen size={30} className="text-white" />
             </div>

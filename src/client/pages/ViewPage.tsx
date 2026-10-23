@@ -380,7 +380,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* Hero banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 shadow-lg">
+      <div className="bg-primary text-on-primary p-6 shadow-lg">
         <div className="max-w-3xl mx-auto">
           {isTeacher && (
             <button

@@ -219,7 +219,7 @@ export default function GrammarPanel({
   return (
     <div className="max-w-2xl mx-auto w-full px-4 py-6 space-y-5">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-violet-700 text-white p-5 sm:p-6 rounded-3xl shadow-lg">
+      <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-3xl shadow-lg">
         <div className="flex items-center gap-2 mb-2">
           <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
             📚 Grammatik
@@ -650,7 +650,7 @@ export default function GrammarPanel({
                   setSubmitted(true)
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-on-primary font-bold text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <BookOpen size={16} />
                 <span>

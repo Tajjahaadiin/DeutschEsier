@@ -472,7 +472,7 @@ export default function ScenarioQuiz({
           <p className="text-sm text-slate-500 mb-6">{praiseMessage}</p>
 
           {/* Badge Skor Besar */}
-          <div className="inline-flex flex-col items-center justify-center w-36 h-36 rounded-3xl shadow-lg border-4 border-white mb-6 mx-auto transition-transform hover:scale-105 duration-200 bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 text-white">
+          <div className="inline-flex flex-col items-center justify-center w-36 h-36 rounded-3xl shadow-lg border-4 border-white mb-6 mx-auto transition-transform hover:scale-105 duration-200 bg-primary text-on-primary">
             <span className="text-xs uppercase font-bold tracking-wider text-blue-200">
               Nilai Akhir
             </span>
@@ -703,7 +703,7 @@ export default function ScenarioQuiz({
     <div className="max-w-2xl mx-auto w-full px-4 py-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Banner Info Kuis */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 sm:p-6 rounded-3xl shadow-lg">
+        <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-3xl shadow-lg">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
               📝 Kuis Interaktif
@@ -861,7 +861,7 @@ export default function ScenarioQuiz({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-on-primary font-bold text-sm shadow-md transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
           >
             <Send size={16} />
             <span>{submitting ? 'Memeriksa & Mengirim Jawaban...' : 'Kumpulkan Jawaban Kuis'}</span>
