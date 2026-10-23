@@ -545,6 +545,35 @@ describe('K6 — Retry behaviour pada schema validation failure', () => {
   })
 })
 
+describe('K7 — Validasi cefrLevel', () => {
+  it('menolak cefrLevel huruf kecil seperti "b1" dengan 400', async () => {
+    const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'b1' })
+
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as any
+    expect(body.error).toMatch(/CEFR/)
+    expect(generateContent).not.toHaveBeenCalled()
+  })
+
+  it('menolak cefrLevel di luar A1/A2/B1 seperti "B2", "C1"', async () => {
+    for (const invalid of ['B2', 'C1', 'C2', 'XYZ', ' A1 ']) {
+      const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: invalid })
+      expect(res.status).toBe(400)
+      expect(generateContent).not.toHaveBeenCalled()
+    }
+  })
+
+  it('menerima cefrLevel yang sah: A1, A2, B1', async () => {
+    for (const valid of ['A1', 'A2', 'B1']) {
+      generateContent.mockClear()
+      const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: valid })
+      expect(res.status).toBe(200)
+      expect(generateContent).toHaveBeenCalledTimes(1)
+    }
+  })
+})
+
+
 
 describe('buildGrammarTopicsBlock — batas & isi', () => {
   it('mencetak nama Jerman dan label Indonesia dari taksonomi', async () => {

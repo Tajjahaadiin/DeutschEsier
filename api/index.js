@@ -38191,12 +38191,24 @@ var generateRouter = new Hono2();
 var MIN_DIALOGUE_COUNT = 1;
 var MAX_DIALOGUE_COUNT = 20;
 var DEFAULT_DIALOGUE_COUNT = 8;
+var ALLOWED_CEFR_LEVELS = ["A1", "A2", "B1"];
+function isCefrLevel(value3) {
+  return typeof value3 === "string" && ALLOWED_CEFR_LEVELS.includes(value3);
+}
 generateRouter.post("/", requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json();
     const { prompt, cefrLevel, wordIds, dialogueCount, grammarTopics } = body;
     if (!prompt || !cefrLevel) {
       return c.json({ error: "Missing prompt or cefrLevel" }, 400);
+    }
+    if (!isCefrLevel(cefrLevel)) {
+      return c.json(
+        {
+          error: `Level CEFR tidak valid: "${cefrLevel}". Pilihan yang didukung: ${ALLOWED_CEFR_LEVELS.join(", ")}.`
+        },
+        400
+      );
     }
     let count3 = DEFAULT_DIALOGUE_COUNT;
     if (dialogueCount !== void 0) {

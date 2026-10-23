@@ -14,6 +14,13 @@ export const MIN_DIALOGUE_COUNT = 1
 export const MAX_DIALOGUE_COUNT = 20
 export const DEFAULT_DIALOGUE_COUNT = 8
 
+export const ALLOWED_CEFR_LEVELS = ['A1', 'A2', 'B1'] as const
+export type CefrLevel = (typeof ALLOWED_CEFR_LEVELS)[number]
+
+function isCefrLevel(value: unknown): value is CefrLevel {
+  return typeof value === 'string' && (ALLOWED_CEFR_LEVELS as readonly string[]).includes(value)
+}
+
 generateRouter.post('/', requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json()
@@ -21,6 +28,15 @@ generateRouter.post('/', requireTeacherAuth, async (c) => {
     
     if (!prompt || !cefrLevel) {
       return c.json({ error: 'Missing prompt or cefrLevel' }, 400)
+    }
+
+    if (!isCefrLevel(cefrLevel)) {
+      return c.json(
+        {
+          error: `Level CEFR tidak valid: "${cefrLevel}". Pilihan yang didukung: ${ALLOWED_CEFR_LEVELS.join(', ')}.`,
+        },
+        400
+      )
     }
 
     let count = DEFAULT_DIALOGUE_COUNT
