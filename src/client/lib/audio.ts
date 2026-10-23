@@ -20,12 +20,6 @@ interface ResolvedVoiceConfig {
 const MALE_VOICE_REGEX = /\b(conrad|kilian|killian|florian|stefan|markus|yannick|viktor|martin|jonas|jan|bernd|christoph|ralf|michael|karsten)\b|#male|\bmale\b/i
 const FEMALE_VOICE_REGEX = /\b(katja|hedda|amala|seraphina|anna|petra|helena|marlene|ingrid|leni|maja|lou|gisela)\b|#female|\bfemale\b|google deutsch/i
 
-export function hasNativeMaleVoice(): boolean {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return false
-  const voices = window.speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith('de'))
-  return voices.some(v => MALE_VOICE_REGEX.test(v.name) || MALE_VOICE_REGEX.test(v.voiceURI))
-}
-
 let germanVoices: SpeechSynthesisVoice[] = []
 
 export async function initGermanVoice() {
