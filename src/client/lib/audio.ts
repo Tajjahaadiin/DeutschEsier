@@ -1,8 +1,10 @@
 import {
+  type TtsPersona,
   type TtsPersonaId,
   getTtsPersona,
-  resolveEdgeVoiceId,
+  TTS_PERSONAS,
   DEFAULT_FEMALE_PERSONA,
+  DEFAULT_MALE_PERSONA,
 } from '../../shared/ttsPersonas'
 
 export type VoiceGender = 'male' | 'female'
@@ -48,22 +50,51 @@ export function resolveVoice(gender: VoiceGender): ResolvedVoiceConfig {
   const defaultVoice = germanVoices[0] || null
 
   if (gender === 'male') {
-    // 1. Coba cari suara pria native
     const nativeMale = germanVoices.find(v => MALE_VOICE_REGEX.test(v.name) || MALE_VOICE_REGEX.test(v.voiceURI))
     if (nativeMale) {
       return { voice: nativeMale, pitch: 1.0, rate: 1.0 }
     }
-    // 2. Fallback akustik: pitch bariton 0.80, rate 0.90
-    return { voice: defaultVoice, pitch: 0.80, rate: 0.90 }
+  } else {
+    const nativeFemale = germanVoices.find(v => FEMALE_VOICE_REGEX.test(v.name) || FEMALE_VOICE_REGEX.test(v.voiceURI))
+    if (nativeFemale) {
+      return { voice: nativeFemale, pitch: 1.0, rate: 1.0 }
+    }
   }
 
-  // Gender 'female'
-  const nativeFemale = germanVoices.find(v => FEMALE_VOICE_REGEX.test(v.name) || FEMALE_VOICE_REGEX.test(v.voiceURI))
-  if (nativeFemale) {
-    return { voice: nativeFemale, pitch: 1.0, rate: 1.0 }
+  // Jaring keselamatan terakhir saja. Pitch TIDAK digeser: mengubah nada suara
+  // yang sama bukan pengganti persona, dan justru menyamarkan kegagalan jaringan.
+  return { voice: defaultVoice, pitch: 1.0, rate: 1.0 }
+}
+
+/**
+ * Menentukan persona dan voiceId untuk satu permintaan audio.
+ *
+ * Fungsi murni (tanpa window/localStorage) supaya aturan prioritas bisa diuji:
+ * persona eksplisit > persona tersimpan (bila gender cocok) > persona default gender.
+ * Hasilnya selalu persona neural nyata, tidak pernah "suara browser + pitch".
+ */
+export function resolveTtsRequest(
+  options: { personaId?: string; gender?: VoiceGender; storedPersonaId?: string } = {}
+): { voiceId: string; personaId: TtsPersonaId; gender: VoiceGender } {
+  // 1. Pemanggil tahu persis siapa yang bicara (dialog turn, pilihan persona di UI).
+  const explicit = getTtsPersona(options.personaId)
+  if (explicit) {
+    return { voiceId: explicit.voiceId, personaId: explicit.id, gender: explicit.gender }
   }
-  // Fallback akustik: nada jernih 1.05, rate 1.0
-  return { voice: defaultVoice, pitch: 1.05, rate: 1.0 }
+
+  // 2. Persona tersimpan dipakai selama gender-nya cocok dengan permintaan.
+  const stored = getTtsPersona(options.storedPersonaId)
+  if (stored && (!options.gender || stored.gender === options.gender)) {
+    return { voiceId: stored.voiceId, personaId: stored.id, gender: stored.gender }
+  }
+
+  // 3. Hanya gender yang diketahui: pilih persona neural default untuk gender itu.
+  const gender: VoiceGender = options.gender || stored?.gender || 'female'
+  const fallback: TtsPersona = getTtsPersona(
+    gender === 'male' ? DEFAULT_MALE_PERSONA : DEFAULT_FEMALE_PERSONA
+  ) || TTS_PERSONAS[0]
+
+  return { voiceId: fallback.voiceId, personaId: fallback.id, gender: fallback.gender }
 }
 
 export type SpeakOptions = {
@@ -128,41 +159,38 @@ function fallbackSpeechSynthesis(text: string, options: SpeakOptions) {
 export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() => void)) {
   stopSpeech()
   const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
-  
-  // Ambil persona spesifik bila ada, atau fallback ke preferred/gender
-  const personaId = options.personaId || (options.gender ? undefined : getStoredPersonaId())
-  const persona = personaId ? getTtsPersona(personaId) : undefined
-  const gender: VoiceGender = persona ? persona.gender : (options.gender || 'female')
-  const voiceId = resolveEdgeVoiceId(persona?.voiceId || personaId || gender, gender)
 
-  // Putar via Edge TTS serverless bila persona/suara spesifik diminta ATAU suara pria native tak ada di browser
-  const shouldUseEdgeTts = Boolean(options.personaId || persona) || (gender === 'male' && !hasNativeMaleVoice())
+  // Satu sumber audio untuk bahasa Jerman: persona neural dari /api/tts.
+  // Web Speech hanya dipakai saat permintaan gagal, bukan sebagai jalur normal.
+  const request = resolveTtsRequest({
+    personaId: options.personaId,
+    gender: options.gender,
+    storedPersonaId: getStoredPersonaId(),
+  })
 
-  if (shouldUseEdgeTts) {
-    const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(voiceId)}`
-    const audio = new Audio(audioUrl)
-    if (options.rate !== undefined) {
-      audio.playbackRate = options.rate
-      audio.defaultPlaybackRate = options.rate
-    }
-    currentHtmlAudio = audio
-    let fallbackExecuted = false
-    const safeFallback = () => {
-      if (fallbackExecuted) return
-      fallbackExecuted = true
-      if (currentHtmlAudio === audio) currentHtmlAudio = null
-      fallbackSpeechSynthesis(text, { ...options, gender })
-    }
-    audio.onended = () => {
-      if (currentHtmlAudio === audio) currentHtmlAudio = null
-      if (options.onEnd) options.onEnd()
-    }
-    audio.onerror = () => safeFallback()
-    audio.play().catch(() => safeFallback())
-    return
+  const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(request.voiceId)}`
+  const audio = new Audio(audioUrl)
+  if (options.rate !== undefined) {
+    audio.playbackRate = options.rate
+    audio.defaultPlaybackRate = options.rate
   }
-
-  fallbackSpeechSynthesis(text, { ...options, gender })
+  currentHtmlAudio = audio
+  let fallbackExecuted = false
+  const safeFallback = () => {
+    if (fallbackExecuted) return
+    fallbackExecuted = true
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    // Sadar-diri: suara lokal biasa, tanpa manipulasi nada. Tidak berpura-pura
+    // menjadi persona yang dipilih pengguna.
+    console.warn('[tts] /api/tts gagal, memakai suara browser tanpa perubahan nada')
+    fallbackSpeechSynthesis(text, { ...options, gender: request.gender })
+  }
+  audio.onended = () => {
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    if (options.onEnd) options.onEnd()
+  }
+  audio.onerror = () => safeFallback()
+  audio.play().catch(() => safeFallback())
 }
 
 // Memutar audio satu kata. Saat ini selalu melalui TTS (Web Speech API / Edge TTS),
