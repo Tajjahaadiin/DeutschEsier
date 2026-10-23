@@ -32,3 +32,8 @@ _Avoid_: Soal AI fallback, auto-quiz
 Karakter suara sintetis neural Jerman yang merepresentasikan peran sosial dan usia penutur tertentu (misal: Conrad sebagai Male 1 / Guru Formal, Killian sebagai Male 2 / Mahasiswa Kasual, Katja sebagai Female 1 / Tutor Utama, Amala sebagai Female 2 / Mahasiswi Dinamis).
 _Avoid_: Suara robot, pilihan gender biner biasa
 
+**Die Grundlagen (Fondasi Dasar)**:
+Kategori modul pembelajaran mandiri yang memuat materi dasar non-dialog (Bank Kata Kognat, Das Alphabet, Die Nummer, dan Die Tage), dapat dibuka langsung oleh guru di dashboard dan dapat diakses murid menggunakan kunci akses `sessionId = "grundlagen"`.
+_Avoid_: Modul umum, menu ekstra, menu sampingan
+
+

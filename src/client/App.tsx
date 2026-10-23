@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
 import HomePage from './pages/HomePage'
+import GrundlagenPage from './pages/GrundlagenPage'
 import GeneratorPage from './pages/GeneratorPage'
 import ViewPage from './pages/ViewPage'
-import AlphabetPage from './pages/AlphabetPage'
-import NumberPage from './pages/NumberPage'
-import DayPage from './pages/DayPage'
 import LoginPage from './pages/LoginPage'
+import DashboardLayout from './components/layout/DashboardLayout'
 import { initGermanVoice } from './lib/audio'
 import { isTeacherAuthenticated } from './lib/auth'
 
@@ -35,24 +34,81 @@ export default function App() {
     setCurrentPath(path.split('?')[0])
   }
 
-  // Route: /login
+  // 1. Rute Publik: /login
   if (currentPath === '/login') {
     if (isTeacherAuthenticated()) {
-      return <HomePage navigate={navigate} />
+      return (
+        <DashboardLayout currentPath="/" navigate={navigate}>
+          <HomePage navigate={navigate} />
+        </DashboardLayout>
+      )
     }
     return <LoginPage navigate={navigate} />
   }
 
-  // Route: /view/:id (Accessible to anyone: teacher or student)
+  // 2. Rute Publik: /view/:id (Ruang Belajar Percakapan Siswa/Guru)
   if (currentPath.startsWith('/view/')) {
     const id = currentPath.split('/view/')[1].split('?')[0]
     return <ViewPage id={id} navigate={navigate} />
   }
 
-  // Route guarding for teacher routes
+  // 3. Rute Terbuka Guru & Murid: /grundlagen (Portal Modul Fondasi Dasar)
+  if (currentPath === '/grundlagen') {
+    const page = <GrundlagenPage navigate={navigate} />
+    return isTeacherAuthenticated() ? (
+      <DashboardLayout currentPath={currentPath} navigate={navigate}>
+        {page}
+      </DashboardLayout>
+    ) : (
+      <div className="min-h-dvh bg-neutral p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+        {page}
+      </div>
+    )
+  }
+
+  // 4. Backward-Compatibility Redirects: /alphabet, /nummer, /tage -> /grundlagen?tab=...
+  if (currentPath === '/alphabet') {
+    const page = <GrundlagenPage navigate={navigate} initialTab="alphabet" />
+    return isTeacherAuthenticated() ? (
+      <DashboardLayout currentPath="/grundlagen" navigate={navigate}>
+        {page}
+      </DashboardLayout>
+    ) : (
+      <div className="min-h-dvh bg-neutral p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+        {page}
+      </div>
+    )
+  }
+
+  if (currentPath === '/nummer') {
+    const page = <GrundlagenPage navigate={navigate} initialTab="nummer" />
+    return isTeacherAuthenticated() ? (
+      <DashboardLayout currentPath="/grundlagen" navigate={navigate}>
+        {page}
+      </DashboardLayout>
+    ) : (
+      <div className="min-h-dvh bg-neutral p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+        {page}
+      </div>
+    )
+  }
+
+  if (currentPath === '/tage') {
+    const page = <GrundlagenPage navigate={navigate} initialTab="tage" />
+    return isTeacherAuthenticated() ? (
+      <DashboardLayout currentPath="/grundlagen" navigate={navigate}>
+        {page}
+      </DashboardLayout>
+    ) : (
+      <div className="min-h-dvh bg-neutral p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+        {page}
+      </div>
+    )
+  }
+
+  // 5. Rute Terlindungi Khusus Guru
   const isProtectedTeacherRoute =
     currentPath === '/' ||
-    currentPath === '/alphabet' ||
     currentPath === '/generate' ||
     currentPath.startsWith('/edit/')
 
@@ -61,34 +117,41 @@ export default function App() {
   }
 
   if (currentPath === '/') {
-    return <HomePage navigate={navigate} />
-  }
-
-  if (currentPath === '/alphabet') {
-    return <AlphabetPage navigate={navigate} />
-  }
-
-  if (currentPath === '/nummer') {
-    return <NumberPage navigate={navigate} />
-  }
-
-  if (currentPath === '/tage') {
-    return <DayPage navigate={navigate} />
+    return (
+      <DashboardLayout currentPath={currentPath} navigate={navigate}>
+        <HomePage navigate={navigate} />
+      </DashboardLayout>
+    )
   }
 
   if (currentPath === '/generate') {
-    return <GeneratorPage navigate={navigate} />
+    return (
+      <DashboardLayout currentPath={currentPath} navigate={navigate}>
+        <GeneratorPage navigate={navigate} />
+      </DashboardLayout>
+    )
   }
 
   if (currentPath.startsWith('/edit/')) {
     const id = currentPath.split('/edit/')[1].split('?')[0]
-    return <GeneratorPage editId={id} navigate={navigate} />
+    return (
+      <DashboardLayout currentPath={currentPath} navigate={navigate}>
+        <GeneratorPage editId={id} navigate={navigate} />
+      </DashboardLayout>
+    )
   }
 
+  // 6. 404 Fallback
   return (
-    <div className="p-8 text-center">
-      <h1 className="text-2xl font-bold">404 Not Found</h1>
-      <button onClick={() => navigate('/')} className="text-blue-500 hover:underline mt-4">Go Home</button>
+    <div className="min-h-dvh flex flex-col items-center justify-center p-8 text-center bg-neutral">
+      <h1 className="text-display font-bold text-text">404 Not Found</h1>
+      <p className="text-body-sm text-text-muted mt-2">Halaman yang Anda tuju tidak ditemukan.</p>
+      <button
+        onClick={() => navigate('/')}
+        className="mt-4 px-4 py-2 rounded-md bg-primary text-on-primary text-sm font-semibold hover:opacity-95 transition-opacity cursor-pointer"
+      >
+        Kembali ke Beranda
+      </button>
     </div>
   )
 }

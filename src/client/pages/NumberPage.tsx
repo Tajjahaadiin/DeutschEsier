@@ -8,6 +8,7 @@ import { OBJECT_ITEMS, OBJECT_CATEGORIES, type ObjectItem } from '../data/object
 
 interface NumberPageProps {
   navigate: (path: string) => void
+  embedded?: boolean
 }
 
 type Tab = 'cards' | 'game'
@@ -15,7 +16,7 @@ type Tab = 'cards' | 'game'
 /** Kartu angka yang dipakai di game (biar tidak terlalu banyak). */
 const GAME_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-export default function NumberPage({ navigate }: NumberPageProps) {
+export default function NumberPage({ navigate, embedded = false }: NumberPageProps) {
   const [activeTab, setActiveTab] = useState<Tab>('cards')
   const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
   const [speechRate, setSpeechRate] = useState(1.0)
@@ -50,60 +51,62 @@ export default function NumberPage({ navigate }: NumberPageProps) {
   }
 
   return (
-    <div className="min-h-dvh bg-slate-50 pb-20">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-              aria-label="Kembali"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <div>
-              <h1 className="text-lg sm:text-xl font-extrabold text-slate-800">die Nummer</h1>
-              <p className="text-xs text-slate-500">Belajar angka & menghitung benda</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
-              <select
-                value={currentPersonaId}
-                onChange={(e) => {
-                  const nextId = e.target.value as TtsPersonaId
-                  setCurrentPersonaId(nextId)
-                  setStoredPersonaId(nextId)
-                }}
-                className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
+    <div className={embedded ? 'space-y-6' : 'min-h-dvh bg-slate-50 pb-20'}>
+      {!embedded && (
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
+          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="p-2 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                aria-label="Kembali"
               >
-                {TTS_PERSONAS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.emoji} {p.name}
-                  </option>
-                ))}
-              </select>
+                <ChevronLeft size={20} />
+              </button>
+              <div>
+                <h1 className="text-lg sm:text-xl font-extrabold text-slate-800">die Nummer</h1>
+                <p className="text-xs text-slate-500">Belajar angka & menghitung benda</p>
+              </div>
             </div>
-            <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-lg text-xs">
-              {[1.0, 0.75].map((rate) => (
-                <button
-                  key={rate}
-                  type="button"
-                  onClick={() => setSpeechRate(rate)}
-                  className={`px-2 py-1 rounded-md font-medium transition-all cursor-pointer ${
-                    speechRate === rate ? 'bg-white text-blue-600 shadow-xs font-semibold' : 'text-slate-500'
-                  }`}
+
+            <div className="flex items-center gap-2">
+              <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
+                <select
+                  value={currentPersonaId}
+                  onChange={(e) => {
+                    const nextId = e.target.value as TtsPersonaId
+                    setCurrentPersonaId(nextId)
+                    setStoredPersonaId(nextId)
+                  }}
+                  className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
                 >
-                  {rate}x
-                </button>
-              ))}
+                  {TTS_PERSONAS.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.emoji} {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-lg text-xs">
+                {[1.0, 0.75].map((rate) => (
+                  <button
+                    key={rate}
+                    type="button"
+                    onClick={() => setSpeechRate(rate)}
+                    className={`px-2 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                      speechRate === rate ? 'bg-white text-blue-600 shadow-xs font-semibold' : 'text-slate-500'
+                    }`}
+                  >
+                    {rate}x
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      <main className="max-w-6xl mx-auto px-4 mt-6">
+      <main className={embedded ? '' : 'max-w-6xl mx-auto px-4 mt-6'}>
         {/* Tab */}
         <div className="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-lg w-fit mb-6">
           <button

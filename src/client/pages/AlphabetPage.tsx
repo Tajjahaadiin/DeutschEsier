@@ -21,11 +21,12 @@ import { TTS_PERSONAS, getTtsPersona } from '../../shared/ttsPersonas'
 
 interface AlphabetPageProps {
   navigate: (path: string) => void
+  embedded?: boolean
 }
 
 type FilterType = 'all' | 'vowel' | 'consonant' | 'special' | 'critical'
 
-export default function AlphabetPage({ navigate }: AlphabetPageProps) {
+export default function AlphabetPage({ navigate, embedded = false }: AlphabetPageProps) {
   const [activeTab, setActiveTab] = useState<'cards' | 'trainer'>('cards')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<FilterType>('all')
@@ -75,82 +76,84 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
   }
 
   return (
-    <div className="min-h-dvh pb-24 bg-slate-50">
+    <div className={embedded ? 'space-y-6' : 'min-h-dvh pb-24 bg-slate-50'}>
       {/* Sticky Top Header */}
-      <header className="bg-white border-b sticky top-0 z-30 shadow-xs">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-              title="Kembali ke Beranda"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-                Das Deutsche Alphabet
-              </h1>
-              <p className="text-xs text-slate-500 hidden sm:block">
-                30 Karakter dengan Kata Jangkar Indonesia & Buchstabier-Trainer
-              </p>
-            </div>
-          </div>
-
-          {/* Voice & Speed Controls */}
-          <div className="flex items-center gap-2">
-            {/* Persona Selector */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
-              <select
-                value={currentPersonaId}
-                onChange={(e) => {
-                  const nextId = e.target.value as TtsPersonaId
-                  setCurrentPersonaId(nextId)
-                  setStoredPersonaId(nextId)
-                }}
-                className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
+      {!embedded && (
+        <header className="bg-white border-b sticky top-0 z-30 shadow-xs">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="p-2 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                title="Kembali ke Beranda"
               >
-                {TTS_PERSONAS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.emoji} {p.name}
-                  </option>
-                ))}
-              </select>
+                <ArrowLeft size={20} />
+              </button>
+              <div>
+                <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
+                  Das Deutsche Alphabet
+                </h1>
+                <p className="text-xs text-slate-500 hidden sm:block">
+                  30 Karakter dengan Kata Jangkar Indonesia & Buchstabier-Trainer
+                </p>
+              </div>
             </div>
 
-            {/* Speed Toggle */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
-              <button
-                type="button"
-                onClick={() => setSpeechRate(1.0)}
-                className={`px-2 py-1 rounded-md font-medium transition-all ${
-                  speechRate === 1.0
-                    ? 'bg-white text-blue-600 shadow-xs font-semibold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-                title="Kecepatan Normal"
-              >
-                1.0x
-              </button>
-              <button
-                type="button"
-                onClick={() => setSpeechRate(0.75)}
-                className={`px-2 py-1 rounded-md font-medium transition-all ${
-                  speechRate === 0.75
-                    ? 'bg-white text-blue-600 shadow-xs font-semibold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-                title="Kecepatan Lambat"
-              >
-                0.75x
-              </button>
+            {/* Voice & Speed Controls */}
+            <div className="flex items-center gap-2">
+              {/* Persona Selector */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
+                <select
+                  value={currentPersonaId}
+                  onChange={(e) => {
+                    const nextId = e.target.value as TtsPersonaId
+                    setCurrentPersonaId(nextId)
+                    setStoredPersonaId(nextId)
+                  }}
+                  className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
+                >
+                  {TTS_PERSONAS.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.emoji} {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Speed Toggle */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSpeechRate(1.0)}
+                  className={`px-2 py-1 rounded-md font-medium transition-all ${
+                    speechRate === 1.0
+                      ? 'bg-white text-blue-600 shadow-xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title="Kecepatan Normal"
+                >
+                  1.0x
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSpeechRate(0.75)}
+                  className={`px-2 py-1 rounded-md font-medium transition-all ${
+                    speechRate === 0.75
+                      ? 'bg-white text-blue-600 shadow-xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title="Kecepatan Lambat"
+                >
+                  0.75x
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Container */}
-      <main className="max-w-6xl mx-auto px-4 mt-6">
+      <main className={embedded ? '' : 'max-w-6xl mx-auto px-4 mt-6'}>
         {/* Mode Switcher Tabs */}
         <div className="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-lg w-fit mb-6">
           <button

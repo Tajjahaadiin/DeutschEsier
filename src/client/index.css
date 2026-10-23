@@ -95,6 +95,24 @@ body {
   animation: fadeIn 200ms ease-out forwards;
 }
 
+/* Transisi interaktif halus untuk kontrol tombol & kartu (patuh prefers-reduced-motion) */
+.interactive-hover {
+  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 120ms cubic-bezier(0.16, 1, 0.3, 1), border-color 120ms ease;
+}
+.interactive-hover:hover {
+  transform: translateY(-1px);
+}
+.interactive-hover:active {
+  transform: translateY(0) scale(0.99);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-hover:hover,
+  .interactive-hover:active {
+    transform: none;
+  }
+}
+
 /* Redam gerak, jangan matikan animasinya: fadeIn hanya mengubah opacity,
    jadi modal tetap punya transisi masuk tanpa scale. .animate-backdrop
    sudah opacity-only dan tidak perlu diubah. */
