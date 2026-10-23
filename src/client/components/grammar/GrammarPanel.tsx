@@ -15,8 +15,11 @@ import {
   segmentsCoverExample,
   coverSentence,
   type GrammarPattern,
-  type GrammarSegmentRole,
 } from '../../lib/grammarPatterns'
+import {
+  GRAMMAR_ROLES,
+  type GrammarSegmentRole,
+} from '../../../shared/grammarRoles'
 import { type GrammarTopicContent } from '../../lib/grammarTopicsParser'
 import {
   parseGrammarQuestions,
@@ -337,7 +340,7 @@ export default function GrammarPanel({
                   {/* Legenda warna */}
                   {covered && (
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      {(['subjekt', 'praedikat', 'objekt', 'other'] as const)
+                      {GRAMMAR_ROLES
                         .filter((role) => pattern.segments.some((s) => s.role === role))
                         .map((role) => (
                           <span

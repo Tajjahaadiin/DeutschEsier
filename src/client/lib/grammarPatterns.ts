@@ -8,8 +8,12 @@
  * Fungsi di sini murni (pure) agar mudah diuji.
  */
 
-/** Peran gramatikal satu potongan kalimat, dipakai untuk pewarnaan. */
-export type GrammarSegmentRole = 'subjekt' | 'praedikat' | 'objekt' | 'other'
+import {
+  type GrammarSegmentRole,
+  normalizeRole,
+} from '../../shared/grammarRoles'
+
+export type { GrammarSegmentRole }
 
 export interface GrammarSegment {
   text: string
@@ -26,18 +30,6 @@ export interface GrammarPattern {
   exampleGerman: string
   exampleIndonesian: string
   segments: GrammarSegment[]
-}
-
-const ROLES: readonly GrammarSegmentRole[] = ['subjekt', 'praedikat', 'objekt', 'other']
-
-/**
- * Role yang tidak dikenal diubah menjadi 'other' (bukan dibuang), supaya
- * kalimatnya tetap bisa ditampilkan utuh walaupun AI memakai istilah lain.
- */
-function normalizeRole(value: unknown): GrammarSegmentRole {
-  return ROLES.includes(value as GrammarSegmentRole)
-    ? (value as GrammarSegmentRole)
-    : 'other'
 }
 
 function toSegment(value: unknown): GrammarSegment | null {

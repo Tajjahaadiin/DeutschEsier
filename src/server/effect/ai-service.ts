@@ -2,6 +2,7 @@ import { Effect, Schedule, Duration, Schema } from 'effect'
 import { GoogleGenAI, Type } from '@google/genai'
 import { GeneratedLessonSchema } from './schemas'
 import { GRAMMAR_TOPICS, MAX_GRAMMAR_TOPICS, type GrammarTopic } from '../../shared/grammarTopics'
+import { GRAMMAR_ROLES } from '../../shared/grammarRoles'
 
 export class GeminiApiError extends Error {
   readonly _tag = 'GeminiApiError'
@@ -116,7 +117,7 @@ export function generateLesson(
                           text: { type: Type.STRING },
                           role: {
                             type: Type.STRING,
-                            enum: ['subjekt', 'praedikat', 'objekt', 'other'],
+                            enum: [...GRAMMAR_ROLES],
                           },
                         },
                         required: ['text', 'role'],
@@ -201,7 +202,7 @@ export function generateLesson(
                                 text: { type: Type.STRING },
                                 role: {
                                   type: Type.STRING,
-                                  enum: ['subjekt', 'praedikat', 'objekt', 'other'],
+                                  enum: [...GRAMMAR_ROLES],
                                 },
                               },
                               required: ['text', 'role'],

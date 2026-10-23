@@ -37624,6 +37624,10 @@ function validateTopicIds(raw2) {
   return [...new Set(raw2)];
 }
 
+// src/shared/grammarRoles.ts
+var GRAMMAR_ROLES = ["subjekt", "praedikat", "objekt", "other"];
+var GRAMMAR_ROLE_SET = new Set(GRAMMAR_ROLES);
+
 // src/server/effect/schemas.ts
 var DialogLineSchema = Schema_exports.Struct({
   speaker: Schema_exports.String,
@@ -37643,7 +37647,7 @@ var ComprehensionQuestionSchema = Schema_exports.Struct({
 });
 var GrammarSegmentSchema = Schema_exports.Struct({
   text: Schema_exports.String,
-  role: Schema_exports.Literal("subjekt", "praedikat", "objekt", "other")
+  role: Schema_exports.Literal(...GRAMMAR_ROLES)
 });
 var GrammarPatternSchema = Schema_exports.Struct({
   name: Schema_exports.String,
@@ -37843,7 +37847,7 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, gram
                           text: { type: Type3.STRING },
                           role: {
                             type: Type3.STRING,
-                            enum: ["subjekt", "praedikat", "objekt", "other"]
+                            enum: [...GRAMMAR_ROLES]
                           }
                         },
                         required: ["text", "role"]
@@ -37925,7 +37929,7 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, gram
                             text: { type: Type3.STRING },
                             role: {
                               type: Type3.STRING,
-                              enum: ["subjekt", "praedikat", "objekt", "other"]
+                              enum: [...GRAMMAR_ROLES]
                             }
                           },
                           required: ["text", "role"]

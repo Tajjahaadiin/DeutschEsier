@@ -1,5 +1,6 @@
 import { Schema } from 'effect'
 import { isGrammarTopicId } from '../../shared/grammarTopics'
+import { GRAMMAR_ROLES } from '../../shared/grammarRoles'
 
 export const DialogLineSchema = Schema.Struct({
   speaker: Schema.String,
@@ -32,7 +33,7 @@ export const ComprehensionQuestionSchema = Schema.Struct({
  */
 export const GrammarSegmentSchema = Schema.Struct({
   text: Schema.String,
-  role: Schema.Literal('subjekt', 'praedikat', 'objekt', 'other'),
+  role: Schema.Literal(...GRAMMAR_ROLES),
 })
 
 /**

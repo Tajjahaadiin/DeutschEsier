@@ -11,7 +11,7 @@
  */
 
 import { isGrammarTopicId } from '../../shared/grammarTopics'
-import { type GrammarSegmentRole } from './grammarPatterns'
+import { type GrammarSegmentRole, normalizeRole } from '../../shared/grammarRoles'
 
 export interface AiGrammarQuestionSegment {
   text: string
@@ -33,14 +33,6 @@ export interface AiGrammarQuestion {
   segments: AiGrammarQuestionSegment[]
   /** Teks yang layak dibacakan TTS Jerman. */
   audioText: string
-}
-
-const ROLES: readonly GrammarSegmentRole[] = ['subjekt', 'praedikat', 'objekt', 'other']
-
-function normalizeRole(value: unknown): GrammarSegmentRole {
-  return ROLES.includes(value as GrammarSegmentRole)
-    ? (value as GrammarSegmentRole)
-    : 'other'
 }
 
 function parseJson(raw: string | null | undefined): unknown {
