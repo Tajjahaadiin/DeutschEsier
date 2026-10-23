@@ -49,11 +49,11 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-full: 9999px;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
+  /* Token spacing (xs..xl) SENGAJA tidak diekspor. Di Tailwind v4 kunci
+     --spacing-<nama> masuk ke namespace spacing, dan utility max-w-<nama>
+     membaca namespace itu lebih dulu daripada --container-<nama>. Akibatnya
+     max-w-md menjadi 16px (bukan 28rem) dan setiap kartu/modal menyusut jadi
+     garis. Pakai skala numerik biasa (p-4, gap-2, max-w-md bawaan). */
 
   /* Alias: DESIGN.md Colors menetapkan neutral sebagai latar halaman dan text
      sebagai teks utama. Dipertahankan agar body di bawah tidak perlu diubah. */
