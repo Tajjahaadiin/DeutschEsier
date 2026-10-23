@@ -27,3 +27,8 @@ _Avoid_: Soal kuis biasa, soal pilihan ganda gramatik
 **Soal Turunan Kosakata (Legacy Grammar Question)**:
 Soal Richtig/Falsch yang disusun secara deterministik saat runtime dari vocabClues dan kalimat dialog, digunakan sebagai cadangan bila skenario belum memiliki soal tata bahasa AI.
 _Avoid_: Soal AI fallback, auto-quiz
+
+**Persona Vokal (TTS Speaker Persona)**:
+Karakter suara sintetis neural Jerman yang merepresentasikan peran sosial dan usia penutur tertentu (misal: Conrad sebagai Male 1 / Guru Formal, Killian sebagai Male 2 / Mahasiswa Kasual, Katja sebagai Female 1 / Tutor Utama, Amala sebagai Female 2 / Mahasiswi Dinamis).
+_Avoid_: Suara robot, pilihan gender biner biasa
+

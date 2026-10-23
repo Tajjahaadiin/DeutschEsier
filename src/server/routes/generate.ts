@@ -24,7 +24,7 @@ function isCefrLevel(value: unknown): value is CefrLevel {
 generateRouter.post('/', requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json()
-    const { prompt, cefrLevel, wordIds, dialogueCount, grammarTopics } = body
+    const { prompt, cefrLevel, wordIds, dialogueCount, grammarTopics, speakerCount } = body
     
     if (!prompt || !cefrLevel) {
       return c.json({ error: 'Missing prompt or cefrLevel' }, 400)
@@ -37,6 +37,14 @@ generateRouter.post('/', requireTeacherAuth, async (c) => {
         },
         400
       )
+    }
+
+    let speakers = 2
+    if (speakerCount !== undefined) {
+      if (typeof speakerCount !== 'number' || !Number.isInteger(speakerCount) || speakerCount < 2 || speakerCount > 6) {
+        return c.json({ error: 'Jumlah pembicara harus berupa bilangan bulat antara 2 dan 6.' }, 400)
+      }
+      speakers = speakerCount
     }
 
     let count = DEFAULT_DIALOGUE_COUNT
@@ -86,7 +94,7 @@ generateRouter.post('/', requireTeacherAuth, async (c) => {
     }
 
     const result = await Effect.runPromise(
-      generateLesson(prompt, cefrLevel, cognateWords, count, topicIds)
+      generateLesson(prompt, cefrLevel, cognateWords, count, topicIds, speakers)
     )
     
     return c.json({ lesson: result })

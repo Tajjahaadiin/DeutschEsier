@@ -15,6 +15,7 @@ import {
 import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPatterns'
 import { buildSessionRequest, accessDenialFrom } from '../lib/sessionRequest'
 import { parseGrammarTopics, type GrammarTopicContent } from '../lib/grammarTopicsParser'
+import { getTtsPersona } from '../../shared/ttsPersonas'
 import {
   Volume2,
   Share2,
@@ -36,6 +37,7 @@ interface DialogTurn {
   germanText: string
   indonesianText: string
   gender?: 'female' | 'male'
+  personaId?: string
 }
 
 interface VocabClue {
@@ -316,6 +318,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
         speakGerman(turn.germanText, {
           gender: turnGender,
+          personaId: turn.personaId,
           rate: playbackRateRef.current,
           onEnd: done,
         })
@@ -328,13 +331,14 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     }
   }
 
-  const handlePlayTurn = (index: number, germanText: string, gender: 'male' | 'female') => {
+  const handlePlayTurn = (index: number, germanText: string, gender: 'male' | 'female', personaId?: string) => {
     if (isPlayingAll) {
       handleStopAll()
     }
     setPlayingIndex(index)
     speakGerman(germanText, {
       gender,
+      personaId,
       rate: playbackRateRef.current,
       onEnd: () => setPlayingIndex(null),
     })
@@ -723,7 +727,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                             : 'bg-blue-500 text-white rounded-tr-sm')
                         }
                       >
-                        <div className="flex items-center gap-2 mb-1.5">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                           <span
                             className={
                               'text-xs font-semibold ' +
@@ -732,16 +736,22 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                           >
                             {turn.speaker}
                           </span>
-                          <span
-                            className={
-                              'text-xs px-2 py-0.5 rounded-full font-medium ' +
-                              (turnGender === 'female'
-                                ? 'bg-rose-100 text-rose-700'
-                                : 'bg-sky-100 text-sky-700')
-                            }
-                          >
-                            {turnGender === 'female' ? '👩 Wanita' : '👨 Pria'}
-                          </span>
+                          {turn.personaId ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-white/25 text-slate-800 dark:text-white border border-white/30">
+                              {getTtsPersona(turn.personaId)?.emoji} {getTtsPersona(turn.personaId)?.name || turn.personaId}
+                            </span>
+                          ) : (
+                            <span
+                              className={
+                                'text-xs px-2 py-0.5 rounded-full font-medium ' +
+                                (turnGender === 'female'
+                                  ? 'bg-rose-100 text-rose-700'
+                                  : 'bg-sky-100 text-sky-700')
+                              }
+                            >
+                              {turnGender === 'female' ? '👩 Wanita' : '👨 Pria'}
+                            </span>
+                          )}
                         </div>
                         <p
                           className={
@@ -761,7 +771,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                         </p>
                         <button
                           type="button"
-                          onClick={() => handlePlayTurn(i, turn.germanText, turnGender)}
+                          onClick={() => handlePlayTurn(i, turn.germanText, turnGender, turn.personaId)}
                           className={
                             'flex items-center gap-1 text-xs px-2.5 py-1 rounded-full transition-colors ' +
                             (isA

@@ -14,12 +14,14 @@ import {
 } from '../lib/grammarTopicsParser'
 import { parseGrammarQuestions, type AiGrammarQuestion } from '../lib/grammarQuestions'
 import GrammarTopicPicker from '../components/generator/GrammarTopicPicker'
+import { TTS_PERSONAS, type TtsPersonaId } from '../../shared/ttsPersonas'
 
 interface DialogTurn {
   speaker: string
   germanText: string
   indonesianText: string
   gender?: 'female' | 'male'
+  personaId?: string
 }
 
 interface VocabClue {
@@ -45,6 +47,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [prompt, setPrompt] = useState('Di sebuah kafe di Berlin, memesan kopi dan kue.')
   const [cefrLevel, setCefrLevel] = useState('A1')
   const [dialogueCount, setDialogueCount] = useState(8)
+  const [speakerCount, setSpeakerCount] = useState(2)
   // Pilihan topik grammar B1. Disimpan di sini (bukan di dalam picker) supaya
   // tidak hilang saat level CEFR ditukar sementara.
   const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([])
@@ -56,8 +59,14 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [editedVocab, setEditedVocab] = useState<VocabClue[]>([])
   const [editedTitle, setEditedTitle] = useState('')
   const [editedSceneDesc, setEditedSceneDesc] = useState('')
-  const [speakerAGender, setSpeakerAGender] = useState<'female' | 'male'>('female')
-  const [speakerBGender, setSpeakerBGender] = useState<'female' | 'male'>('male')
+  const [speakerPersonas, setSpeakerPersonas] = useState<Record<string, TtsPersonaId>>({
+    'Sprecher A': 'female-1',
+    'Sprecher B': 'male-1',
+    'Sprecher C': 'female-2',
+    'Sprecher D': 'male-2',
+    'Sprecher E': 'female-3',
+    'Sprecher F': 'male-3',
+  })
   const [isPlayingAll, setIsPlayingAll] = useState(false)
   const [playingIndex, setPlayingIndex] = useState<number | null>(null)
   const [playbackRate, setPlaybackRate] = useState<number>(1.0)
@@ -97,6 +106,19 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         setSelectedTopicIds(parseGrammarTopicIds(data.grammarTopicsJson))
         setEditedDialogue(parsedDialogue)
         setEditedVocab(parsedVocab)
+
+        const distinctSpeakers = [...new Set(parsedDialogue.map(t => t.speaker))]
+        if (distinctSpeakers.length > 0) {
+          setSpeakerCount(Math.min(6, Math.max(2, distinctSpeakers.length)))
+          const updatedPersonas: Record<string, TtsPersonaId> = { ...speakerPersonas }
+          for (const spk of distinctSpeakers) {
+            const matchTurn = parsedDialogue.find(t => t.speaker === spk)
+            if (matchTurn?.personaId) {
+              updatedPersonas[spk] = matchTurn.personaId as TtsPersonaId
+            }
+          }
+          setSpeakerPersonas(updatedPersonas)
+        }
         setLesson({
           title: data.title,
           sceneDescription: data.sceneDescription || '',
@@ -108,10 +130,15 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           grammarQuestions: parseGrammarQuestions(data.grammarQuestionsJson),
         })
 
+        // Biarkan turnA/turnB gender lama tetap terbaca bila ada
         const turnA = parsedDialogue.find(t => t.speaker === 'Sprecher A')
-        if (turnA?.gender) setSpeakerAGender(turnA.gender)
+        if (turnA?.gender) {
+          setSpeakerPersonas(prev => ({ ...prev, 'Sprecher A': turnA.gender === 'male' ? 'male-1' : 'female-1' }))
+        }
         const turnB = parsedDialogue.find(t => t.speaker === 'Sprecher B')
-        if (turnB?.gender) setSpeakerBGender(turnB.gender)
+        if (turnB?.gender) {
+          setSpeakerPersonas(prev => ({ ...prev, 'Sprecher B': turnB.gender === 'male' ? 'male-1' : 'female-1' }))
+        }
       })
       .catch(err => {
         setError(err.message || 'Gagal memuat skenario')
@@ -138,6 +165,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           cefrLevel,
           wordIds: selectedWords,
           dialogueCount,
+          speakerCount,
           // Topik hanya berlaku untuk B1; jangan kirim kunci sama sekali bila kosong.
           ...(cefrLevel === 'B1' && selectedTopicIds.length > 0
             ? { grammarTopics: selectedTopicIds }
@@ -148,11 +176,16 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       if (data.error) throw new Error(data.error)
       const generated: GeneratedLesson = data.lesson
       setLesson(generated)
-      const turnsWithGender = generated.dialogue.map(t => ({
-        ...t,
-        gender: t.speaker === 'Sprecher A' ? speakerAGender : speakerBGender
-      }))
-      setEditedDialogue(turnsWithGender)
+      const turnsWithPersonas: DialogTurn[] = generated.dialogue.map(t => {
+        const personaId = speakerPersonas[t.speaker] || 'female-1'
+        const isMale = personaId.startsWith('male')
+        return {
+          ...t,
+          personaId,
+          gender: isMale ? ('male' as const) : ('female' as const),
+        }
+      })
+      setEditedDialogue(turnsWithPersonas)
       setEditedVocab([...generated.vocabClues])
       setEditedTitle(generated.title)
       setEditedSceneDesc(generated.sceneDescription)
@@ -221,14 +254,14 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
     }
   }
 
-  const handleSpeakerAGenderChange = (gender: 'female' | 'male') => {
-    setSpeakerAGender(gender)
-    setEditedDialogue(prev => prev.map(t => t.speaker === 'Sprecher A' ? { ...t, gender } : t))
-  }
-
-  const handleSpeakerBGenderChange = (gender: 'female' | 'male') => {
-    setSpeakerBGender(gender)
-    setEditedDialogue(prev => prev.map(t => t.speaker === 'Sprecher B' ? { ...t, gender } : t))
+  const handleSpeakerPersonaChange = (speaker: string, personaId: TtsPersonaId) => {
+    setSpeakerPersonas(prev => ({ ...prev, [speaker]: personaId }))
+    const isMale = personaId.startsWith('male')
+    setEditedDialogue(prev => prev.map(t => t.speaker === speaker ? {
+      ...t,
+      personaId,
+      gender: isMale ? 'male' : 'female'
+    } : t))
   }
 
   const handleStopAll = () => {
@@ -253,7 +286,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       if (cancelledRef.current) break
       const turn = editedDialogue[i]
       if (!turn.germanText.trim()) continue
-      const turnGender: 'male' | 'female' = turn.gender || (turn.speaker === 'Sprecher A' ? speakerAGender : speakerBGender)
+      const turnPersonaId = turn.personaId || speakerPersonas[turn.speaker] || 'female-1'
+      const turnGender: 'male' | 'female' = turnPersonaId.startsWith('male') ? 'male' : 'female'
 
       setPlayingIndex(i)
 
@@ -271,6 +305,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         }
         speakGerman(turn.germanText, {
           gender: turnGender,
+          personaId: turnPersonaId,
           rate: playbackRateRef.current,
           onEnd: done,
         })
@@ -292,10 +327,25 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   }
 
   const addTurn = () => {
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F']
     const lastTurn = editedDialogue[editedDialogue.length - 1]
-    const nextSpeaker = lastTurn?.speaker === 'Sprecher A' ? 'Sprecher B' : 'Sprecher A'
-    const nextGender = nextSpeaker === 'Sprecher A' ? speakerAGender : speakerBGender
-    setEditedDialogue(prev => [...prev, { speaker: nextSpeaker, germanText: '', indonesianText: '', gender: nextGender }])
+    let nextIdx = 0
+    if (lastTurn) {
+      const match = lastTurn.speaker.match(/Sprecher ([A-F])/)
+      if (match) {
+        nextIdx = (letters.indexOf(match[1]) + 1) % speakerCount
+      }
+    }
+    const nextSpeaker = `Sprecher ${letters[nextIdx]}`
+    const personaId = speakerPersonas[nextSpeaker] || 'female-1'
+    const isMale = personaId.startsWith('male')
+    setEditedDialogue(prev => [...prev, {
+      speaker: nextSpeaker,
+      germanText: '',
+      indonesianText: '',
+      personaId,
+      gender: isMale ? 'male' : 'female',
+    }])
   }
 
   const updateVocab = (index: number, field: keyof VocabClue, value: string) => {
@@ -386,10 +436,25 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               }}
               className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
-            <p className="text-[11px] text-slate-400 mt-1">1 - 20 baris dialog</p>
+            <p className="text-[11px] text-slate-400 mt-1">1 - 20 baris</p>
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Jumlah Karakter
+            </label>
+            <select
+              value={speakerCount}
+              onChange={e => setSpeakerCount(parseInt(e.target.value, 10))}
+              className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              {[2, 3, 4, 5, 6].map(n => (
+                <option key={n} value={n}>{n} Orang</option>
+              ))}
+            </select>
+            <p className="text-[11px] text-slate-400 mt-1">2 - 6 pembicara</p>
           </div>
           <div className="text-sm text-slate-500 mt-5">
-            <span className="font-medium text-blue-600">{selectedWords.length}</span> kata dari Bank Kata
+            <span className="font-medium text-blue-600">{selectedWords.length}</span> kata Bank
           </div>
         </div>
 
@@ -495,45 +560,29 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 p-3 bg-blue-50/60 rounded-xl border border-blue-100 mb-4 items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-600">Suara Sprecher A:</span>
-                <div className="flex gap-1 bg-white p-0.5 rounded-lg border border-slate-200 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => handleSpeakerAGenderChange('female')}
-                    className={`px-2 py-1 rounded font-medium transition-all ${speakerAGender === 'female' ? 'bg-rose-100 text-rose-700' : 'text-slate-500'}`}
-                  >
-                    👩 Wanita
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSpeakerAGenderChange('male')}
-                    className={`px-2 py-1 rounded font-medium transition-all ${speakerAGender === 'male' ? 'bg-sky-100 text-sky-700' : 'text-slate-500'}`}
-                  >
-                    👨 Pria
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-600">Suara Sprecher B:</span>
-                <div className="flex gap-1 bg-white p-0.5 rounded-lg border border-slate-200 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => handleSpeakerBGenderChange('female')}
-                    className={`px-2 py-1 rounded font-medium transition-all ${speakerBGender === 'female' ? 'bg-rose-100 text-rose-700' : 'text-slate-500'}`}
-                  >
-                    👩 Wanita
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSpeakerBGenderChange('male')}
-                    className={`px-2 py-1 rounded font-medium transition-all ${speakerBGender === 'male' ? 'bg-sky-100 text-sky-700' : 'text-slate-500'}`}
-                  >
-                    👨 Pria
-                  </button>
-                </div>
+            <div className="flex flex-col gap-2 p-3 bg-blue-50/60 rounded-xl border border-blue-100 mb-4">
+              <span className="text-xs font-semibold text-slate-700">Konfigurasi Persona Karakter ({speakerCount} Orang):</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                {['A', 'B', 'C', 'D', 'E', 'F'].slice(0, speakerCount).map(letter => {
+                  const speaker = `Sprecher ${letter}`
+                  const currentPersona = speakerPersonas[speaker] || 'female-1'
+                  return (
+                    <div key={speaker} className="flex items-center justify-between gap-1.5 bg-white p-2 rounded-lg border border-slate-200">
+                      <span className="font-semibold text-slate-700 shrink-0">{speaker}:</span>
+                      <select
+                        value={currentPersona}
+                        onChange={e => handleSpeakerPersonaChange(speaker, e.target.value as TtsPersonaId)}
+                        className="p-1 border border-slate-300 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 max-w-[150px] truncate"
+                      >
+                        {TTS_PERSONAS.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.emoji} {p.name} ({p.roleId.split(' ')[0]})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
@@ -551,21 +600,31 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         value={turn.speaker}
                         onChange={e => {
                           const newSpeaker = e.target.value
+                          const targetPersona = speakerPersonas[newSpeaker] || 'female-1'
                           updateTurn(i, 'speaker', newSpeaker)
-                          updateTurn(i, 'gender', newSpeaker === 'Sprecher A' ? speakerAGender : speakerBGender)
+                          updateTurn(i, 'personaId', targetPersona)
+                          updateTurn(i, 'gender', targetPersona.startsWith('male') ? 'male' : 'female')
                         }}
                         className="w-32 p-1.5 border border-slate-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-400 focus:outline-none font-medium"
                       >
-                        <option value="Sprecher A">Sprecher A</option>
-                        <option value="Sprecher B">Sprecher B</option>
+                        {['A', 'B', 'C', 'D', 'E', 'F'].slice(0, speakerCount).map(l => (
+                          <option key={l} value={`Sprecher ${l}`}>Sprecher {l}</option>
+                        ))}
                       </select>
                       <select
-                        value={turn.gender || (turn.speaker === 'Sprecher A' ? speakerAGender : speakerBGender)}
-                        onChange={e => updateTurn(i, 'gender', e.target.value)}
+                        value={turn.personaId || speakerPersonas[turn.speaker] || 'female-1'}
+                        onChange={e => {
+                          const pId = e.target.value as TtsPersonaId
+                          updateTurn(i, 'personaId', pId)
+                          updateTurn(i, 'gender', pId.startsWith('male') ? 'male' : 'female')
+                        }}
                         className="p-1.5 border border-slate-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-400 focus:outline-none"
                       >
-                        <option value="female">👩 Wanita</option>
-                        <option value="male">👨 Pria</option>
+                        {TTS_PERSONAS.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.emoji} {p.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <input
@@ -589,8 +648,10 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                       onClick={() => {
                         if (isPlayingAll) handleStopAll()
                         setPlayingIndex(i)
+                        const pId = turn.personaId || speakerPersonas[turn.speaker] || 'female-1'
                         speakGerman(turn.germanText, {
-                          gender: turn.gender || (turn.speaker === 'Sprecher A' ? speakerAGender : speakerBGender),
+                          personaId: pId,
+                          gender: pId.startsWith('male') ? 'male' : 'female',
                           rate: playbackRateRef.current,
                           onEnd: () => setPlayingIndex(null),
                         })

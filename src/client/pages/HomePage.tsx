@@ -4,7 +4,8 @@ import { SelectionBasket } from '../components/word-bank/SelectionBasket'
 import { BookOpen, Plus, ExternalLink, Trash2, Clock, Pencil, Key, LogOut } from 'lucide-react'
 import { Card } from '../components/ui/card'
 import { Button } from '../components/ui/button'
-import { getStoredVoiceGender, setStoredVoiceGender, type VoiceGender } from '../lib/audio'
+import { getStoredPersonaId, setStoredPersonaId, type TtsPersonaId } from '../lib/audio'
+import { TTS_PERSONAS } from '../../shared/ttsPersonas'
 import { logoutTeacher, getAuthHeaders } from '../lib/auth'
 import KeyManagerModal from '../components/access/KeyManagerModal'
 
@@ -27,7 +28,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
   })
   const [sessions, setSessions] = useState<Session[]>([])
   const [activeTab, setActiveTab] = useState<'bank' | 'sessions'>('bank')
-  const [voiceGender, setVoiceGender] = useState<VoiceGender>(() => getStoredVoiceGender())
+  const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
   const [keyModalSession, setKeyModalSession] = useState<Session | null>(null)
 
   useEffect(() => {
@@ -187,22 +188,23 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                 <option value="">Semua Kategori</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <div className="flex items-center gap-1 bg-white border border-slate-300 rounded-xl p-1 text-xs">
-                <span className="text-slate-400 px-2 font-medium">Suara:</span>
-                <button
-                  type="button"
-                  onClick={() => { setVoiceGender('female'); setStoredVoiceGender('female'); }}
-                  className={`px-2.5 py-1 rounded-lg font-medium transition-all ${voiceGender === 'female' ? 'bg-rose-100 text-rose-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+              <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl p-1.5 text-xs">
+                <span className="text-slate-400 px-1 font-medium">Suara:</span>
+                <select
+                  value={currentPersonaId}
+                  onChange={(e) => {
+                    const nextId = e.target.value as TtsPersonaId
+                    setCurrentPersonaId(nextId)
+                    setStoredPersonaId(nextId)
+                  }}
+                  className="bg-transparent font-semibold text-slate-700 focus:outline-none cursor-pointer"
                 >
-                  👩 Wanita
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setVoiceGender('male'); setStoredVoiceGender('male'); }}
-                  className={`px-2.5 py-1 rounded-lg font-medium transition-all ${voiceGender === 'male' ? 'bg-sky-100 text-sky-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
-                >
-                  👨 Pria
-                </button>
+                  {TTS_PERSONAS.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.emoji} {p.name} ({p.gender === 'male' ? 'Pria' : 'Wanita'})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -221,7 +223,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                   word={w}
                   isSelected={selectedWords.includes(w.id)}
                   onToggle={() => toggleWord(w.id)}
-                  voiceGender={voiceGender}
+                  voiceGender={currentPersonaId.startsWith('male') ? 'male' : 'female'}
                 />
               ))}
             </div>

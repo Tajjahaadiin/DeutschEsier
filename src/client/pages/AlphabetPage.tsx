@@ -13,10 +13,12 @@ import { AlphabetCard } from '../components/alphabet/AlphabetCard'
 import { AlphabetDetailModal } from '../components/alphabet/AlphabetDetailModal'
 import { SpellingTrainer } from '../components/alphabet/SpellingTrainer'
 import {
-  getStoredVoiceGender,
-  setStoredVoiceGender,
+  getStoredPersonaId,
+  setStoredPersonaId,
+  type TtsPersonaId,
   type VoiceGender
 } from '../lib/audio'
+import { TTS_PERSONAS } from '../../shared/ttsPersonas'
 
 interface AlphabetPageProps {
   navigate: (path: string) => void
@@ -28,15 +30,12 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
   const [activeTab, setActiveTab] = useState<'cards' | 'trainer'>('cards')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<FilterType>('all')
-  const [voiceGender, setVoiceGender] = useState<VoiceGender>(() => getStoredVoiceGender())
+  const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
   const [speechRate, setSpeechRate] = useState<number>(1.0)
   const [selectedItem, setSelectedItem] = useState<GermanAlphabetItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleGenderChange = (gender: VoiceGender) => {
-    setVoiceGender(gender)
-    setStoredVoiceGender(gender)
-  }
+  const voiceGender: VoiceGender = currentPersonaId.startsWith('male') ? 'male' : 'female'
 
   const counts = {
     all: GERMAN_ALPHABET.length,
@@ -102,30 +101,23 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
 
           {/* Voice & Speed Controls */}
           <div className="flex items-center gap-2">
-            {/* Gender Toggle */}
+            {/* Persona Selector */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs">
-              <button
-                type="button"
-                onClick={() => handleGenderChange('female')}
-                className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
-                  voiceGender === 'female'
-                    ? 'bg-white text-rose-600 shadow-xs font-semibold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
+              <select
+                value={currentPersonaId}
+                onChange={(e) => {
+                  const nextId = e.target.value as TtsPersonaId
+                  setCurrentPersonaId(nextId)
+                  setStoredPersonaId(nextId)
+                }}
+                className="bg-transparent font-semibold text-slate-700 focus:outline-none cursor-pointer px-1 py-0.5"
               >
-                👩 Katja
-              </button>
-              <button
-                type="button"
-                onClick={() => handleGenderChange('male')}
-                className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
-                  voiceGender === 'male'
-                    ? 'bg-white text-sky-600 shadow-xs font-semibold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                👨 Conrad
-              </button>
+                {TTS_PERSONAS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.emoji} {p.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Speed Toggle */}

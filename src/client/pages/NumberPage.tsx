@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, Volume2, RotateCcw, Sparkles, Hash, Gamepad2 } from 'lucide-react'
-import { speakGerman, getStoredVoiceGender, setStoredVoiceGender, type VoiceGender } from '../lib/audio'
+import { speakGerman, getStoredPersonaId, setStoredPersonaId, type TtsPersonaId, type VoiceGender } from '../lib/audio'
+import { TTS_PERSONAS } from '../../shared/ttsPersonas'
 import { combineNumberAndNoun } from '../lib/numberGame'
 import { NUMBER_ITEMS } from '../data/numberData'
 import { OBJECT_ITEMS, OBJECT_CATEGORIES, type ObjectItem } from '../data/objectData'
@@ -16,7 +17,7 @@ const GAME_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 export default function NumberPage({ navigate }: NumberPageProps) {
   const [activeTab, setActiveTab] = useState<Tab>('cards')
-  const [voiceGender, setVoiceGender] = useState<VoiceGender>(() => getStoredVoiceGender())
+  const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
   const [speechRate, setSpeechRate] = useState(1.0)
   const [playing, setPlaying] = useState<string | null>(null)
 
@@ -26,14 +27,11 @@ export default function NumberPage({ navigate }: NumberPageProps) {
   const [generated, setGenerated] = useState<string | null>(null)
   const [category, setCategory] = useState<string>('Semua')
 
-  const handleGenderChange = (gender: VoiceGender) => {
-    setVoiceGender(gender)
-    setStoredVoiceGender(gender)
-  }
+  const voiceGender: VoiceGender = currentPersonaId.startsWith('male') ? 'male' : 'female'
 
   const handlePlay = (text: string) => {
     setPlaying(text)
-    speakGerman(text, { gender: voiceGender, rate: speechRate, onEnd: () => setPlaying(null) })
+    speakGerman(text, { personaId: currentPersonaId, gender: voiceGender, rate: speechRate, onEnd: () => setPlaying(null) })
   }
 
   const gameObjects = useMemo(
@@ -72,24 +70,21 @@ export default function NumberPage({ navigate }: NumberPageProps) {
 
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs">
-              <button
-                type="button"
-                onClick={() => handleGenderChange('female')}
-                className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                  voiceGender === 'female' ? 'bg-white text-rose-600 shadow-xs font-semibold' : 'text-slate-500'
-                }`}
+              <select
+                value={currentPersonaId}
+                onChange={(e) => {
+                  const nextId = e.target.value as TtsPersonaId
+                  setCurrentPersonaId(nextId)
+                  setStoredPersonaId(nextId)
+                }}
+                className="bg-transparent font-semibold text-slate-700 focus:outline-none cursor-pointer px-1 py-0.5"
               >
-                👩 Katja
-              </button>
-              <button
-                type="button"
-                onClick={() => handleGenderChange('male')}
-                className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                  voiceGender === 'male' ? 'bg-white text-sky-600 shadow-xs font-semibold' : 'text-slate-500'
-                }`}
-              >
-                👨 Conrad
-              </button>
+                {TTS_PERSONAS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.emoji} {p.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl text-xs">
               {[1.0, 0.75].map((rate) => (

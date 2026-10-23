@@ -1,4 +1,12 @@
+import {
+  type TtsPersonaId,
+  getTtsPersona,
+  resolveEdgeVoiceId,
+  DEFAULT_FEMALE_PERSONA,
+} from '../../shared/ttsPersonas'
+
 export type VoiceGender = 'male' | 'female'
+export type { TtsPersonaId }
 
 interface ResolvedVoiceConfig {
   voice: SpeechSynthesisVoice | null
@@ -60,6 +68,7 @@ export function resolveVoice(gender: VoiceGender): ResolvedVoiceConfig {
 
 export type SpeakOptions = {
   gender?: VoiceGender
+  personaId?: TtsPersonaId | string
   rate?: number
   onEnd?: () => void
 }
@@ -119,10 +128,18 @@ function fallbackSpeechSynthesis(text: string, options: SpeakOptions) {
 export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() => void)) {
   stopSpeech()
   const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
-  const gender = options.gender || 'female'
+  
+  // Ambil persona spesifik bila ada, atau fallback ke preferred/gender
+  const personaId = options.personaId || (options.gender ? undefined : getStoredPersonaId())
+  const persona = personaId ? getTtsPersona(personaId) : undefined
+  const gender: VoiceGender = persona ? persona.gender : (options.gender || 'female')
+  const voiceId = resolveEdgeVoiceId(persona?.voiceId || personaId || gender, gender)
 
-  if (gender === 'male' && !hasNativeMaleVoice()) {
-    const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&gender=male`
+  // Putar via Edge TTS serverless bila persona/suara spesifik diminta ATAU suara pria native tak ada di browser
+  const shouldUseEdgeTts = Boolean(options.personaId || persona) || (gender === 'male' && !hasNativeMaleVoice())
+
+  if (shouldUseEdgeTts) {
+    const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(voiceId)}`
     const audio = new Audio(audioUrl)
     if (options.rate !== undefined) {
       audio.playbackRate = options.rate
@@ -134,7 +151,7 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
       if (fallbackExecuted) return
       fallbackExecuted = true
       if (currentHtmlAudio === audio) currentHtmlAudio = null
-      fallbackSpeechSynthesis(text, options)
+      fallbackSpeechSynthesis(text, { ...options, gender })
     }
     audio.onended = () => {
       if (currentHtmlAudio === audio) currentHtmlAudio = null
@@ -145,7 +162,7 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
     return
   }
 
-  fallbackSpeechSynthesis(text, options)
+  fallbackSpeechSynthesis(text, { ...options, gender })
 }
 
 // Memutar audio satu kata. Saat ini selalu melalui TTS (Web Speech API / Edge TTS),
@@ -154,19 +171,26 @@ export function playWordAudio(germanText: string, optionsOrOnEnd?: SpeakOptions 
   speakGerman(germanText, optionsOrOnEnd)
 }
 
-export function getStoredVoiceGender(): VoiceGender {
-  if (typeof window === 'undefined') return 'female'
+export function getStoredPersonaId(): TtsPersonaId {
+  if (typeof window === 'undefined') return DEFAULT_FEMALE_PERSONA
   try {
-    const saved = localStorage.getItem('preferredVoiceGender')
-    return saved === 'male' ? 'male' : 'female'
+    const saved = localStorage.getItem('preferredPersonaId')
+    if (saved && getTtsPersona(saved)) return saved as TtsPersonaId
+    // Migrasi dari preferredVoiceGender lama
+    const oldGender = localStorage.getItem('preferredVoiceGender')
+    return oldGender === 'male' ? 'male-1' : DEFAULT_FEMALE_PERSONA
   } catch {
-    return 'female'
+    return DEFAULT_FEMALE_PERSONA
   }
 }
 
-export function setStoredVoiceGender(gender: VoiceGender): void {
+export function setStoredPersonaId(personaId: TtsPersonaId): void {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem('preferredVoiceGender', gender)
+    localStorage.setItem('preferredPersonaId', personaId)
+    const persona = getTtsPersona(personaId)
+    if (persona) {
+      localStorage.setItem('preferredVoiceGender', persona.gender)
+    }
   } catch {}
 }

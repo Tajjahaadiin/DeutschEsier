@@ -37765,8 +37765,8 @@ function getAiClient() {
 var retryPolicy = Schedule_exports.exponential(Duration_exports.millis(500), 2).pipe(
   Schedule_exports.intersect(Schedule_exports.recurs(3))
 );
-function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, grammarTopicIds = []) {
-  const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords, dialogueCount, grammarTopicIds);
+function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, grammarTopicIds = [], speakerCount = 2) {
+  const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords, dialogueCount, grammarTopicIds, speakerCount);
   const wantsComprehension = cefrLevel === "B1";
   const topics = topicsForPrompt(grammarTopicIds);
   const wantsGrammarTopics = cefrLevel === "B1" && topics.length > 0;
@@ -38028,11 +38028,14 @@ Aturan:
 7. topicId disalin persis dari daftar di atas
 8. segments memecah "sentence" menjadi potongan berurutan; tiap potongan punya "text" dan "role" (salah satu dari "subjekt", "praedikat", "objekt", "other"); gabungan semua "text" harus sama dengan "sentence"`;
 }
-function buildPrompt(prompt, level, cognates, dialogueCount, grammarTopicIds = []) {
+function buildPrompt(prompt, level, cognates, dialogueCount, grammarTopicIds = [], speakerCount = 2) {
   const cognateList = cognates.length > 0 ? `
 Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
   const grammarTopicsBlock = level === "B1" ? buildGrammarTopicsBlock(grammarTopicIds) : "";
   const grammarQuestionsBlock = level === "B1" ? buildGrammarQuestionsBlock(grammarTopicIds) : "";
+  const letters = ["A", "B", "C", "D", "E", "F"];
+  const count3 = Math.min(6, Math.max(2, speakerCount || 2));
+  const speakerNames = letters.slice(0, count3).map((l) => `"Sprecher ${l}"`).join(", ");
   const comprehensionBlock = level === "B1" ? `
 
 Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):
@@ -38049,7 +38052,7 @@ Skenario: ${prompt}${cognateList}
 
 Panduan:
 1. Dialog harus natural dan relevan dengan skenario
-2. Speaker adalah "Sprecher A" und "Sprecher B"
+2. Gunakan percakapan antar ${count3} pembicara: ${speakerNames}
 3. Teks Jerman harus sesuai level ${level} CEFR
 4. Terjemahan Indonesia harus natural
 5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu
@@ -38083,7 +38086,7 @@ function isCefrLevel(value3) {
 generateRouter.post("/", requireTeacherAuth, async (c) => {
   try {
     const body = await c.req.json();
-    const { prompt, cefrLevel, wordIds, dialogueCount, grammarTopics } = body;
+    const { prompt, cefrLevel, wordIds, dialogueCount, grammarTopics, speakerCount } = body;
     if (!prompt || !cefrLevel) {
       return c.json({ error: "Missing prompt or cefrLevel" }, 400);
     }
@@ -38094,6 +38097,13 @@ generateRouter.post("/", requireTeacherAuth, async (c) => {
         },
         400
       );
+    }
+    let speakers = 2;
+    if (speakerCount !== void 0) {
+      if (typeof speakerCount !== "number" || !Number.isInteger(speakerCount) || speakerCount < 2 || speakerCount > 6) {
+        return c.json({ error: "Jumlah pembicara harus berupa bilangan bulat antara 2 dan 6." }, 400);
+      }
+      speakers = speakerCount;
     }
     let count3 = DEFAULT_DIALOGUE_COUNT;
     if (dialogueCount !== void 0) {
@@ -38132,7 +38142,7 @@ generateRouter.post("/", requireTeacherAuth, async (c) => {
       cognateWords = words.map((w) => w.word);
     }
     const result = await Effect_exports.runPromise(
-      generateLesson(prompt, cefrLevel, cognateWords, count3, topicIds)
+      generateLesson(prompt, cefrLevel, cognateWords, count3, topicIds, speakers)
     );
     return c.json({ lesson: result });
   } catch (error) {
@@ -38273,16 +38283,94 @@ var sessions_default = sessionsRouter;
 
 // src/server/routes/tts.ts
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+
+// src/shared/ttsPersonas.ts
+var TTS_PERSONAS = [
+  {
+    id: "male-1",
+    name: "Conrad",
+    gender: "male",
+    voiceId: "de-DE-ConradNeural",
+    roleId: "Guru Formal (Der Lehrer)",
+    descriptionId: "Dewasa matang, bariton tegas, artikulasi akademis",
+    emoji: "\u{1F468}\u200D\u{1F3EB}"
+  },
+  {
+    id: "male-2",
+    name: "Killian",
+    gender: "male",
+    voiceId: "de-DE-KillianNeural",
+    roleId: "Mahasiswa Santai (Der Student)",
+    descriptionId: "Muda, tenor luwes, percakapan sehari-hari",
+    emoji: "\u{1F9D1}\u200D\u{1F393}"
+  },
+  {
+    id: "male-3",
+    name: "Florian",
+    gender: "male",
+    voiceId: "de-DE-FlorianMultilingualNeural",
+    roleId: "Rekan Kerja (Der Kollege)",
+    descriptionId: "Dewasa muda, modern, lugas & profesional",
+    emoji: "\u{1F468}\u200D\u{1F4BC}"
+  },
+  {
+    id: "female-1",
+    name: "Katja",
+    gender: "female",
+    voiceId: "de-DE-KatjaNeural",
+    roleId: "Tutor Utama (Die Lehrerin)",
+    descriptionId: "Dewasa, vokal jernih, hangat & artikulatif",
+    emoji: "\u{1F469}\u200D\u{1F3EB}"
+  },
+  {
+    id: "female-2",
+    name: "Amala",
+    gender: "female",
+    voiceId: "de-DE-AmalaNeural",
+    roleId: "Rekan Belajar (Die Studentin)",
+    descriptionId: "Muda, ceria, energik & dinamis",
+    emoji: "\u{1F467}"
+  },
+  {
+    id: "female-3",
+    name: "Seraphina",
+    gender: "female",
+    voiceId: "de-DE-SeraphinaMultilingualNeural",
+    roleId: "Konsultan Ramah (Die Beraterin)",
+    descriptionId: "Dewasa muda, nada ramah, empatik & halus",
+    emoji: "\u{1F469}\u200D\u{1F4BC}"
+  }
+];
+var PERSONA_BY_ID = new Map(
+  TTS_PERSONAS.map((p) => [p.id, p])
+);
+var PERSONA_BY_VOICE = new Map(
+  TTS_PERSONAS.map((p) => [p.voiceId.toLowerCase(), p])
+);
+function resolveEdgeVoiceId(voiceOrPersona, fallbackGender = "female") {
+  if (!voiceOrPersona) {
+    return fallbackGender === "male" ? "de-DE-ConradNeural" : "de-DE-KatjaNeural";
+  }
+  const byId = PERSONA_BY_ID.get(voiceOrPersona);
+  if (byId) return byId.voiceId;
+  const byVoice = PERSONA_BY_VOICE.get(voiceOrPersona.toLowerCase());
+  if (byVoice) return byVoice.voiceId;
+  if (voiceOrPersona.toLowerCase() === "male") return "de-DE-ConradNeural";
+  if (voiceOrPersona.toLowerCase() === "female") return "de-DE-KatjaNeural";
+  return "de-DE-KatjaNeural";
+}
+
+// src/server/routes/tts.ts
 var ttsRouter = new Hono2();
-var MALE_VOICE = "de-DE-ConradNeural";
-var FEMALE_VOICE = "de-DE-KatjaNeural";
 ttsRouter.get("/", async (c) => {
   const text2 = c.req.query("text");
-  const gender = c.req.query("gender") || "male";
+  const voiceParam = c.req.query("voice") || c.req.query("persona");
+  const genderParam = (c.req.query("gender") || "").toLowerCase();
+  const fallbackGender = genderParam === "male" ? "male" : "female";
   if (!text2 || text2.trim() === "") {
     return c.json({ error: "Text parameter is required" }, 400);
   }
-  const voiceName = gender === "female" ? FEMALE_VOICE : MALE_VOICE;
+  const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : void 0), fallbackGender);
   const tts = new MsEdgeTTS();
   try {
     await tts.setMetadata(voiceName, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);

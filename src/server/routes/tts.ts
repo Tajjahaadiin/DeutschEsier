@@ -1,23 +1,20 @@
 import { Hono } from 'hono'
 import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts'
+import { resolveEdgeVoiceId } from '../../shared/ttsPersonas'
 
 const ttsRouter = new Hono()
 
-// Voices:
-// Pria: de-DE-ConradNeural (standar bariton)
-// Wanita: de-DE-KatjaNeural
-const MALE_VOICE = 'de-DE-ConradNeural'
-const FEMALE_VOICE = 'de-DE-KatjaNeural'
-
 ttsRouter.get('/', async (c) => {
   const text = c.req.query('text')
-  const gender = c.req.query('gender') || 'male'
+  const voiceParam = c.req.query('voice') || c.req.query('persona')
+  const genderParam = (c.req.query('gender') || '').toLowerCase()
+  const fallbackGender: 'male' | 'female' = genderParam === 'male' ? 'male' : 'female'
 
   if (!text || text.trim() === '') {
     return c.json({ error: 'Text parameter is required' }, 400)
   }
 
-  const voiceName = gender === 'female' ? FEMALE_VOICE : MALE_VOICE
+  const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : undefined), fallbackGender)
   const tts = new MsEdgeTTS()
 
   try {
