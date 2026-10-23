@@ -202,7 +202,7 @@ export default function KeyManagerModal({
         {/* Modal Body (Scrollable) */}
         <div className="p-5 overflow-y-auto space-y-6 flex-1">
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />
               <span>{error}</span>
             </div>
@@ -340,7 +340,7 @@ export default function KeyManagerModal({
                             </span>
                           )}
                           {isExpired ? (
-                            <span className="text-label bg-red-100 text-red-700 px-2 py-0.5 rounded-sm font-semibold">
+                            <span className="text-label bg-rose-100 text-rose-700 px-2 py-0.5 rounded-sm font-semibold">
                               Kedaluwarsa
                             </span>
                           ) : (
@@ -402,7 +402,7 @@ export default function KeyManagerModal({
                         <button
                           type="button"
                           onClick={() => handleDeleteKey(k.id)}
-                          className="p-1.5 rounded-md border border-slate-200 hover:border-red-200 bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+                          className="p-1.5 rounded-md border border-slate-200 hover:border-rose-200 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors"
                           title="Cabut Kunci Akses"
                         >
                           <Trash2 size={14} />

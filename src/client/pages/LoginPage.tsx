@@ -54,7 +54,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
 
             {/* Error state */}
             {error && (
-              <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2.5 text-red-700 text-sm">
+              <div className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-sm">
                 <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>

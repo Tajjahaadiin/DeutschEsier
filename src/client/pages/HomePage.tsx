@@ -116,7 +116,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
             </div>
             <button
               onClick={() => logoutTeacher()}
-              className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-600 px-2.5 py-1.5 rounded-md hover:bg-red-50 transition-colors font-medium border border-transparent hover:border-red-100"
+              className="flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600 px-2.5 py-1.5 rounded-md hover:bg-rose-50 transition-colors font-medium border border-transparent hover:border-rose-100"
               title="Keluar dari akun guru"
             >
               <LogOut size={14} />
@@ -211,7 +211,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
             {selectedWords.length > 0 && (
               <div className="mb-4 flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
                 <span className="font-semibold">{selectedWords.length}</span> kata dipilih
-                <button onClick={clearSelection} className="ml-auto text-slate-400 hover:text-red-500 text-xs">Hapus pilihan</button>
+                <button onClick={clearSelection} className="ml-auto text-slate-400 hover:text-rose-500 text-xs">Hapus pilihan</button>
               </div>
             )}
 
@@ -295,7 +295,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                       </button>
                       <button
                         onClick={e => handleDeleteSession(session.id, e)}
-                        className="p-2 text-slate-400 hover:text-red-500 rounded-md hover:bg-red-50"
+                        className="p-2 text-slate-400 hover:text-rose-500 rounded-md hover:bg-rose-50"
                         title="Hapus"
                       >
                         <Trash2 size={16} />

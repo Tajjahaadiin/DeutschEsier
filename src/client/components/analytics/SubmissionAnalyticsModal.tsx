@@ -168,7 +168,7 @@ export default function SubmissionAnalyticsModal({
       label: '0–40',
       sublabel: 'Perlu Remedial',
       count: distribution['0-40'],
-      color: 'from-rose-500 to-red-600',
+      color: 'from-rose-500 to-rose-600',
       textColor: 'text-rose-600',
     },
     {

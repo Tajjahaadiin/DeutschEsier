@@ -459,7 +459,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         </div>
 
         {error && (
-          <div className="text-red-600 text-sm bg-red-50 border border-red-200 p-3 rounded-lg">
+          <div className="text-rose-600 text-sm bg-rose-50 border border-rose-200 p-3 rounded-lg">
             {error}
           </div>
         )}
@@ -671,7 +671,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         deleteTurn(i)
                       }}
                       title="Hapus baris"
-                      className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -700,7 +700,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   <button
                     onClick={() => deleteVocab(i)}
                     title="Hapus vocab"
-                    className="absolute top-2 right-2 p-1 text-blue-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                    className="absolute top-2 right-2 p-1 text-blue-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
                   >
                     <Trash2 size={14} />
                   </button>

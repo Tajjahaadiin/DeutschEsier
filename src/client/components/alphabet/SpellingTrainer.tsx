@@ -294,7 +294,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
           {isPlaying ? (
             <button
               onClick={stopPlayback}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold text-sm shadow-sm transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm shadow-sm transition-all"
             >
               <Square size={16} />
               <span>Berhenti</span>
@@ -398,7 +398,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
                       onClick={(e) => handleDeleteWord(item.id, e)}
                       title="Hapus kata"
                       className={`p-1 rounded hover:bg-black/10 cursor-pointer ${
-                        inputText === item.word ? 'text-white' : 'text-slate-500 hover:text-red-600'
+                        inputText === item.word ? 'text-white' : 'text-slate-500 hover:text-rose-600'
                       }`}
                     >
                       <Trash2 size={12} />
@@ -435,7 +435,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
               <button
                 type="button"
                 onClick={handleResetToDefault}
-                className="text-xs px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                className="text-xs px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                 title="Reset daftar kata ke bawaan awal"
               >
                 Reset ke Bawaan
@@ -580,7 +580,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
               </div>
 
               {modalError && (
-                <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg border border-red-200">
+                <p className="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg border border-rose-200">
                   {modalError}
                 </p>
               )}
