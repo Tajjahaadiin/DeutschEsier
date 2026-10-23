@@ -13,6 +13,7 @@ import {
   type ComprehensionQuestion,
 } from '../lib/comprehension'
 import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPatterns'
+import { buildSessionRequest, accessDenialFrom } from '../lib/sessionRequest'
 import { parseGrammarTopics, type GrammarTopicContent } from '../lib/grammarTopicsParser'
 import {
   Volume2,
@@ -124,9 +125,27 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
   // Fetch Session Data
   useEffect(() => {
-    fetch('/api/sessions/' + id)
-      .then((res) => res.json())
+    // Kunci (siswa) dan token (guru) ikut dikirim supaya server bisa menolak
+    // permintaan tanpa hak. Effects TIDAK diubah urutannya.
+    const urlKey = new URLSearchParams(window.location.search).get('key')
+    const { url, headers } = buildSessionRequest(id, urlKey, isTeacher)
+
+    fetch(url, { headers })
+      .then(async (res) => {
+        const data = await res.json()
+        // 403 dari server harus mengisi accessError, bukan hanya verify-access,
+        // supaya kedua jalur tidak bisa berbeda pendapat.
+        const denial = accessDenialFrom(res.status, data)
+        if (denial) {
+          setAccessError(denial)
+          setAccessGranted(false)
+          setVerifyingKey(false)
+          return
+        }
+        return data
+      })
       .then((data) => {
+        if (!data) return
         if (data.error) throw new Error(data.error)
         setSession({
           ...data,

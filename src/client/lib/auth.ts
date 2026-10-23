@@ -1,4 +1,5 @@
-const TEACHER_TOKEN_KEY = 'teacher_auth_token'
+/** Nama kunci localStorage untuk token guru. Diekspor agar test bisa menyetelnya. */
+export const TEACHER_TOKEN_KEY = 'teacher_auth_token'
 
 export function getTeacherToken(): string | null {
   if (typeof window === 'undefined') return null
