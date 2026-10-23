@@ -397,7 +397,7 @@ export default function GrundlagenPage({
             </select>
           </div>
 
-          {selectedWords.length > 0 && (
+          {isTeacher && selectedWords.length > 0 && (
             <div className="flex items-center gap-2 text-sm text-primary bg-primary/10 border border-primary/20 rounded-md px-4 py-2">
               <span className="font-bold">{selectedWords.length}</span> kata dipilih
               <button
@@ -415,9 +415,10 @@ export default function GrundlagenPage({
               <WordCard
                 key={w.id}
                 word={w}
-                isSelected={selectedWords.includes(w.id)}
-                onToggle={() => toggleWord(w.id)}
+                isSelected={isTeacher && selectedWords.includes(w.id)}
+                onToggle={() => isTeacher && toggleWord(w.id)}
                 personaId={currentPersonaId}
+                selectable={isTeacher}
               />
             ))}
           </div>
@@ -430,7 +431,9 @@ export default function GrundlagenPage({
             </div>
           )}
 
-          <SelectionBasket count={selectedWords.length} onGenerate={() => navigate('/generate')} />
+          {isTeacher && (
+            <SelectionBasket count={selectedWords.length} onGenerate={() => navigate('/generate')} />
+          )}
         </div>
       )}
 

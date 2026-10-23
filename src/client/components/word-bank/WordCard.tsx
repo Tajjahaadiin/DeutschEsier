@@ -2,7 +2,19 @@ import { Card } from '../ui/card'
 import { playWordAudio, type TtsPersonaId } from '../../lib/audio'
 import { Volume2 } from 'lucide-react'
 
-export function WordCard({ word, isSelected, onToggle, personaId }: { word: any, isSelected: boolean, onToggle: () => void, personaId?: TtsPersonaId }) {
+export function WordCard({
+  word,
+  isSelected,
+  onToggle,
+  personaId,
+  selectable = true,
+}: {
+  word: any
+  isSelected?: boolean
+  onToggle?: () => void
+  personaId?: TtsPersonaId
+  selectable?: boolean
+}) {
   const getArticleColor = (article: string) => {
     if (article === 'der') return 'bg-sky-100 text-sky-800 border-sky-300'
     if (article === 'die') return 'bg-rose-100 text-rose-800 border-rose-300'
@@ -11,11 +23,19 @@ export function WordCard({ word, isSelected, onToggle, personaId }: { word: any,
   }
 
   return (
-    <Card className={`p-4 flex flex-col gap-2 relative transition-all ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:border-blue-300'}`}>
-      <div className="absolute top-4 right-4">
-        <input type="checkbox" checked={isSelected} onChange={onToggle} className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
-      </div>
-      <div className="flex items-center gap-2 pr-8">
+    <Card className={`p-4 flex flex-col gap-2 relative transition-all ${selectable && isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:border-border'}`}>
+      {selectable && onToggle && (
+        <div className="absolute top-4 right-4">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onToggle}
+            aria-label={`Pilih kata ${word.germanWord}`}
+            className="w-5 h-5 text-primary rounded-sm border-border focus:ring-primary cursor-pointer"
+          />
+        </div>
+      )}
+      <div className={`flex items-center gap-2 ${selectable ? 'pr-8' : ''}`}>
         {word.article && (
           <span className={`text-xs px-2 py-0.5 rounded-sm border ${getArticleColor(word.article)} font-medium`}>
             {word.article}
