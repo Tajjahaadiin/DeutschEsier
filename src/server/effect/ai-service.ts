@@ -242,21 +242,23 @@ export function generateLesson(
     catch: (err) => new GeminiApiError(`Gemini API call failed: ${err}`),
   })
   
-  const pipeline = callGemini.pipe(
+  const callAndParse = callGemini.pipe(
     Effect.flatMap((rawText) =>
       Effect.try({
         try: () => JSON.parse(rawText) as unknown,
         catch: (err) => new JsonParseError(`JSON parse failed: ${err}`),
       })
     ),
+    Effect.retry(retryPolicy)
+  )
+
+  return callAndParse.pipe(
     Effect.flatMap((parsed) =>
       Schema.decodeUnknown(GeneratedLessonSchema)(parsed).pipe(
         Effect.mapError((err) => new SchemaValidationError(`Schema validation failed: ${err}`))
       )
     )
   )
-
-  return pipeline.pipe(Effect.retry(retryPolicy))
 }
 
 /** Ambil definisi topik (dibatasi MAX_GRAMMAR_TOPICS) untuk prompt & schema. */

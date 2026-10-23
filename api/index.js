@@ -38083,20 +38083,22 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, gram
     },
     catch: (err) => new GeminiApiError(`Gemini API call failed: ${err}`)
   });
-  const pipeline = callGemini.pipe(
+  const callAndParse = callGemini.pipe(
     Effect_exports.flatMap(
       (rawText) => Effect_exports.try({
         try: () => JSON.parse(rawText),
         catch: (err) => new JsonParseError(`JSON parse failed: ${err}`)
       })
     ),
+    Effect_exports.retry(retryPolicy)
+  );
+  return callAndParse.pipe(
     Effect_exports.flatMap(
       (parsed) => Schema_exports.decodeUnknown(GeneratedLessonSchema)(parsed).pipe(
         Effect_exports.mapError((err) => new SchemaValidationError(`Schema validation failed: ${err}`))
       )
     )
   );
-  return pipeline.pipe(Effect_exports.retry(retryPolicy));
 }
 function topicsForPrompt(topicIds) {
   const wanted = new Set(topicIds);

@@ -515,6 +515,37 @@ describe('POST /api/generate — pola kalimat untuk tab Materi', () => {
   })
 })
 
+describe('K6 — Retry behaviour pada schema validation failure', () => {
+  it('tidak mengulang panggil Gemini ketika payload JSON melanggar schema', async () => {
+    // Payload JSON valid tetapi tidak memenuhi GeneratedLessonSchema (hilang 'title')
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        sceneDescription: 'Deskripsi tanpa title',
+        dialogue: [],
+        vocabClues: [],
+      }),
+    })
+
+    const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+
+    expect(res.status).toBe(500)
+    // HARUS dipanggil tepat 1 kali, bukan 4 kali (1 call + 3 retries)
+    expect(generateContent).toHaveBeenCalledTimes(1)
+  })
+
+  it('tetap mengulang panggil Gemini ketika respons JSON malformed lalu berhasil', async () => {
+    generateContent
+      .mockResolvedValueOnce({ text: 'Bukan JSON valid {' })
+      .mockResolvedValueOnce({ text: VALID_LESSON })
+
+    const res = await postGenerate({ prompt: 'Di kafe Berlin', cefrLevel: 'A1' })
+
+    expect(res.status).toBe(200)
+    expect(generateContent).toHaveBeenCalledTimes(2)
+  })
+})
+
+
 describe('buildGrammarTopicsBlock — batas & isi', () => {
   it('mencetak nama Jerman dan label Indonesia dari taksonomi', async () => {
     const { buildGrammarTopicsBlock } = await import('../effect/ai-service')
