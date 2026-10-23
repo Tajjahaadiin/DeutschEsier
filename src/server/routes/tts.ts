@@ -1,6 +1,10 @@
 import { Hono } from 'hono'
-import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts'
+import { EdgeTTS } from 'node-edge-tts'
 import { resolveEdgeVoiceId } from '../../shared/ttsPersonas'
+import { promises as fs } from 'fs'
+import { join } from 'path'
+import { tmpdir } from 'os'
+import { nanoid } from 'nanoid'
 
 const ttsRouter = new Hono()
 
@@ -15,18 +19,18 @@ ttsRouter.get('/', async (c) => {
   }
 
   const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : undefined), fallbackGender)
-  const tts = new MsEdgeTTS()
+  const tempPath = join(tmpdir(), `tts-${nanoid()}.mp3`)
 
   try {
-    await tts.setMetadata(voiceName, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3)
-    const { audioStream } = tts.toStream(text)
+    const tts = new EdgeTTS({
+      voice: voiceName,
+      lang: 'de-DE',
+      outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+      timeout: 10000,
+    })
 
-    // Kumpulkan audio stream ke in-memory Buffer
-    const chunks: Buffer[] = []
-    for await (const chunk of audioStream) {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-    }
-    const audioBuffer = Buffer.concat(chunks)
+    await tts.ttsPromise(text, tempPath)
+    const audioBuffer = await fs.readFile(tempPath)
 
     // Headers untuk caching bertingkat: Browser + Vercel Global Edge CDN
     c.header('Content-Type', 'audio/mpeg')
@@ -39,10 +43,9 @@ ttsRouter.get('/', async (c) => {
     console.error('Edge TTS generation failed:', error)
     return c.json({ error: error?.message || 'TTS generation failed' }, 500)
   } finally {
-    try {
-      tts.close()
-    } catch {}
+    fs.unlink(tempPath).catch(() => {})
   }
 })
 
 export default ttsRouter
+

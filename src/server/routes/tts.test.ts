@@ -1,19 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const setMetadataMock = vi.fn()
-const closeMock = vi.fn()
+const ttsPromiseMock = vi.fn().mockImplementation(async (_text, filePath) => {
+  const fs = await import('fs/promises')
+  await fs.writeFile(filePath, Buffer.from('dummy-mp3-binary-data'))
+})
 
-vi.mock('msedge-tts', () => {
+let lastConfig: any = null
+
+vi.mock('node-edge-tts', () => {
   return {
-    OUTPUT_FORMAT: { AUDIO_24KHZ_48KBITRATE_MONO_MP3: 'mp3_24k' },
-    MsEdgeTTS: class {
-      setMetadata = setMetadataMock
-      close = closeMock
-      toStream = () => ({
-        audioStream: (async function* () {
-          yield Buffer.from('dummy-mp3-data')
-        })(),
-      })
+    EdgeTTS: class {
+      constructor(config: any) {
+        lastConfig = config
+      }
+      ttsPromise = ttsPromiseMock
     },
   }
 })
@@ -21,8 +21,8 @@ vi.mock('msedge-tts', () => {
 const { default: app } = await import('../app')
 
 beforeEach(() => {
-  setMetadataMock.mockClear()
-  closeMock.mockClear()
+  ttsPromiseMock.mockClear()
+  lastConfig = null
 })
 
 describe('GET /api/tts', () => {
@@ -36,24 +36,25 @@ describe('GET /api/tts', () => {
     const res = await app.request('/api/tts?text=Hallo')
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('audio/mpeg')
-    expect(setMetadataMock).toHaveBeenCalledWith('de-DE-KatjaNeural', 'mp3_24k')
+    expect(lastConfig?.voice).toBe('de-DE-KatjaNeural')
+    expect(ttsPromiseMock).toHaveBeenCalled()
   })
 
   it('menerima parameter ?persona=male-2 dan memetakan ke de-DE-KillianNeural', async () => {
     const res = await app.request('/api/tts?text=Hallo&persona=male-2')
     expect(res.status).toBe(200)
-    expect(setMetadataMock).toHaveBeenCalledWith('de-DE-KillianNeural', 'mp3_24k')
+    expect(lastConfig?.voice).toBe('de-DE-KillianNeural')
   })
 
   it('menerima parameter ?voice=de-DE-AmalaNeural secara langsung', async () => {
     const res = await app.request('/api/tts?text=Hallo&voice=de-DE-AmalaNeural')
     expect(res.status).toBe(200)
-    expect(setMetadataMock).toHaveBeenCalledWith('de-DE-AmalaNeural', 'mp3_24k')
+    expect(lastConfig?.voice).toBe('de-DE-AmalaNeural')
   })
 
   it('mendukung fallback gender lama ?gender=male', async () => {
     const res = await app.request('/api/tts?text=Hallo&gender=male')
     expect(res.status).toBe(200)
-    expect(setMetadataMock).toHaveBeenCalledWith('de-DE-ConradNeural', 'mp3_24k')
+    expect(lastConfig?.voice).toBe('de-DE-ConradNeural')
   })
 })

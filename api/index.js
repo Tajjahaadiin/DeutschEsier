@@ -3206,7 +3206,7 @@ function sql(strings, ...params) {
     return new SQL([new StringChunk(str)]);
   }
   sql22.raw = raw2;
-  function join3(chunks, separator) {
+  function join4(chunks, separator) {
     const result = [];
     for (const [i, chunk3] of chunks.entries()) {
       if (i > 0 && separator !== void 0) {
@@ -3216,7 +3216,7 @@ function sql(strings, ...params) {
     }
     return new SQL(result);
   }
-  sql22.join = join3;
+  sql22.join = join4;
   function identifier2(value3) {
     return new Name(value3);
   }
@@ -6714,7 +6714,7 @@ var PgSelectQueryBuilderBase = class extends TypedQueryBuilder {
     return (table, on) => {
       const baseTableName = this.tableName;
       const tableName = getTableLikeName(table);
-      if (typeof tableName === "string" && this.config.joins?.some((join3) => join3.alias === tableName)) {
+      if (typeof tableName === "string" && this.config.joins?.some((join4) => join4.alias === tableName)) {
         throw new Error(`Alias "${tableName}" is already used in this query`);
       }
       if (!this.isPartialSelect) {
@@ -7741,7 +7741,7 @@ var PgUpdateBase = class extends QueryPromise {
   createJoin(joinType) {
     return (table, on) => {
       const tableName = getTableLikeName(table);
-      if (typeof tableName === "string" && this.config.joins.some((join3) => join3.alias === tableName)) {
+      if (typeof tableName === "string" && this.config.joins.some((join4) => join4.alias === tableName)) {
         throw new Error(`Alias "${tableName}" is already used in this query`);
       }
       if (typeof on === "function") {
@@ -7837,10 +7837,10 @@ var PgUpdateBase = class extends QueryPromise {
           const fromFields = this.getTableLikeFields(this.config.from);
           fields[tableName] = fromFields;
         }
-        for (const join3 of this.config.joins) {
-          const tableName2 = getTableLikeName(join3.table);
-          if (typeof tableName2 === "string" && !is(join3.table, SQL)) {
-            const fromFields = this.getTableLikeFields(join3.table);
+        for (const join4 of this.config.joins) {
+          const tableName2 = getTableLikeName(join4.table);
+          if (typeof tableName2 === "string" && !is(join4.table, SQL)) {
+            const fromFields = this.getTableLikeFields(join4.table);
             fields[tableName2] = fromFields;
           }
         }
@@ -38282,7 +38282,7 @@ sessionsRouter.delete("/:id", requireTeacherAuth, async (c) => {
 var sessions_default = sessionsRouter;
 
 // src/server/routes/tts.ts
-import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+import { EdgeTTS } from "node-edge-tts";
 
 // src/shared/ttsPersonas.ts
 var TTS_PERSONAS = [
@@ -38361,6 +38361,47 @@ function resolveEdgeVoiceId(voiceOrPersona, fallbackGender = "female") {
 }
 
 // src/server/routes/tts.ts
+import { promises as fs } from "fs";
+import { join as join3 } from "path";
+import { tmpdir } from "os";
+
+// node_modules/nanoid/index.js
+import { webcrypto as crypto3 } from "node:crypto";
+
+// node_modules/nanoid/url-alphabet/index.js
+var urlAlphabet = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
+
+// node_modules/nanoid/index.js
+var POOL_SIZE_MULTIPLIER = 128;
+var pool;
+var poolOffset;
+function fillPool(bytes) {
+  if (bytes < 0) throw new RangeError("Wrong ID size");
+  try {
+    if (!pool || pool.length < bytes) {
+      pool = Buffer.allocUnsafe(bytes * POOL_SIZE_MULTIPLIER);
+      crypto3.getRandomValues(pool);
+      poolOffset = 0;
+    } else if (poolOffset + bytes > pool.length) {
+      crypto3.getRandomValues(pool);
+      poolOffset = 0;
+    }
+  } catch (e) {
+    pool = void 0;
+    throw e;
+  }
+  poolOffset += bytes;
+}
+function nanoid(size10 = 21) {
+  fillPool(size10 |= 0);
+  let id = "";
+  for (let i = poolOffset - size10; i < poolOffset; i++) {
+    id += urlAlphabet[pool[i] & 63];
+  }
+  return id;
+}
+
+// src/server/routes/tts.ts
 var ttsRouter = new Hono2();
 ttsRouter.get("/", async (c) => {
   const text2 = c.req.query("text");
@@ -38371,15 +38412,16 @@ ttsRouter.get("/", async (c) => {
     return c.json({ error: "Text parameter is required" }, 400);
   }
   const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : void 0), fallbackGender);
-  const tts = new MsEdgeTTS();
+  const tempPath = join3(tmpdir(), `tts-${nanoid()}.mp3`);
   try {
-    await tts.setMetadata(voiceName, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-    const { audioStream } = tts.toStream(text2);
-    const chunks = [];
-    for await (const chunk3 of audioStream) {
-      chunks.push(Buffer.isBuffer(chunk3) ? chunk3 : Buffer.from(chunk3));
-    }
-    const audioBuffer = Buffer.concat(chunks);
+    const tts = new EdgeTTS({
+      voice: voiceName,
+      lang: "de-DE",
+      outputFormat: "audio-24khz-48kbitrate-mono-mp3",
+      timeout: 1e4
+    });
+    await tts.ttsPromise(text2, tempPath);
+    const audioBuffer = await fs.readFile(tempPath);
     c.header("Content-Type", "audio/mpeg");
     c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
     c.header("CDN-Cache-Control", "public, s-maxage=31536000");
@@ -38389,10 +38431,8 @@ ttsRouter.get("/", async (c) => {
     console.error("Edge TTS generation failed:", error);
     return c.json({ error: error?.message || "TTS generation failed" }, 500);
   } finally {
-    try {
-      tts.close();
-    } catch {
-    }
+    fs.unlink(tempPath).catch(() => {
+    });
   }
 });
 var tts_default = ttsRouter;
@@ -38488,42 +38528,6 @@ accessKeysRouter.get("/:id/verify-access", async (c) => {
   }
 });
 var access_keys_default = accessKeysRouter;
-
-// node_modules/nanoid/index.js
-import { webcrypto as crypto3 } from "node:crypto";
-
-// node_modules/nanoid/url-alphabet/index.js
-var urlAlphabet = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
-
-// node_modules/nanoid/index.js
-var POOL_SIZE_MULTIPLIER = 128;
-var pool;
-var poolOffset;
-function fillPool(bytes) {
-  if (bytes < 0) throw new RangeError("Wrong ID size");
-  try {
-    if (!pool || pool.length < bytes) {
-      pool = Buffer.allocUnsafe(bytes * POOL_SIZE_MULTIPLIER);
-      crypto3.getRandomValues(pool);
-      poolOffset = 0;
-    } else if (poolOffset + bytes > pool.length) {
-      crypto3.getRandomValues(pool);
-      poolOffset = 0;
-    }
-  } catch (e) {
-    pool = void 0;
-    throw e;
-  }
-  poolOffset += bytes;
-}
-function nanoid(size10 = 21) {
-  fillPool(size10 |= 0);
-  let id = "";
-  for (let i = poolOffset - size10; i < poolOffset; i++) {
-    id += urlAlphabet[pool[i] & 63];
-  }
-  return id;
-}
 
 // src/server/routes/submissions.ts
 var submissionsRouter = new Hono2();
