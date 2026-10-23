@@ -103,3 +103,13 @@ body {
     animation: fadeIn 150ms ease-out forwards;
   }
 }
+
+/* Fallback tinggi layar. `min-height: 100dvh` tidak dikenal Safari < 15.4,
+   Chrome < 108, dan WebView Android lama: deklarasinya dibuang seluruhnya,
+   sehingga elemen kehilangan tinggi minimum dan flex centering kolaps —
+   halaman login berakhir menempel di atas dengan latar terpotong. */
+@supports not (min-height: 100dvh) {
+  .min-h-dvh {
+    min-height: 100vh;
+  }
+}

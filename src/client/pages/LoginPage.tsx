@@ -29,7 +29,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
   }
 
   return (
-    <div className="min-h-dvh bg-neutral flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-neutral flex items-center justify-center p-4 pt-[calc(1rem_+_env(safe-area-inset-top))] pb-[calc(1rem_+_env(safe-area-inset-bottom))]">
       <div className="max-w-md w-full">
         {/* Card Container */}
         <div className="bg-white rounded-lg shadow-xl border border-slate-100 overflow-hidden">
@@ -39,7 +39,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
               <BookOpen size={30} className="text-white" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight">DeutschEasier</h1>
-            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm bg-blue-500/30 border border-white/20 text-xs font-semibold text-blue-100">
+            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/30 border border-white/20 text-xs font-semibold text-blue-100">
               <Sparkles size={12} />
               <span>Portal Khusus Guru (Lehrer)</span>
             </div>
