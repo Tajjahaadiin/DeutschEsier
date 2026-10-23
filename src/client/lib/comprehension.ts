@@ -8,6 +8,8 @@
  * Fungsi di sini murni (pure) agar mudah diuji.
  */
 
+import { parseTolerantArray } from './tolerantParser'
+
 export type ComprehensionAnswer = 'richtig' | 'falsch'
 
 export interface ComprehensionQuestion {
@@ -38,14 +40,7 @@ function isQuestion(value: unknown): value is ComprehensionQuestion {
  * lengkap dibuang tanpa menggagalkan sisanya.
  */
 export function parseComprehensionQuestions(raw: string | null | undefined): ComprehensionQuestion[] {
-  if (!raw) return []
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(isQuestion)
-  } catch {
-    return []
-  }
+  return parseTolerantArray(raw, (entry) => (isQuestion(entry) ? entry : null))
 }
 
 /**

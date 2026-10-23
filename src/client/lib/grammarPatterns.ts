@@ -12,6 +12,7 @@ import {
   type GrammarSegmentRole,
   normalizeRole,
 } from '../../shared/grammarRoles'
+import { parseTolerantArray } from './tolerantParser'
 
 export type { GrammarSegmentRole }
 
@@ -71,16 +72,7 @@ function toPattern(value: unknown): GrammarPattern | null {
  * bentuknya tidak lengkap dibuang tanpa menggagalkan sisanya.
  */
 export function parseGrammarPatterns(raw: string | null | undefined): GrammarPattern[] {
-  if (!raw) return []
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return parsed
-      .map(toPattern)
-      .filter((p): p is GrammarPattern => p !== null)
-  } catch {
-    return []
-  }
+  return parseTolerantArray(raw, toPattern)
 }
 
 /**

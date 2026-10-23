@@ -12,6 +12,7 @@
 
 import { isGrammarTopicId } from '../../shared/grammarTopics'
 import { type GrammarSegmentRole, normalizeRole } from '../../shared/grammarRoles'
+import { parseTolerantArray } from './tolerantParser'
 
 export interface AiGrammarQuestionSegment {
   text: string
@@ -33,15 +34,6 @@ export interface AiGrammarQuestion {
   segments: AiGrammarQuestionSegment[]
   /** Teks yang layak dibacakan TTS Jerman. */
   audioText: string
-}
-
-function parseJson(raw: string | null | undefined): unknown {
-  if (!raw) return null
-  try {
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
 }
 
 function toSegment(value: unknown): AiGrammarQuestionSegment | null {
@@ -101,10 +93,5 @@ function toQuestion(value: unknown, index: number): AiGrammarQuestion | null {
 export function parseGrammarQuestions(
   raw: string | null | undefined
 ): AiGrammarQuestion[] {
-  const parsed = parseJson(raw)
-  if (!Array.isArray(parsed)) return []
-
-  return parsed
-    .map((entry, i) => toQuestion(entry, i))
-    .filter((q): q is AiGrammarQuestion => q !== null)
+  return parseTolerantArray(raw, toQuestion)
 }

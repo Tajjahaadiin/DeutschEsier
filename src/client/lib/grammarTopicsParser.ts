@@ -11,6 +11,7 @@
  */
 
 import { isGrammarTopicId } from '../../shared/grammarTopics'
+import { parseTolerantArray } from './tolerantParser'
 
 export interface GrammarTopicExample {
   german: string
@@ -94,7 +95,7 @@ export function parseGrammarTopics(raw: string | null | undefined): GrammarTopic
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return []
 
   const content = (parsed as any).content
-  if (!Array.isArray(content)) return []
+  if (content === undefined || content === null) return []
 
-  return content.map(toContent).filter((c): c is GrammarTopicContent => c !== null)
+  return parseTolerantArray(JSON.stringify(content), toContent)
 }
