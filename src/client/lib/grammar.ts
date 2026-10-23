@@ -112,14 +112,18 @@ export function detectCategory(grammarTip: string, germanWord = ''): GrammarCate
   // Fallback: kata berhuruf kecil yang berakhiran -en/-n hampir pasti infinitif
   // verba, karena semua kata benda Jerman ditulis dengan huruf kapital.
   //
-  // Artikel dibuang dulu: "der Garten" bukan infinitif. Dan bila inti katanya
-  // masih berhuruf kapital, itu nomina Jerman — bukan infinitif — walau
-  // akhirannya -en (Garten, Kuchen, Wagen, Hafen, Ofen).
-  const stripped = (germanWord || '').trim()
-  const withArticle = /^(der|die|das)\s+/i.test(stripped)
-  const w = stripped.replace(/^(der|die|das)\s+/i, '').trim()
+  // Artikel dibuang dulu supaya "der Garten" dan "Garten" diperlakukan sama.
+  //
+  // Premisnya (lihat komentar di atas): kata benda Jerman SELALU berhuruf
+  // kapital. Jadi kapital saja sudah cukup untuk menyimpulkan nomina — tanpa
+  // mensyaratkan artikel. Nomina tanpa artikel ("Garten", "Fenster",
+  // "Mädchen") adalah bentuk yang memang dikirim AI saat grammarTip kosong.
+  //
+  // Verba yang dinominalkan ("das Gehen", "das Essen") juga nomina, jadi
+  // aturan ini tidak menukar satu kesalahan dengan kesalahan lain.
+  const w = (germanWord || '').trim().replace(/^(der|die|das)\s+/i, '').trim()
 
-  if (withArticle && /^[A-ZÄÖÜ]/.test(w)) return 'Nomen'
+  if (/^[A-ZÄÖÜ]/.test(w)) return 'Nomen'
   if (/^[a-zäöüß]/.test(w) && /(en|n)$/.test(w)) return 'Verb'
 
   return 'Sonstiges'

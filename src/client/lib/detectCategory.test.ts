@@ -25,6 +25,14 @@ const CASES: { tip: string; word?: string; expected: string; why: string }[] = [
   { tip: '', word: 'der Hafen', expected: 'Nomen', why: 'K3' },
   { tip: '', word: 'der Ofen', expected: 'Nomen', why: 'K3' },
 
+  // --- K3 lanjutan: nomina TANPA artikel, kapital saja sudah cukup ---
+  // AI mengirim bentuk ini saat grammarTip kosong. Premis "kata benda selalu
+  // kapital" berlaku tanpa syarat artikel.
+  { tip: '', word: 'Garten', expected: 'Nomen', why: 'K3: nomina tanpa artikel' },
+  { tip: '', word: 'Fenster', expected: 'Nomen', why: 'K3: nomina tanpa artikel, -er' },
+  { tip: '', word: 'Gärten', expected: 'Nomen', why: 'K3: nomina jamak tanpa artikel' },
+  { tip: '', word: 'Mädchen', expected: 'Nomen', why: 'K3: nomina -chen' },
+
   // --- K3 negatif: infinitif asli TETAP Verb ---
   { tip: '', word: 'gehen', expected: 'Verb', why: 'K3 negatif: jangan tukar false-positive jadi false-negative' },
   { tip: '', word: 'kommen', expected: 'Verb', why: 'K3 negatif' },
