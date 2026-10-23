@@ -380,20 +380,20 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           <ChevronLeft size={20} />
         </button>
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-display font-bold text-text tracking-tight">
             {isEditMode ? 'Edit Skenario Pembelajaran' : 'Buat Skenario Pembelajaran'}
           </h1>
           {isEditMode && (
-            <span className="text-xs bg-amber-100 text-amber-800 font-semibold px-2.5 py-0.5 rounded-sm border border-amber-200">
+            <span className="text-label bg-amber-50 text-amber-800 font-semibold px-2.5 py-0.5 rounded-sm border border-amber-200">
               Mode Edit
             </span>
           )}
         </div>
       </div>
 
-      <Card className="p-6 flex flex-col gap-4 mb-6">
+      <Card className="p-5 sm:p-6 flex flex-col gap-4 mb-6 shadow-xs border-border">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-label font-bold text-text mb-1.5">
             Prompt Skenario
           </label>
           <textarea
@@ -401,16 +401,16 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             onChange={e => setPrompt(e.target.value)}
             rows={3}
             placeholder="Contoh: Di sebuah kafe di Berlin, Andi memesan kopi dan strudel..."
-            className="w-full p-3 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full p-3 border border-border rounded-md text-base bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none leading-relaxed"
           />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Level CEFR</label>
+            <label className="block text-label font-bold text-text mb-1.5">Level CEFR</label>
             <select
               value={cefrLevel}
               onChange={e => setCefrLevel(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-border rounded-md text-base bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
             >
               <option value="A1">A1 - Pemula</option>
               <option value="A2">A2 - Dasar</option>
@@ -421,7 +421,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             <GrammarTopicPicker selected={selectedTopicIds} onChange={setSelectedTopicIds} />
           )}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-label font-bold text-text mb-1.5">
               Jumlah Dialog
             </label>
             <input
@@ -434,32 +434,32 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                 if (Number.isNaN(parsed)) return
                 setDialogueCount(Math.min(20, Math.max(1, parsed)))
               }}
-              className="w-full p-2 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-border rounded-md text-base bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            <p className="text-label text-slate-400 mt-1">1 - 20 baris</p>
+            <p className="text-label text-text-muted mt-1">1 - 20 baris</p>
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-label font-bold text-text mb-1.5">
               Jumlah Karakter
             </label>
             <select
               value={speakerCount}
               onChange={e => setSpeakerCount(parseInt(e.target.value, 10))}
-              className="w-full p-2 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-border rounded-md text-base bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
             >
               {[2, 3, 4, 5, 6].map(n => (
                 <option key={n} value={n}>{n} Orang</option>
               ))}
             </select>
-            <p className="text-label text-slate-400 mt-1">2 - 6 pembicara</p>
+            <p className="text-label text-text-muted mt-1">2 - 6 pembicara</p>
           </div>
-          <div className="text-sm text-slate-500 mt-5">
-            <span className="font-medium text-blue-600">{selectedWords.length}</span> kata Bank
+          <div className="text-body-sm text-text-muted mt-4">
+            <span className="font-bold text-primary">{selectedWords.length}</span> kata Bank
           </div>
         </div>
 
         {error && (
-          <div role="alert" aria-live="assertive" className="text-rose-600 text-sm bg-rose-50 border border-rose-200 p-3 rounded-lg">
+          <div role="alert" aria-live="assertive" className="text-danger text-body-sm bg-danger/10 border border-danger/30 p-3 rounded-md">
             {error}
           </div>
         )}
@@ -467,7 +467,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         <Button
           onClick={handleGenerate}
           disabled={loading || !prompt.trim()}
-          className="flex items-center justify-center gap-2"
+          className="flex items-center justify-center gap-2 py-2.5"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -485,39 +485,39 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
       {lesson && (
         <div className="space-y-6">
-          <Card className="p-6">
-            <h2 className="text-xs font-semibold text-slate-400 mb-3">Judul & Latar</h2>
+          <Card className="p-5 sm:p-6 shadow-xs border-border">
+            <h2 className="text-heading font-bold text-text mb-3">Judul & Latar</h2>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Judul Pelajaran</label>
+                <label className="block text-label font-bold text-text mb-1">Judul Pelajaran</label>
                 <input
                   type="text"
                   value={editedTitle}
                   onChange={e => setEditedTitle(e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded-md text-base font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2.5 border border-border rounded-md text-base font-semibold bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Deskripsi Latar</label>
+                <label className="block text-label font-bold text-text mb-1">Deskripsi Latar</label>
                 <textarea
                   value={editedSceneDesc}
                   onChange={e => setEditedSceneDesc(e.target.value)}
                   rows={2}
-                  className="w-full p-2 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full p-2.5 border border-border rounded-md text-base bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary resize-none leading-relaxed"
                 />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-5 sm:p-6 shadow-xs border-border">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs font-semibold text-slate-400">Dialog</h2>
-                <span className="text-xs text-slate-400">({editedDialogue.length} baris)</span>
+                <h2 className="text-heading font-bold text-text">Dialog</h2>
+                <span className="text-label text-text-muted">({editedDialogue.length} baris)</span>
               </div>
               <div className="flex items-center gap-2">
                 {/* Speed selector pills */}
-                <div className="flex items-center bg-slate-200/70 p-0.5 rounded-lg text-xs" title="Kecepatan Audio">
+                <div className="flex items-center bg-surface-muted p-0.5 rounded-md text-label border border-border" title="Kecepatan Audio">
                   {[1.0, 0.8, 0.75, 0.5].map((speed) => (
                     <button
                       key={speed}
@@ -526,10 +526,10 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         setPlaybackRate(speed)
                         playbackRateRef.current = speed
                       }}
-                      className={`px-2 py-1 rounded-md font-medium text-xs transition-all ${
+                      className={`px-2 py-1 rounded-sm font-semibold text-xs transition-colors cursor-pointer ${
                         playbackRate === speed
-                          ? 'bg-white text-blue-600 shadow-xs font-bold'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'bg-surface text-primary shadow-xs font-bold'
+                          : 'text-text-muted hover:text-text'
                       }`}
                     >
                       {speed}x
@@ -541,9 +541,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   <button
                     type="button"
                     onClick={handleStopAll}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition-all shadow-xs cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-danger text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer"
                   >
-                    <Square size={13} className="fill-rose-700" />
+                    <Square size={13} className="fill-white" />
                     <span>Hentikan Audio</span>
                   </button>
                 ) : (
@@ -551,7 +551,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                     type="button"
                     onClick={handlePlayAll}
                     disabled={editedDialogue.length === 0}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer disabled:opacity-50"
                   >
                     <Play size={13} className="fill-white" />
                     <span>Putar Semua Dialog</span>
@@ -560,19 +560,19 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 p-3 bg-blue-50/60 rounded-lg border border-blue-100 mb-4">
-              <span className="text-xs font-semibold text-slate-700">Konfigurasi Persona Karakter ({speakerCount} Orang):</span>
+            <div className="flex flex-col gap-2 p-3 bg-surface-muted rounded-md border border-border mb-4">
+              <span className="text-label font-bold text-text">Konfigurasi Persona Karakter ({speakerCount} Orang):</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                 {['A', 'B', 'C', 'D', 'E', 'F'].slice(0, speakerCount).map(letter => {
                   const speaker = `Sprecher ${letter}`
                   const currentPersona = speakerPersonas[speaker] || 'female-1'
                   return (
-                    <div key={speaker} className="flex items-center justify-between gap-1.5 bg-white p-2 rounded-lg border border-slate-200">
-                      <span className="font-semibold text-slate-700 shrink-0">{speaker}:</span>
+                    <div key={speaker} className="flex items-center justify-between gap-1.5 bg-surface p-2 rounded-md border border-border">
+                      <span className="font-semibold text-text shrink-0">{speaker}:</span>
                       <select
                         value={currentPersona}
                         onChange={e => handleSpeakerPersonaChange(speaker, e.target.value as TtsPersonaId)}
-                        className="p-1 border border-slate-300 rounded text-base bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 max-w-[150px] truncate"
+                        className="p-1 border border-border rounded-md text-base bg-surface text-text focus:outline-none focus:ring-1 focus:ring-primary max-w-[150px] truncate cursor-pointer"
                       >
                         {TTS_PERSONAS.map(p => (
                           <option key={p.id} value={p.id}>
@@ -590,8 +590,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               {editedDialogue.map((turn, i) => (
                 <div
                   key={i}
-                  className={`flex gap-3 items-start p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all ${
-                    playingIndex === i ? 'ring-2 ring-blue-400 ring-offset-2 shadow-md' : ''
+                  className={`flex gap-3 items-start p-3 bg-surface rounded-md border transition-colors ${
+                    playingIndex === i ? 'ring-2 ring-primary border-primary shadow-xs' : 'border-border'
                   }`}
                 >
                   <div className="flex flex-col gap-2 flex-1 min-w-0">
@@ -605,7 +605,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                           updateTurn(i, 'personaId', targetPersona)
                           updateTurn(i, 'gender', targetPersona.startsWith('male') ? 'male' : 'female')
                         }}
-                        className="w-32 p-1.5 border border-slate-300 rounded text-base bg-white focus:ring-1 focus:ring-blue-400 focus:outline-none font-medium"
+                        className="w-32 p-1.5 border border-border rounded-md text-base bg-surface text-text focus:ring-1 focus:ring-primary focus:outline-none font-semibold cursor-pointer"
                       >
                         {['A', 'B', 'C', 'D', 'E', 'F'].slice(0, speakerCount).map(l => (
                           <option key={l} value={`Sprecher ${l}`}>Sprecher {l}</option>
@@ -618,7 +618,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                           updateTurn(i, 'personaId', pId)
                           updateTurn(i, 'gender', pId.startsWith('male') ? 'male' : 'female')
                         }}
-                        className="p-1.5 border border-slate-300 rounded text-base bg-white focus:ring-1 focus:ring-blue-400 focus:outline-none"
+                        className="p-1.5 border border-border rounded-md text-base bg-surface text-text focus:ring-1 focus:ring-primary focus:outline-none cursor-pointer"
                       >
                         {TTS_PERSONAS.map(p => (
                           <option key={p.id} value={p.id}>
@@ -629,17 +629,18 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                     </div>
                     <input
                       type="text"
+                      lang="de"
                       value={turn.germanText}
                       onChange={e => updateTurn(i, 'germanText', e.target.value)}
                       placeholder="Teks Jerman..."
-                      className="w-full p-2 border border-slate-300 rounded text-base font-medium focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      className="w-full p-2 border border-border rounded-md text-base font-semibold bg-surface text-text focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                     <input
                       type="text"
                       value={turn.indonesianText}
                       onChange={e => updateTurn(i, 'indonesianText', e.target.value)}
                       placeholder="Terjemahan Indonesia..."
-                      className="w-full p-2 border border-slate-200 rounded text-base text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      className="w-full p-2 border border-border rounded-md text-base text-text-muted bg-surface focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                   </div>
                   <div className="flex flex-col gap-1 pt-8">
@@ -658,11 +659,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                       }}
                       disabled={!turn.germanText}
                       title="Putar audio"
-                      className={`p-1.5 text-slate-400 hover:text-blue-500 disabled:opacity-30 transition-colors ${
-                        playingIndex === i ? 'text-blue-600' : ''
+                      className={`p-1.5 text-text-muted hover:text-primary disabled:opacity-30 transition-colors cursor-pointer ${
+                        playingIndex === i ? 'text-primary' : ''
                       }`}
                     >
-                      <Volume2 size={16} className={playingIndex === i ? 'animate-pulse text-blue-600' : ''} />
+                      <Volume2 size={16} className={playingIndex === i ? 'animate-pulse text-primary' : ''} />
                     </button>
                     <button
                       type="button"
@@ -671,7 +672,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         deleteTurn(i)
                       }}
                       title="Hapus baris"
-                      className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"
+                      className="p-1.5 text-text-muted hover:text-danger transition-colors cursor-pointer"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -682,7 +683,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
             <button
               onClick={addTurn}
-              className="mt-3 w-full py-2 border-2 border-dashed border-slate-300 rounded-md text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 text-sm"
+              className="mt-3 w-full py-2.5 border border-dashed border-border rounded-md text-text-muted hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer"
             >
               <Plus size={16} /> Tambah Baris Dialog
             </button>
@@ -706,24 +707,25 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   </button>
                   <input
                     type="text"
+                    lang="de"
                     value={clue.germanWord}
                     onChange={e => updateVocab(i, 'germanWord', e.target.value)}
                     placeholder="Kata Jerman..."
-                    className="w-full bg-transparent font-bold text-blue-900 text-base mb-1 focus:outline-none border-b border-blue-200 pb-0.5"
+                    className="w-full bg-transparent font-bold text-text text-base mb-1 focus:outline-none border-b border-border pb-0.5"
                   />
                   <input
                     type="text"
                     value={clue.indonesianMeaning}
                     onChange={e => updateVocab(i, 'indonesianMeaning', e.target.value)}
                     placeholder="Arti Indonesia..."
-                    className="w-full bg-transparent text-blue-800 text-base mb-1 focus:outline-none"
+                    className="w-full bg-transparent text-text-muted text-base mb-1 focus:outline-none"
                   />
                   <input
                     type="text"
                     value={clue.grammarTip}
                     onChange={e => updateVocab(i, 'grammarTip', e.target.value)}
                     placeholder="Tips grammar..."
-                    className="w-full bg-transparent text-blue-600 text-base italic focus:outline-none"
+                    className="w-full bg-transparent text-primary text-body-sm italic focus:outline-none"
                   />
                 </div>
               ))}
@@ -731,7 +733,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
             <button
               onClick={addVocab}
-              className="mt-3 w-full py-2 border-2 border-dashed border-blue-200 rounded-md text-blue-400 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 text-sm"
+              className="mt-3 w-full py-2.5 border border-dashed border-border rounded-md text-text-muted hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer"
             >
               <Plus size={16} /> Tambah Vocab Clue
             </button>

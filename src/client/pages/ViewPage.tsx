@@ -697,9 +697,9 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <button
                         type="button"
                         onClick={handleStopAll}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition-all shadow-xs cursor-pointer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-danger text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer"
                       >
-                        <Square size={13} className="fill-rose-700" />
+                        <Square size={13} className="fill-white" />
                         <span>Hentikan Audio</span>
                       </button>
                     ) : (
@@ -707,7 +707,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                         type="button"
                         onClick={handlePlayAll}
                         disabled={session.dialogue.length === 0}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer disabled:opacity-50"
                       >
                         <Play size={13} className="fill-white" />
                         <span>Putar Seluruh Dialog</span>
@@ -728,35 +728,35 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <div
                         ref={(el) => (turnRefs.current[i] = el)}
                         className={
-                          'max-w-[88%] rounded-lg p-4 shadow-sm transition-all ' +
+                          'max-w-[88%] rounded-lg p-4 shadow-xs transition-colors ' +
                           (playingIndex === i
-                            ? 'ring-2 ring-blue-400 ring-offset-2 shadow-md '
-                            : '') +
+                            ? 'ring-2 ring-primary border-primary '
+                            : 'border border-border ') +
                           (isA
-                            ? 'bg-white rounded-tl-sm'
-                            : 'bg-blue-500 text-white rounded-tr-sm')
+                            ? 'bg-surface rounded-tl-xs text-text'
+                            : 'bg-primary text-on-primary rounded-tr-xs')
                         }
                       >
                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                           <span
                             className={
-                              'text-xs font-semibold ' +
-                              (isA ? 'text-slate-400' : 'text-blue-200')
+                              'text-label font-bold ' +
+                              (isA ? 'text-text-muted' : 'text-blue-100')
                             }
                           >
                             {turn.speaker}
                           </span>
                           {turn.personaId ? (
-                            <span className="text-xs px-2 py-0.5 rounded-sm font-medium bg-white/25 text-slate-800 dark:text-white border border-white/30">
+                            <span className={`text-label px-2 py-0.5 rounded-sm font-semibold border ${isA ? 'bg-surface-muted text-text border-border' : 'bg-white/20 text-white border-white/30'}`}>
                               {getTtsPersona(turn.personaId)?.emoji} {getTtsPersona(turn.personaId)?.name || turn.personaId}
                             </span>
                           ) : (
                             <span
                               className={
-                                'text-xs px-2 py-0.5 rounded-sm font-medium ' +
-                                (turnGender === 'female'
-                                  ? 'bg-rose-100 text-rose-700'
-                                  : 'bg-sky-100 text-sky-700')
+                                'text-label px-2 py-0.5 rounded-sm font-semibold border ' +
+                                (isA
+                                  ? (turnGender === 'female' ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-blue-50 text-blue-800 border-blue-200')
+                                  : 'bg-white/20 text-white border-white/30')
                               }
                             >
                               {turnGender === 'female' ? 'Wanita' : 'Pria'}
@@ -766,16 +766,16 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                         <p
                           lang="de"
                           className={
-                            'text-base font-semibold leading-snug mb-1 ' +
-                            (isA ? 'text-slate-800' : 'text-white')
+                            'text-body font-semibold leading-snug mb-1 ' +
+                            (isA ? 'text-text' : 'text-on-primary')
                           }
                         >
                           {turn.germanText}
                         </p>
                         <p
                           className={
-                            'text-sm leading-relaxed mb-2 ' +
-                            (isA ? 'text-slate-400' : 'text-blue-100')
+                            'text-body-sm leading-relaxed mb-2 ' +
+                            (isA ? 'text-text-muted' : 'text-blue-100')
                           }
                         >
                           {turn.indonesianText}
@@ -784,10 +784,10 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                           type="button"
                           onClick={() => handlePlayTurn(i, turn.germanText, turnGender, turn.personaId)}
                           className={
-                            'flex items-center gap-1 text-xs px-2.5 py-1 rounded-md transition-colors ' +
+                            'inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md transition-colors cursor-pointer ' +
                             (isA
-                              ? 'bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600'
-                              : 'bg-white/20 hover:bg-white/30 text-blue-100 hover:text-white')
+                              ? 'bg-surface-muted hover:bg-border text-text'
+                              : 'bg-white/20 hover:bg-white/30 text-white')
                           }
                           disabled={playingIndex === i}
                         >
