@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   ArrowLeft,
   Search,
@@ -34,6 +34,18 @@ export default function AlphabetPage({ navigate, embedded = false }: AlphabetPag
   const [speechRate, setSpeechRate] = useState<number>(1.0)
   const [selectedItem, setSelectedItem] = useState<GermanAlphabetItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  useEffect(() => {
+    const handlePersonaChange = () => {
+      setCurrentPersonaId(getStoredPersonaId())
+    }
+    window.addEventListener('persona-change', handlePersonaChange)
+    window.addEventListener('storage', handlePersonaChange)
+    return () => {
+      window.removeEventListener('persona-change', handlePersonaChange)
+      window.removeEventListener('storage', handlePersonaChange)
+    }
+  }, [])
 
 
   const counts = {

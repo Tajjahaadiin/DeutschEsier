@@ -214,5 +214,7 @@ export function setStoredPersonaId(personaId: TtsPersonaId): void {
     if (persona) {
       localStorage.setItem('preferredVoiceGender', persona.gender)
     }
+    // Siarkan event agar komponen lain yang membaca persona ikut menyelaraskan state
+    window.dispatchEvent(new Event('persona-change'))
   } catch {}
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Volume2, CalendarDays, PartyPopper, Clock } from 'lucide-react'
 import { speakGerman, getStoredPersonaId, setStoredPersonaId, type TtsPersonaId } from '../lib/audio'
 import { TTS_PERSONAS } from '../../shared/ttsPersonas'
@@ -26,6 +26,18 @@ export default function DayPage({ navigate, embedded = false }: DayPageProps) {
   const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
   const [speechRate, setSpeechRate] = useState(1.0)
   const [playing, setPlaying] = useState<string | null>(null)
+
+  useEffect(() => {
+    const handlePersonaChange = () => {
+      setCurrentPersonaId(getStoredPersonaId())
+    }
+    window.addEventListener('persona-change', handlePersonaChange)
+    window.addEventListener('storage', handlePersonaChange)
+    return () => {
+      window.removeEventListener('persona-change', handlePersonaChange)
+      window.removeEventListener('storage', handlePersonaChange)
+    }
+  }, [])
 
 
   const { year, month: monthIndex } = cursor

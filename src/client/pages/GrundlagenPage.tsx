@@ -85,8 +85,20 @@ export default function GrundlagenPage({
     }
   })
 
-  // Voice Persona State
-  const [currentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
+  // Voice Persona State: selaras dengan event 'persona-change' dan localStorage
+  const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
+
+  useEffect(() => {
+    const handlePersonaChange = () => {
+      setCurrentPersonaId(getStoredPersonaId())
+    }
+    window.addEventListener('persona-change', handlePersonaChange)
+    window.addEventListener('storage', handlePersonaChange)
+    return () => {
+      window.removeEventListener('persona-change', handlePersonaChange)
+      window.removeEventListener('storage', handlePersonaChange)
+    }
+  }, [])
 
   // Sinkronisasi Tab ke URL Query
   const handleTabChange = (tab: GrundlagenTab) => {
