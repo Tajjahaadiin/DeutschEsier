@@ -10,7 +10,11 @@ process.env.TEACHER_PASSWORD = TEST_PASSWORD
  * Setiap pemanggilan `.limit()` / `.orderBy()` mengambil satu entri dari
  * `state.queue`, sehingga urutan query terbaca eksplisit di tiap test.
  */
-const state = vi.hoisted(() => ({ queue: [] as unknown[][] }))
+const state = vi.hoisted(() => ({
+  queue: [] as unknown[][],
+  lastUpdateSet: null as any,
+  lastInsertValues: null as any,
+}))
 
 vi.mock('../../db/client', () => {
   const chain: any = {
@@ -22,7 +26,19 @@ vi.mock('../../db/client', () => {
   return {
     db: {
       select: () => chain,
-      insert: () => ({ values: async () => ({}) }),
+      insert: () => ({
+        values: async (vals: any) => {
+          state.lastInsertValues = vals
+          return {}
+        },
+      }),
+      update: () => ({
+        set: (vals: any) => {
+          state.lastUpdateSet = vals
+          return chain
+        },
+      }),
+      delete: () => chain,
     },
   }
 })
@@ -134,3 +150,96 @@ describe('GET /api/sessions/:id — REQUIRE_ACCESS_KEY menyala', () => {
     expect(res.status).toBe(200)
   })
 })
+
+describe('POST & PUT /api/sessions — semantik kolom JSON (undefined vs null)', () => {
+  it('mode update: mempertahankan kolom ketika field undefined (tidak disentuh)', async () => {
+    const token = await loginAsTeacher()
+    // existing session found in DB
+    state.queue.push([SESSION_ROW])
+
+    const res = await app.request('/api/sessions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        id: 'sess-1',
+        title: 'Judul Baru',
+        scenarioPrompt: 'Prompt',
+        cefrLevel: 'B1',
+        dialogueJson: [],
+        vocabCluesJson: [],
+        // comprehensionQuestions, grammarPatterns, grammarTopics, grammarQuestions adalah undefined
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(state.lastUpdateSet).toBeDefined()
+    expect('comprehensionQuestionsJson' in state.lastUpdateSet).toBe(false)
+    expect('grammarPatternsJson' in state.lastUpdateSet).toBe(false)
+    expect('grammarTopicsJson' in state.lastUpdateSet).toBe(false)
+    expect('grammarQuestionsJson' in state.lastUpdateSet).toBe(false)
+  })
+
+  it('mode update: mengosongkan kolom ke null jika field bernilai null secara eksplisit', async () => {
+    const token = await loginAsTeacher()
+    // existing session found in DB
+    state.queue.push([SESSION_ROW])
+
+    const res = await app.request('/api/sessions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        id: 'sess-1',
+        title: 'Judul Baru',
+        scenarioPrompt: 'Prompt',
+        cefrLevel: 'B1',
+        dialogueJson: [],
+        vocabCluesJson: [],
+        comprehensionQuestions: null,
+        grammarPatterns: null,
+        grammarTopics: null,
+        grammarQuestions: null,
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(state.lastUpdateSet.comprehensionQuestionsJson).toBeNull()
+    expect(state.lastUpdateSet.grammarPatternsJson).toBeNull()
+    expect(state.lastUpdateSet.grammarTopicsJson).toBeNull()
+    expect(state.lastUpdateSet.grammarQuestionsJson).toBeNull()
+  })
+
+  it('mode insert: menyimpan payload sebagai string JSON bila ada', async () => {
+    const token = await loginAsTeacher()
+    // no existing session found in DB
+    state.queue.push([])
+
+    const sampleQ = [{ statement: 'A', isCorrect: true }]
+
+    const res = await app.request('/api/sessions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        id: 'sess-new',
+        title: 'Judul Baru',
+        scenarioPrompt: 'Prompt',
+        cefrLevel: 'B1',
+        dialogueJson: [],
+        vocabCluesJson: [],
+        comprehensionQuestions: sampleQ,
+      }),
+    })
+
+    expect(res.status).toBe(200)
+    expect(state.lastInsertValues.comprehensionQuestionsJson).toBe(JSON.stringify(sampleQ))
+  })
+})
+
