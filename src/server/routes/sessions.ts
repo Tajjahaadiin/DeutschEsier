@@ -4,13 +4,18 @@ import { learningSession } from '../../db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { requireTeacherAuth } from './auth'
 import { authorizeSessionAccess } from './access-guard'
+import {
+  MIN_DIALOGUE_COUNT,
+  MAX_DIALOGUE_COUNT,
+  DEFAULT_DIALOGUE_COUNT,
+} from './generate'
 
 const sessionsRouter = new Hono()
 
 /** Jumlah dialog valid: bilangan bulat 1-20, default 8 bila tidak valid/kosong. */
 function normalizeDialogueCount(raw: unknown): number {
-  if (typeof raw !== 'number' || !Number.isInteger(raw)) return 8
-  return Math.min(20, Math.max(1, raw))
+  if (typeof raw !== 'number' || !Number.isInteger(raw)) return DEFAULT_DIALOGUE_COUNT
+  return Math.min(MAX_DIALOGUE_COUNT, Math.max(MIN_DIALOGUE_COUNT, raw))
 }
 
 /**

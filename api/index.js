@@ -8957,7 +8957,17 @@ var words_default = wordsRouter;
 // src/server/routes/auth.ts
 import crypto2 from "crypto";
 var authRouter = new Hono2();
+var MAX_ACTIVE_TOKENS = 500;
 var activeTokens = /* @__PURE__ */ new Set();
+function rememberActiveToken(token) {
+  if (activeTokens.size >= MAX_ACTIVE_TOKENS) {
+    const oldest = activeTokens.values().next().value;
+    if (oldest !== void 0) {
+      activeTokens.delete(oldest);
+    }
+  }
+  activeTokens.add(token);
+}
 function getSecretKey() {
   return process.env.TEACHER_PASSWORD || process.env.TEACHER_SECRET_KEY || "guru123";
 }
@@ -9009,7 +9019,7 @@ authRouter.post("/login", async (c) => {
     if (body.password === expectedPassword) {
       const rawPayload = "guru-session-" + Date.now() + "-" + Math.random().toString(36).substring(2, 9);
       const token = signToken(rawPayload);
-      activeTokens.add(token);
+      rememberActiveToken(token);
       return c.json({ success: true, token, role: "teacher" });
     }
     return c.json({ error: "Password guru salah. Silakan coba lagi." }, 401);
@@ -9066,135 +9076,6 @@ async function authorizeSessionAccess(headers, sessionId, rawKey) {
   if (!accessKeyRequired()) return { allowed: true };
   return verifySessionKey(sessionId, rawKey);
 }
-
-// src/server/routes/sessions.ts
-var sessionsRouter = new Hono2();
-function normalizeDialogueCount(raw2) {
-  if (typeof raw2 !== "number" || !Number.isInteger(raw2)) return 8;
-  return Math.min(20, Math.max(1, raw2));
-}
-function comprehensionQuestionsColumn(raw2) {
-  if (raw2 === void 0) return {};
-  if (raw2 === null) return { comprehensionQuestionsJson: null };
-  return { comprehensionQuestionsJson: JSON.stringify(raw2) };
-}
-function grammarPatternsColumn(raw2) {
-  if (raw2 === void 0) return {};
-  if (raw2 === null) return { grammarPatternsJson: null };
-  return { grammarPatternsJson: JSON.stringify(raw2) };
-}
-function grammarTopicsColumn(raw2) {
-  if (raw2 === void 0) return {};
-  if (raw2 === null) return { grammarTopicsJson: null };
-  return { grammarTopicsJson: JSON.stringify(raw2) };
-}
-function grammarQuestionsColumn(raw2) {
-  if (raw2 === void 0) return {};
-  if (raw2 === null) return { grammarQuestionsJson: null };
-  return { grammarQuestionsJson: JSON.stringify(raw2) };
-}
-sessionsRouter.get("/", requireTeacherAuth, async (c) => {
-  try {
-    const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt));
-    return c.json({ sessions });
-  } catch (error) {
-    return c.json({ error: "Failed to fetch sessions" }, 500);
-  }
-});
-sessionsRouter.get("/:id", async (c) => {
-  try {
-    const id = c.req.param("id");
-    const access = await authorizeSessionAccess(c.req.raw.headers, id, c.req.query("key"));
-    if (!access.allowed) {
-      return c.json({ error: "Access key required", reason: access.reason }, 403);
-    }
-    const [session] = await db.select().from(learningSession).where(eq(learningSession.id, id)).limit(1);
-    if (!session) return c.json({ error: "Session not found" }, 404);
-    return c.json(session);
-  } catch (error) {
-    return c.json({ error: "Failed to fetch session" }, 500);
-  }
-});
-sessionsRouter.post("/", requireTeacherAuth, async (c) => {
-  try {
-    const body = await c.req.json();
-    if (!body.id || !body.title) return c.json({ error: "Invalid data" }, 400);
-    const dialogueCount = normalizeDialogueCount(body.dialogueCount);
-    const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions);
-    const grammarPatternsCol = grammarPatternsColumn(body.grammarPatterns);
-    const grammarTopicsCol = grammarTopicsColumn(body.grammarTopics);
-    const grammarQuestionsCol = grammarQuestionsColumn(body.grammarQuestions);
-    const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1);
-    if (existing) {
-      await db.update(learningSession).set({
-        title: body.title,
-        scenarioPrompt: body.scenarioPrompt,
-        sceneDescription: body.sceneDescription || "",
-        cefrLevel: body.cefrLevel,
-        dialogueJson: JSON.stringify(body.dialogueJson),
-        vocabCluesJson: JSON.stringify(body.vocabCluesJson),
-        dialogueCount,
-        ...comprehensionCol,
-        ...grammarPatternsCol,
-        ...grammarTopicsCol,
-        ...grammarQuestionsCol,
-        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-      }).where(eq(learningSession.id, body.id));
-    } else {
-      await db.insert(learningSession).values({
-        id: body.id,
-        title: body.title,
-        scenarioPrompt: body.scenarioPrompt,
-        sceneDescription: body.sceneDescription || "",
-        cefrLevel: body.cefrLevel,
-        dialogueJson: JSON.stringify(body.dialogueJson),
-        vocabCluesJson: JSON.stringify(body.vocabCluesJson),
-        dialogueCount,
-        ...comprehensionCol,
-        ...grammarPatternsCol,
-        ...grammarTopicsCol,
-        ...grammarQuestionsCol
-      });
-    }
-    return c.json({ success: true, id: body.id });
-  } catch (error) {
-    console.error(error);
-    return c.json({ error: "Failed to save session" }, 500);
-  }
-});
-sessionsRouter.put("/:id", requireTeacherAuth, async (c) => {
-  try {
-    const id = c.req.param("id");
-    const body = await c.req.json();
-    await db.update(learningSession).set({
-      title: body.title,
-      scenarioPrompt: body.scenarioPrompt,
-      sceneDescription: body.sceneDescription || "",
-      cefrLevel: body.cefrLevel,
-      dialogueJson: JSON.stringify(body.dialogueJson),
-      vocabCluesJson: JSON.stringify(body.vocabCluesJson),
-      dialogueCount: normalizeDialogueCount(body.dialogueCount),
-      ...comprehensionQuestionsColumn(body.comprehensionQuestions),
-      ...grammarPatternsColumn(body.grammarPatterns),
-      ...grammarTopicsColumn(body.grammarTopics),
-      ...grammarQuestionsColumn(body.grammarQuestions),
-      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-    }).where(eq(learningSession.id, id));
-    return c.json({ success: true, id });
-  } catch (error) {
-    return c.json({ error: "Failed to update session" }, 500);
-  }
-});
-sessionsRouter.delete("/:id", requireTeacherAuth, async (c) => {
-  try {
-    const id = c.req.param("id");
-    await db.delete(learningSession).where(eq(learningSession.id, id));
-    return c.json({ success: true });
-  } catch (error) {
-    return c.json({ error: "Failed to delete session" }, 500);
-  }
-});
-var sessions_default = sessionsRouter;
 
 // node_modules/effect/dist/esm/Function.js
 var isFunction = (input) => typeof input === "function";
@@ -38256,6 +38137,135 @@ generateRouter.post("/", requireTeacherAuth, async (c) => {
   }
 });
 var generate_default = generateRouter;
+
+// src/server/routes/sessions.ts
+var sessionsRouter = new Hono2();
+function normalizeDialogueCount(raw2) {
+  if (typeof raw2 !== "number" || !Number.isInteger(raw2)) return DEFAULT_DIALOGUE_COUNT;
+  return Math.min(MAX_DIALOGUE_COUNT, Math.max(MIN_DIALOGUE_COUNT, raw2));
+}
+function comprehensionQuestionsColumn(raw2) {
+  if (raw2 === void 0) return {};
+  if (raw2 === null) return { comprehensionQuestionsJson: null };
+  return { comprehensionQuestionsJson: JSON.stringify(raw2) };
+}
+function grammarPatternsColumn(raw2) {
+  if (raw2 === void 0) return {};
+  if (raw2 === null) return { grammarPatternsJson: null };
+  return { grammarPatternsJson: JSON.stringify(raw2) };
+}
+function grammarTopicsColumn(raw2) {
+  if (raw2 === void 0) return {};
+  if (raw2 === null) return { grammarTopicsJson: null };
+  return { grammarTopicsJson: JSON.stringify(raw2) };
+}
+function grammarQuestionsColumn(raw2) {
+  if (raw2 === void 0) return {};
+  if (raw2 === null) return { grammarQuestionsJson: null };
+  return { grammarQuestionsJson: JSON.stringify(raw2) };
+}
+sessionsRouter.get("/", requireTeacherAuth, async (c) => {
+  try {
+    const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt));
+    return c.json({ sessions });
+  } catch (error) {
+    return c.json({ error: "Failed to fetch sessions" }, 500);
+  }
+});
+sessionsRouter.get("/:id", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const access = await authorizeSessionAccess(c.req.raw.headers, id, c.req.query("key"));
+    if (!access.allowed) {
+      return c.json({ error: "Access key required", reason: access.reason }, 403);
+    }
+    const [session] = await db.select().from(learningSession).where(eq(learningSession.id, id)).limit(1);
+    if (!session) return c.json({ error: "Session not found" }, 404);
+    return c.json(session);
+  } catch (error) {
+    return c.json({ error: "Failed to fetch session" }, 500);
+  }
+});
+sessionsRouter.post("/", requireTeacherAuth, async (c) => {
+  try {
+    const body = await c.req.json();
+    if (!body.id || !body.title) return c.json({ error: "Invalid data" }, 400);
+    const dialogueCount = normalizeDialogueCount(body.dialogueCount);
+    const comprehensionCol = comprehensionQuestionsColumn(body.comprehensionQuestions);
+    const grammarPatternsCol = grammarPatternsColumn(body.grammarPatterns);
+    const grammarTopicsCol = grammarTopicsColumn(body.grammarTopics);
+    const grammarQuestionsCol = grammarQuestionsColumn(body.grammarQuestions);
+    const [existing] = await db.select().from(learningSession).where(eq(learningSession.id, body.id)).limit(1);
+    if (existing) {
+      await db.update(learningSession).set({
+        title: body.title,
+        scenarioPrompt: body.scenarioPrompt,
+        sceneDescription: body.sceneDescription || "",
+        cefrLevel: body.cefrLevel,
+        dialogueJson: JSON.stringify(body.dialogueJson),
+        vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+        dialogueCount,
+        ...comprehensionCol,
+        ...grammarPatternsCol,
+        ...grammarTopicsCol,
+        ...grammarQuestionsCol,
+        updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+      }).where(eq(learningSession.id, body.id));
+    } else {
+      await db.insert(learningSession).values({
+        id: body.id,
+        title: body.title,
+        scenarioPrompt: body.scenarioPrompt,
+        sceneDescription: body.sceneDescription || "",
+        cefrLevel: body.cefrLevel,
+        dialogueJson: JSON.stringify(body.dialogueJson),
+        vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+        dialogueCount,
+        ...comprehensionCol,
+        ...grammarPatternsCol,
+        ...grammarTopicsCol,
+        ...grammarQuestionsCol
+      });
+    }
+    return c.json({ success: true, id: body.id });
+  } catch (error) {
+    console.error(error);
+    return c.json({ error: "Failed to save session" }, 500);
+  }
+});
+sessionsRouter.put("/:id", requireTeacherAuth, async (c) => {
+  try {
+    const id = c.req.param("id");
+    const body = await c.req.json();
+    await db.update(learningSession).set({
+      title: body.title,
+      scenarioPrompt: body.scenarioPrompt,
+      sceneDescription: body.sceneDescription || "",
+      cefrLevel: body.cefrLevel,
+      dialogueJson: JSON.stringify(body.dialogueJson),
+      vocabCluesJson: JSON.stringify(body.vocabCluesJson),
+      dialogueCount: normalizeDialogueCount(body.dialogueCount),
+      ...comprehensionQuestionsColumn(body.comprehensionQuestions),
+      ...grammarPatternsColumn(body.grammarPatterns),
+      ...grammarTopicsColumn(body.grammarTopics),
+      ...grammarQuestionsColumn(body.grammarQuestions),
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    }).where(eq(learningSession.id, id));
+    return c.json({ success: true, id });
+  } catch (error) {
+    return c.json({ error: "Failed to update session" }, 500);
+  }
+});
+sessionsRouter.delete("/:id", requireTeacherAuth, async (c) => {
+  try {
+    const id = c.req.param("id");
+    await db.delete(learningSession).where(eq(learningSession.id, id));
+    return c.json({ success: true });
+  } catch (error) {
+    return c.json({ error: "Failed to delete session" }, 500);
+  }
+});
+var sessions_default = sessionsRouter;
 
 // src/server/routes/tts.ts
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";

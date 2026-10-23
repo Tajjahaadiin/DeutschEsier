@@ -3,8 +3,19 @@ import crypto from 'crypto'
 
 const authRouter = new Hono()
 
-// Simpan token aktif di memori (fallback lokal)
+// Simpan token aktif di memori dengan batas kapasitas untuk mencegah memory leak
+const MAX_ACTIVE_TOKENS = 500
 const activeTokens = new Set<string>()
+
+export function rememberActiveToken(token: string): void {
+  if (activeTokens.size >= MAX_ACTIVE_TOKENS) {
+    const oldest = activeTokens.values().next().value
+    if (oldest !== undefined) {
+      activeTokens.delete(oldest)
+    }
+  }
+  activeTokens.add(token)
+}
 
 function getSecretKey(): string {
   return process.env.TEACHER_PASSWORD || process.env.TEACHER_SECRET_KEY || 'guru123'
@@ -72,7 +83,7 @@ authRouter.post('/login', async (c) => {
         '-' +
         Math.random().toString(36).substring(2, 9)
       const token = signToken(rawPayload)
-      activeTokens.add(token)
+      rememberActiveToken(token)
       return c.json({ success: true, token, role: 'teacher' })
     }
 
