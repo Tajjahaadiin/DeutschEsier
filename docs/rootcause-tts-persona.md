@@ -80,6 +80,7 @@ paling sering dipakai siswa.
 | `3251d33` | `resolveTtsRequest` murni; semua ucapan Jerman lewat `/api/tts`; fallback tanpa manipulasi pitch; 17 test baru untuk `audio.ts` yang sebelumnya nol test |
 | `a20cd3d` | `personaId` menggantikan `voiceGender` di `AlphabetCard`, `SpellingTrainer`, `AlphabetDetailModal`, `WordCard`; label UI menampilkan persona sebenarnya |
 | `16de109` | `npm run tts:smoke` — sintesis keenam suara, keluar kode 1 bila ada yang gagal |
+| `5031e79` | `personaId` ikut ke soal diktat, sehingga kuis memakai suara pembicara aslinya, bukan persona default gender |
 | ADR-0004 | Keputusan: endpoint neural sebagai satu-satunya sumber persona; self-hosting ditolak untuk sekarang |
 
 Aturan prioritas yang berlaku sekarang, di satu tempat (`resolveTtsRequest`):
