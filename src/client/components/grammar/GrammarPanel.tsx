@@ -72,6 +72,8 @@ export default function GrammarPanel({
   // Jawaban siswa per id soal: 'richtig' | 'falsch'
   const [answers, setAnswers] = useState<Record<string, 'richtig' | 'falsch'>>({})
   const [submitted, setSubmitted] = useState(false)
+  /** Pesan bila siswa mencoba memeriksa sebelum semua soal dijawab. */
+  const [submitError, setSubmitError] = useState('')
   const [playingWord, setPlayingWord] = useState<string | null>(null)
   const [studentName, setStudentName] = useState('')
   const [saving, setSaving] = useState(false)
@@ -625,6 +627,16 @@ export default function GrammarPanel({
                 type="button"
                 disabled={answeredCount === 0}
                 onClick={() => {
+                  // Tolak submit parsial. Skor dihitung atas SEMUA soal, jadi
+                  // membiarkan submit sebagian akan mengirim skor yang tidak
+                  // sesuai dengan jawaban yang benar-benar diberikan siswa.
+                  if (answeredCount < questions.length) {
+                    setSubmitError(
+                      `Masih ada ${questions.length - answeredCount} soal yang belum dijawab.`
+                    )
+                    return
+                  }
+                  setSubmitError('')
                   setSubmitted(true)
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
@@ -635,6 +647,11 @@ export default function GrammarPanel({
                   Periksa Jawaban ({answeredCount}/{questions.length})
                 </span>
               </button>
+              {submitError && (
+                <p className="text-center text-[11px] text-rose-600 font-semibold mt-2">
+                  {submitError}
+                </p>
+              )}
               <p className="text-center text-xs text-slate-400 mt-2">
                 Latihan mandiri — tidak memengaruhi nilai kuis.
                 {usingAiQuestions ? (

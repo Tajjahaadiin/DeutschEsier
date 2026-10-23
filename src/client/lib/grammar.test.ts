@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildQuestions } from './grammar'
+import { buildQuestions, isAnswerCorrect } from './grammar'
 
 function vocab(germanWord: string, indonesianMeaning: string, grammarTip: string) {
   return { germanWord, indonesianMeaning, grammarTip }
@@ -118,5 +118,25 @@ describe('buildQuestions — jumlah soal latihan', () => {
 
     expect(wrongArticle?.isCorrect).toBe(false)
     expect(rightArticle?.isCorrect).toBe(true)
+  })
+})
+
+describe('isAnswerCorrect — K4: jawaban kosong tidak boleh dinilai benar', () => {
+  it('mengembalikan false untuk jawaban undefined pada soal berkunci Falsch', () => {
+    const question = { isCorrect: false }
+
+    // undefined bukan jawaban; tidak boleh otomatis dianggap "Falsch" yang benar.
+    expect(isAnswerCorrect(question, undefined as any)).toBe(false)
+  })
+
+  it('mengembalikan false untuk jawaban kosong/asing', () => {
+    expect(isAnswerCorrect({ isCorrect: false }, '' as any)).toBe(false)
+    expect(isAnswerCorrect({ isCorrect: false }, 'x' as any)).toBe(false)
+  })
+
+  it('tetap benar untuk jawaban sah', () => {
+    expect(isAnswerCorrect({ isCorrect: false }, 'falsch')).toBe(true)
+    expect(isAnswerCorrect({ isCorrect: true }, 'richtig')).toBe(true)
+    expect(isAnswerCorrect({ isCorrect: true }, 'falsch')).toBe(false)
   })
 })

@@ -356,10 +356,16 @@ export function buildQuestions(
  * Nilai jawaban siswa: 'richtig' benar bila soal memang benar, dan sebaliknya.
  *
  * Hanya butuh `isCorrect` sehingga bisa dipakai untuk soal AI maupun soal lama.
+ *
+ * Jawaban yang bukan 'richtig'/'falsch' (mis. belum dijawab) SELALU dinilai
+ * salah. Tanpa guard ini, soal berkunci Falsch akan otomatis "benar" karena
+ * `undefined === 'richtig'` menghasilkan false yang kebetulan sama dengan
+ * `isCorrect: false`.
  */
 export function isAnswerCorrect(
   question: { isCorrect: boolean },
   answer: 'richtig' | 'falsch'
 ): boolean {
+  if (answer !== 'richtig' && answer !== 'falsch') return false
   return (answer === 'richtig') === question.isCorrect
 }

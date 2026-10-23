@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import GrammarPanel from './GrammarPanel'
 import type { GrammarPattern } from '../../lib/grammarPatterns'
 
@@ -195,5 +195,79 @@ describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
     openLatihan()
 
     expect(screen.getByText('Ich')).toBeTruthy()
+  })
+})
+
+describe('GrammarPanel — K4: submit parsial tidak boleh lolos', () => {
+  const twoQuestions = [
+    {
+      sentence: 'Ich bin gestern die Küche geputzt.',
+      isCorrect: false,
+      explanationId: 'Putzen memakai haben.',
+      correctedSentence: 'Ich habe gestern die Küche geputzt.',
+      topicId: 'tempus-perfekt',
+      segments: [{ text: 'Ich bin gestern die Küche geputzt.', role: 'other' as const }],
+    },
+    {
+      sentence: 'Früher war hier vieles ordentlicher.',
+      isCorrect: true,
+      explanationId: 'Präteritum untuk cerita lampau.',
+      correctedSentence: 'Früher war hier vieles ordentlicher.',
+      topicId: 'tempus-praeteritum',
+      segments: [{ text: 'Früher war hier vieles ordentlicher.', role: 'other' as const }],
+    },
+  ]
+
+  const renderTwo = () =>
+    render(
+      <GrammarPanel
+        vocabClues={[]}
+        grammarQuestionsJson={JSON.stringify(twoQuestions)}
+        sessionId="s1"
+      />
+    )
+
+  const openLatihan = () => {
+    fireEvent.click(screen.getByRole('button', { name: /Latihan/ }))
+  }
+
+  it('menolak memeriksa jawaban bila belum semua soal dijawab', () => {
+    renderTwo()
+    openLatihan()
+
+    // Jawab hanya soal pertama, lalu coba periksa.
+    fireEvent.click(screen.getAllByRole('button', { name: '✓ Richtig' })[0])
+    fireEvent.click(screen.getByRole('button', { name: /Periksa Jawaban/ }))
+
+    // Harus ada pesan bahwa masih ada soal belum dijawab, dan hasil TIDAK terbuka.
+    expect(screen.getByText(/belum dijawab/i)).toBeTruthy()
+    expect(screen.queryByText(/Kunci:/)).toBeNull()
+  })
+
+  it('setelah semua dijawab, payload memuat semua soal dengan isCorrect yang jujur', async () => {
+    renderTwo()
+    openLatihan()
+
+    // Jawab SEMUA soal. Soal 1 (kunci Falsch) dijawab "Richtig" -> salah.
+    // Soal 2 (kunci Richtig) dijawab "Richtig" -> benar.
+    fireEvent.click(screen.getAllByRole('button', { name: '✓ Richtig' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: '✓ Richtig' })[1])
+    fireEvent.click(screen.getByRole('button', { name: /Periksa Jawaban/ }))
+
+    fireEvent.change(screen.getByPlaceholderText(/Nama lengkap/i), {
+      target: { value: 'Andi' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Simpan Hasil Latihan/ }))
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
+    const body = JSON.parse(
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1].body
+    )
+
+    expect(body.answers).toHaveLength(2)
+    // Tidak boleh ada entri "Falsch" yang ditandai benar tanpa siswa menjawabnya.
+    expect(body.answers[0].isCorrect).toBe(false)
+    expect(body.answers[1].isCorrect).toBe(true)
+    expect(body.correctAnswers).toBe(1)
   })
 })
