@@ -1,5 +1,10 @@
 # 0003. Arsitektur Multi-Persona Suara Text-to-Speech (TTS) dan Multi-Speaker Dialog
 
+> **Sebagian digantikan oleh [ADR-0004](0004-tts-endpoint-as-single-source-of-persona.md).**
+> Enam persona dan skema `?voice=`/`?persona=` di bawah tetap berlaku. Pustaka `msedge-tts` sudah
+> tidak dipakai (diganti `node-edge-tts`), dan aturan "`personaId` adalah unit yang diseberangkan,
+> bukan `gender`" ditetapkan di ADR-0004.
+
 Aplikasi DeutschEasier membutuhkan suara Text-to-Speech (TTS) yang alami dan native bagi penutur bahasa Jerman dengan ragam karakter yang terbedakan untuk mendukung simulasi dialog percakapan hingga 4–6 pembicara yang berbeda peran dan usia.
 
 Kami memutuskan:
