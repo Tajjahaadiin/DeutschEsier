@@ -29,7 +29,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
   }
 
   return (
-    <div className="min-h-screen bg-neutral flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-neutral flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Card Container */}
         <div className="bg-white rounded-lg shadow-xl border border-slate-100 overflow-hidden">

@@ -346,7 +346,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
   if (loading || verifyingKey) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+      <div className="min-h-dvh bg-slate-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-slate-500">
@@ -359,7 +359,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+      <div className="min-h-dvh bg-slate-100 flex items-center justify-center">
         <div className="text-center p-8">
           <BookOpen size={48} className="mx-auto mb-4 text-slate-300" />
           <h2 className="text-xl font-bold text-slate-600 mb-2">Skenario Tidak Ditemukan</h2>
@@ -378,7 +378,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   if (!session) return null
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+    <div className="min-h-dvh bg-slate-100 flex flex-col">
       {/* Hero banner */}
       <div className="bg-primary text-on-primary p-6 shadow-lg">
         <div className="max-w-3xl mx-auto">

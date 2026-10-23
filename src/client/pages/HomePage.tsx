@@ -76,7 +76,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
   }
 
   return (
-    <div className="min-h-screen pb-32 bg-slate-50">
+    <div className="min-h-dvh pb-32 bg-slate-50">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-40 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">

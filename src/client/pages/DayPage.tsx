@@ -42,7 +42,7 @@ export default function DayPage({ navigate }: DayPageProps) {
   const goNext = () => setCursor((c) => shiftMonth(c.year, c.month, 1))
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="min-h-dvh bg-slate-50 pb-20">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">

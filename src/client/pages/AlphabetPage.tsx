@@ -77,7 +77,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
   }
 
   return (
-    <div className="min-h-screen pb-24 bg-slate-50">
+    <div className="min-h-dvh pb-24 bg-slate-50">
       {/* Sticky Top Header */}
       <header className="bg-white border-b sticky top-0 z-30 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
