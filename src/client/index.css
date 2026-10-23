@@ -94,3 +94,12 @@ body {
 .animate-backdrop {
   animation: fadeIn 200ms ease-out forwards;
 }
+
+/* Redam gerak, jangan matikan animasinya: fadeIn hanya mengubah opacity,
+   jadi modal tetap punya transisi masuk tanpa scale. .animate-backdrop
+   sudah opacity-only dan tidak perlu diubah. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-modal {
+    animation: fadeIn 150ms ease-out forwards;
+  }
+}
