@@ -84,7 +84,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+              className="p-2 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
               title="Kembali ke Beranda"
             >
               <ArrowLeft size={20} />
@@ -102,7 +102,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
           {/* Voice & Speed Controls */}
           <div className="flex items-center gap-2">
             {/* Persona Selector */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs">
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
               <select
                 value={currentPersonaId}
                 onChange={(e) => {
@@ -121,11 +121,11 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
             </div>
 
             {/* Speed Toggle */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs">
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
               <button
                 type="button"
                 onClick={() => setSpeechRate(1.0)}
-                className={`px-2 py-1 rounded-lg font-medium transition-all ${
+                className={`px-2 py-1 rounded-md font-medium transition-all ${
                   speechRate === 1.0
                     ? 'bg-white text-blue-600 shadow-xs font-semibold'
                     : 'text-slate-500 hover:text-slate-800'
@@ -137,7 +137,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
               <button
                 type="button"
                 onClick={() => setSpeechRate(0.75)}
-                className={`px-2 py-1 rounded-lg font-medium transition-all ${
+                className={`px-2 py-1 rounded-md font-medium transition-all ${
                   speechRate === 0.75
                     ? 'bg-white text-blue-600 shadow-xs font-semibold'
                     : 'text-slate-500 hover:text-slate-800'
@@ -154,10 +154,10 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
       {/* Main Container */}
       <main className="max-w-6xl mx-auto px-4 mt-6">
         {/* Mode Switcher Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-2xl w-fit mb-6">
+        <div className="flex items-center gap-1.5 p-1 bg-slate-200/70 rounded-lg w-fit mb-6">
           <button
             onClick={() => setActiveTab('cards')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${
               activeTab === 'cards'
                 ? 'bg-white text-blue-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -168,7 +168,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
           </button>
           <button
             onClick={() => setActiveTab('trainer')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${
               activeTab === 'trainer'
                 ? 'bg-white text-blue-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -194,7 +194,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                   placeholder="Cari huruf, nama Jerman, kata jangkar (cth: Yoyo, Pizza), atau contoh kata..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 />
                 {searchQuery && (
                   <button
@@ -211,7 +211,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                 <button
                   type="button"
                   onClick={() => setFilterType('all')}
-                  className={`px-3 py-1.5 rounded-xl font-semibold transition-all shrink-0 ${
+                  className={`px-3 py-1.5 rounded-md font-semibold transition-all shrink-0 ${
                     filterType === 'all'
                       ? 'bg-slate-900 text-white shadow-xs'
                       : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
@@ -222,7 +222,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                 <button
                   type="button"
                   onClick={() => setFilterType('vowel')}
-                  className={`px-3 py-1.5 rounded-xl font-semibold transition-all shrink-0 ${
+                  className={`px-3 py-1.5 rounded-md font-semibold transition-all shrink-0 ${
                     filterType === 'vowel'
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'
@@ -233,7 +233,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                 <button
                   type="button"
                   onClick={() => setFilterType('consonant')}
-                  className={`px-3 py-1.5 rounded-xl font-semibold transition-all shrink-0 ${
+                  className={`px-3 py-1.5 rounded-md font-semibold transition-all shrink-0 ${
                     filterType === 'consonant'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'
@@ -244,7 +244,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                 <button
                   type="button"
                   onClick={() => setFilterType('special')}
-                  className={`px-3 py-1.5 rounded-xl font-semibold transition-all shrink-0 ${
+                  className={`px-3 py-1.5 rounded-md font-semibold transition-all shrink-0 ${
                     filterType === 'special'
                       ? 'bg-purple-600 text-white shadow-xs'
                       : 'bg-purple-50 border border-purple-200 text-purple-800 hover:bg-purple-100'
@@ -255,7 +255,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                 <button
                   type="button"
                   onClick={() => setFilterType('critical')}
-                  className={`px-3 py-1.5 rounded-xl font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-md font-semibold transition-all shrink-0 flex items-center gap-1.5 ${
                     filterType === 'critical'
                       ? 'bg-amber-600 text-white shadow-xs'
                       : 'bg-amber-50 border border-amber-300 text-amber-800 hover:bg-amber-100'
@@ -268,7 +268,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
             </div>
 
             {/* Quick Helper Banner */}
-            <div className="mb-6 p-4 rounded-2xl bg-linear-to-r from-blue-50 via-sky-50 to-indigo-50 border border-blue-200/80 flex items-center justify-between gap-4">
+            <div className="mb-6 p-4 rounded-lg bg-linear-to-r from-blue-50 via-sky-50 to-indigo-50 border border-blue-200/80 flex items-center justify-between gap-4">
               <div className="text-xs text-slate-700 space-y-1">
                 <p className="font-semibold text-blue-900 flex items-center gap-1.5">
                   <Sparkles size={14} className="text-blue-600" />
@@ -278,7 +278,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                   Klik tombol <strong>Eja</strong> untuk mendengarkan nama huruf, atau klik kartu untuk melihat tips posisi lidah dan jebakan bunyi untuk penutur Indonesia.
                 </p>
               </div>
-              <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-600 bg-white/80 px-3 py-1.5 rounded-xl border border-blue-200 shrink-0">
+              <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-600 bg-white/80 px-3 py-1.5 rounded-lg border border-blue-200 shrink-0">
                 <Gauge size={14} className="text-blue-600" />
                 <span>Audio: {voiceGender === 'female' ? 'Katja' : 'Conrad'} ({speechRate}x)</span>
               </div>
@@ -286,7 +286,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
 
             {/* Grid of Alphabet Cards */}
             {filteredItems.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 text-slate-400">
+              <div className="text-center py-16 bg-white rounded-lg border border-slate-200 text-slate-400">
                 <BookOpen size={48} className="mx-auto mb-3 opacity-30" />
                 <p className="text-base font-semibold text-slate-700">Tidak ada huruf ditemukan</p>
                 <p className="text-xs text-slate-400 mt-1">Coba bersihkan pencarian atau ganti filter kategori.</p>

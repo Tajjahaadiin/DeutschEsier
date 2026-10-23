@@ -119,7 +119,7 @@ export default function ComprehensionQuiz({
 
   if (questions.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 max-w-2xl mx-auto shadow-sm my-6">
+      <div className="bg-white rounded-lg p-8 text-center border border-slate-200 max-w-2xl mx-auto shadow-sm my-6">
         <AlertCircle size={40} className="mx-auto text-slate-300 mb-3" />
         <p className="text-slate-600 font-medium">Skenario ini belum memiliki soal Richtig/Falsch.</p>
       </div>
@@ -136,8 +136,8 @@ export default function ComprehensionQuiz({
         : 'Weiter üben! Terus berlatih! 💪'
     return (
       <div className="max-w-2xl mx-auto w-full px-4 py-6 space-y-5">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold mb-4">
+        <div className="bg-white rounded-lg p-6 sm:p-8 border border-slate-200 shadow-xl text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-slate-100 text-slate-700 text-xs font-semibold mb-4">
             <Award size={15} className="text-amber-500" />
             <span>Rapor Kuis Richtig/Falsch</span>
           </div>
@@ -150,7 +150,7 @@ export default function ComprehensionQuiz({
           <button
             type="button"
             onClick={handleReset}
-            className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-all cursor-pointer"
           >
             <RotateCcw size={14} />
             <span>Ulangi Kuis</span>
@@ -164,7 +164,7 @@ export default function ComprehensionQuiz({
             return (
               <div
                 key={idx}
-                className={`bg-white rounded-2xl border-2 p-4 ${correct ? 'border-emerald-200' : 'border-rose-200'}`}
+                className={`bg-white rounded-lg border-2 p-4 ${correct ? 'border-emerald-200' : 'border-rose-200'}`}
               >
                 <div className="flex items-start gap-2">
                   {correct ? (
@@ -195,9 +195,9 @@ export default function ComprehensionQuiz({
   return (
     <div className="max-w-2xl mx-auto w-full px-4 py-6">
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-3xl shadow-lg">
+        <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-lg shadow-lg">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
+            <span className="px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
               ✅ Richtig oder Falsch
             </span>
             <span className="text-xs text-indigo-100 font-medium">
@@ -214,7 +214,7 @@ export default function ComprehensionQuiz({
           )}
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 sm:p-5 rounded-lg border border-slate-200 shadow-xs">
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <User size={15} className="text-indigo-600" />
             Nama Lengkap Siswa <span className="text-rose-500">*</span>
@@ -225,12 +225,12 @@ export default function ComprehensionQuiz({
             value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
             placeholder="Masukkan nama lengkap Anda..."
-            className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
+            className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
           />
         </div>
 
         {errorMessage && (
-          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+          <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertCircle size={16} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -242,7 +242,7 @@ export default function ComprehensionQuiz({
             return (
               <div
                 key={idx}
-                className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs"
+                className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs"
               >
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex items-start gap-2 min-w-0">
@@ -278,7 +278,7 @@ export default function ComprehensionQuiz({
                         key={value}
                         type="button"
                         onClick={() => handleAnswer(idx, value)}
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all cursor-pointer ${
+                        className={`flex-1 py-2.5 rounded-md text-xs font-bold border-2 transition-all cursor-pointer ${
                           active
                             ? isRight
                               ? 'bg-emerald-600 border-emerald-600 text-white'
@@ -300,7 +300,7 @@ export default function ComprehensionQuiz({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-on-primary font-bold text-sm shadow-md transition-all disabled:opacity-50 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-md bg-primary hover:bg-primary/90 text-on-primary font-bold text-sm shadow-md transition-all disabled:opacity-50 cursor-pointer"
           >
             <Send size={16} />
             <span>{submitting ? 'Memeriksa & Mengirim Jawaban...' : 'Kumpulkan Jawaban Kuis'}</span>

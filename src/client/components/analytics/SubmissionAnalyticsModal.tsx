@@ -199,14 +199,14 @@ export default function SubmissionAnalyticsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
       <div
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-modal"
+        className="bg-white rounded-lg shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-modal"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/70">
           <div>
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-blue-100 text-blue-700">
+              <div className="p-2 rounded-lg bg-blue-100 text-blue-700">
                 <BarChart3 size={20} />
               </div>
               <h2 className="text-lg font-bold text-slate-800">
@@ -219,7 +219,7 @@ export default function SubmissionAnalyticsModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
           >
             <X size={20} />
           </button>
@@ -228,7 +228,7 @@ export default function SubmissionAnalyticsModal({
         {/* Modal Body (Scrollable) */}
         <div className="p-5 overflow-y-auto space-y-6 flex-1">
           {error && (
-            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+            <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
               {error}
             </div>
           )}
@@ -245,7 +245,7 @@ export default function SubmissionAnalyticsModal({
                   key={f.key}
                   type="button"
                   onClick={() => setKindFilter(f.key)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     kindFilter === f.key
                       ? 'bg-slate-800 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
@@ -283,7 +283,7 @@ export default function SubmissionAnalyticsModal({
               </div>
 
               {/* Ringkasan Nilai Siswa */}
-              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="p-5 rounded-lg bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">
                     {selectedSubmission.studentName}
@@ -313,7 +313,7 @@ export default function SubmissionAnalyticsModal({
                     </div>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold border ${getScoreBadge(
+                    className={`px-3 py-1 rounded-sm text-xs font-bold border ${getScoreBadge(
                       selectedSubmission.score
                     )}`}
                   >
@@ -336,7 +336,7 @@ export default function SubmissionAnalyticsModal({
                   selectedSubmission.answers.map((ans, idx) => (
                     <div
                       key={idx}
-                      className={`p-4 rounded-xl border text-xs space-y-2 ${
+                      className={`p-4 rounded-lg border text-xs space-y-2 ${
                         ans.isCorrect
                           ? 'bg-emerald-50/40 border-emerald-200'
                           : 'bg-rose-50/40 border-rose-200'
@@ -379,7 +379,7 @@ export default function SubmissionAnalyticsModal({
                                 speakGerman(textToSpeak, { gender: 'female' })
                               }
                             }}
-                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
                             title="Dengarkan audio kata/kalimat"
                           >
                             <Volume2 size={12} className="text-blue-600" />
@@ -441,7 +441,7 @@ export default function SubmissionAnalyticsModal({
               {/* 4 Kartu Metrik Ringkas */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Total Siswa */}
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <Users size={16} className="text-blue-600" />
                     <span className="text-xs font-semibold uppercase tracking-wider">
@@ -455,7 +455,7 @@ export default function SubmissionAnalyticsModal({
                 </div>
 
                 {/* Rata-Rata Nilai */}
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <TrendingUp size={16} className="text-indigo-600" />
                     <span className="text-xs font-semibold uppercase tracking-wider">
@@ -470,7 +470,7 @@ export default function SubmissionAnalyticsModal({
                 </div>
 
                 {/* Tingkat Kelulusan */}
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <Target size={16} className="text-emerald-600" />
                     <span className="text-xs font-semibold uppercase tracking-wider">
@@ -484,7 +484,7 @@ export default function SubmissionAnalyticsModal({
                 </div>
 
                 {/* Nilai Tertinggi */}
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <Trophy size={16} className="text-amber-500" />
                     <span className="text-xs font-semibold uppercase tracking-wider">
@@ -500,7 +500,7 @@ export default function SubmissionAnalyticsModal({
               </div>
 
               {/* DIAGRAM BATANG DISTRIBUSI NILAI */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+              <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                     <BarChart3 size={15} className="text-blue-600" />
@@ -533,7 +533,7 @@ export default function SubmissionAnalyticsModal({
                           </div>
 
                           {/* Batang Diagram */}
-                          <div className="w-full max-w-[56px] bg-slate-100 rounded-xl overflow-hidden flex items-end h-32 sm:h-36 p-1">
+                          <div className="w-full max-w-[56px] bg-slate-100 rounded-lg overflow-hidden flex items-end h-32 sm:h-36 p-1">
                             <div
                               className={`w-full bg-gradient-to-t ${item.color} rounded-lg transition-all duration-500 shadow-xs`}
                               style={{ height: `${heightPercent}%` }}
@@ -579,13 +579,13 @@ export default function SubmissionAnalyticsModal({
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Cari nama siswa..."
-                      className="w-full text-xs pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400"
+                      className="w-full text-xs pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400"
                     />
                   </div>
                 </div>
 
                 {kindFiltered.length === 0 ? (
-                  <div className="text-center py-10 border border-dashed border-slate-200 rounded-2xl text-slate-400">
+                  <div className="text-center py-10 border border-dashed border-slate-200 rounded-lg text-slate-400">
                     <HelpCircle size={32} className="mx-auto mb-2 opacity-30" />
                     <p className="text-xs font-medium">
                       {kindFilter === 'grammar'
@@ -603,7 +603,7 @@ export default function SubmissionAnalyticsModal({
                     Tidak ditemukan siswa dengan nama "{searchTerm}".
                   </div>
                 ) : (
-                  <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+                  <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-xs">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider text-label">
@@ -627,7 +627,7 @@ export default function SubmissionAnalyticsModal({
                               </td>
                               <td className="py-3 px-3 text-center">
                                 <span
-                                  className={`inline-block px-2.5 py-0.5 rounded-full font-bold text-xs border ${getScoreBadge(
+                                  className={`inline-block px-2.5 py-0.5 rounded-sm font-bold text-xs border ${getScoreBadge(
                                     sub.score
                                   )}`}
                                 >
@@ -656,7 +656,7 @@ export default function SubmissionAnalyticsModal({
                                 <button
                                   type="button"
                                   onClick={() => setSelectedSubmission(sub)}
-                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs transition-colors cursor-pointer"
                                 >
                                   <span>Lihat Detail</span>
                                   <ChevronRight size={13} />
@@ -679,7 +679,7 @@ export default function SubmissionAnalyticsModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md text-xs font-semibold transition-colors"
           >
             Tutup
           </button>

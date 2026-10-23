@@ -53,7 +53,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
   return (
     <div
       onClick={() => onOpenDetail(item)}
-      className={`group relative flex flex-col justify-between bg-white rounded-2xl border transition-all duration-200 p-4 cursor-pointer hover:shadow-md ${
+      className={`group relative flex flex-col justify-between bg-white rounded-lg border transition-all duration-200 p-4 cursor-pointer hover:shadow-md ${
         activeAudio
           ? 'border-blue-500 ring-2 ring-blue-400/40 shadow-md'
           : 'border-slate-200 hover:border-slate-300'
@@ -61,12 +61,12 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
     >
       {/* Top Badges */}
       <div className="flex items-center justify-between gap-1 mb-2">
-        <span className={`text-label font-semibold px-2 py-0.5 rounded-full border ${categoryBadgeClass}`}>
+        <span className={`text-label font-semibold px-2 py-0.5 rounded-sm border ${categoryBadgeClass}`}>
           {categoryName}
         </span>
         {item.isCriticalForId && (
           <span
-            className="text-label font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1"
+            className="text-label font-bold px-2 py-0.5 rounded-sm bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1"
             title="Sering salah diucapkan lidah Indonesia"
           >
             <AlertTriangle size={11} />
@@ -109,7 +109,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
           <button
             type="button"
             onClick={handlePlayLetter}
-            className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-all ${
               activeAudio === 'letter'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
@@ -123,7 +123,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
           <button
             type="button"
             onClick={handlePlayWord}
-            className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all truncate ${
+            className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-md text-xs font-semibold transition-all truncate ${
               activeAudio === 'word'
                 ? 'bg-slate-800 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'

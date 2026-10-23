@@ -175,14 +175,14 @@ export default function KeyManagerModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
       <div
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-modal"
+        className="bg-white rounded-lg shadow-2xl border border-slate-200 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-modal"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/70">
           <div>
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-amber-100 text-amber-700">
+              <div className="p-2 rounded-lg bg-amber-100 text-amber-700">
                 <Key size={20} />
               </div>
               <h2 className="text-lg font-bold text-slate-800">Kelola Kunci Akses Murid</h2>
@@ -193,7 +193,7 @@ export default function KeyManagerModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
           >
             <X size={20} />
           </button>
@@ -202,14 +202,14 @@ export default function KeyManagerModal({
         {/* Modal Body (Scrollable) */}
         <div className="p-5 overflow-y-auto space-y-6 flex-1">
           {error && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Form Buat Kunci Baru */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
             <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Plus size={15} className="text-blue-600" />
               Buat Kunci Akses Baru
@@ -231,7 +231,7 @@ export default function KeyManagerModal({
                           setSelectedHours(p.hours)
                           setIsCustom(false)
                         }}
-                        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+                        className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
                           active
                             ? 'bg-blue-600 text-white shadow-xs'
                             : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -244,7 +244,7 @@ export default function KeyManagerModal({
                   <button
                     type="button"
                     onClick={() => setIsCustom(true)}
-                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+                    className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
                       isCustom
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -262,7 +262,7 @@ export default function KeyManagerModal({
                       max={8760}
                       value={customHours}
                       onChange={(e) => setCustomHours(e.target.value)}
-                      className="w-28 text-xs px-3 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-28 text-xs px-3 py-1.5 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       placeholder="Contoh: 48"
                     />
                     <span className="text-xs text-slate-500">Jam dari sekarang</span>
@@ -279,7 +279,7 @@ export default function KeyManagerModal({
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder='Misal: "Kelas 10 IPS 1", "Tugas Mandiri"'
-                  className="w-full text-xs px-3 py-2 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-400"
+                  className="w-full text-xs px-3 py-2 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-400"
                 />
               </div>
 
@@ -287,7 +287,7 @@ export default function KeyManagerModal({
                 <button
                   type="submit"
                   disabled={creating}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold shadow-xs transition-all disabled:opacity-50"
                 >
                   <Key size={14} />
                   <span>{creating ? 'Membuat Kunci...' : 'Buat Kunci Akses'}</span>
@@ -311,7 +311,7 @@ export default function KeyManagerModal({
                 <span>Memuat daftar kunci...</span>
               </div>
             ) : keys.length === 0 ? (
-              <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl text-slate-400">
+              <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg text-slate-400">
                 <Key size={28} className="mx-auto mb-2 opacity-30" />
                 <p className="text-xs font-medium">Belum ada kunci akses</p>
                 <p className="text-label text-slate-400 mt-0.5">
@@ -319,7 +319,7 @@ export default function KeyManagerModal({
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden bg-white">
+              <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden bg-white">
                 {keys.map((k) => {
                   const remaining = getRemainingTime(k.expiresAt)
                   const isExpired = k.isExpired || remaining.isExpired
@@ -335,16 +335,16 @@ export default function KeyManagerModal({
                             {k.key}
                           </code>
                           {k.label && (
-                            <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+                            <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-sm font-medium">
                               {k.label}
                             </span>
                           )}
                           {isExpired ? (
-                            <span className="text-label bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">
+                            <span className="text-label bg-red-100 text-red-700 px-2 py-0.5 rounded-sm font-semibold">
                               Kedaluwarsa
                             </span>
                           ) : (
-                            <span className="text-label bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                            <span className="text-label bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-sm font-semibold flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                               {remaining.text}
                             </span>
@@ -364,7 +364,7 @@ export default function KeyManagerModal({
                         <button
                           type="button"
                           onClick={() => handleCopyKey(k)}
-                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium flex items-center gap-1 transition-colors"
+                          className="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium flex items-center gap-1 transition-colors"
                           title="Salin Kode Kunci"
                         >
                           {copiedKeyId === k.id ? (
@@ -383,7 +383,7 @@ export default function KeyManagerModal({
                         <button
                           type="button"
                           onClick={() => handleCopyStudentLink(k)}
-                          className="px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium flex items-center gap-1 transition-colors"
+                          className="px-2.5 py-1.5 rounded-md border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium flex items-center gap-1 transition-colors"
                           title="Salin Tautan Khusus Murid"
                         >
                           {copiedLinkId === k.id ? (
@@ -402,7 +402,7 @@ export default function KeyManagerModal({
                         <button
                           type="button"
                           onClick={() => handleDeleteKey(k.id)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:border-red-200 bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
+                          className="p-1.5 rounded-md border border-slate-200 hover:border-red-200 bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
                           title="Cabut Kunci Akses"
                         >
                           <Trash2 size={14} />
@@ -421,7 +421,7 @@ export default function KeyManagerModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md text-xs font-semibold transition-colors"
           >
             Tutup
           </button>

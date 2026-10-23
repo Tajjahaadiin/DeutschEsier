@@ -87,19 +87,19 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/alphabet')}
-              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             >
               <span>🔤 Das Alphabet (30)</span>
             </button>
             <button
               onClick={() => navigate('/nummer')}
-              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             >
               <span>🔢 die Nummer</span>
             </button>
             <button
               onClick={() => navigate('/tage')}
-              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+              className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             >
               <span>📅 die Tage</span>
             </button>
@@ -116,7 +116,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
             </div>
             <button
               onClick={() => logoutTeacher()}
-              className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors font-medium border border-transparent hover:border-red-100"
+              className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-600 px-2.5 py-1.5 rounded-md hover:bg-red-50 transition-colors font-medium border border-transparent hover:border-red-100"
               title="Keluar dari akun guru"
             >
               <LogOut size={14} />
@@ -128,10 +128,10 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
 
       <main className="max-w-5xl mx-auto px-4 mt-6">
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-slate-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 mb-6 bg-slate-100 p-1 rounded-lg w-fit">
           <button
             onClick={() => setActiveTab('bank')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
               activeTab === 'bank'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
@@ -141,7 +141,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
           </button>
           <button
             onClick={() => setActiveTab('sessions')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
               activeTab === 'sessions'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
@@ -151,19 +151,19 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
           </button>
           <button
             onClick={() => navigate('/alphabet')}
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
+            className="px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
           >
             Das Alphabet (30)
           </button>
           <button
             onClick={() => navigate('/nummer')}
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
+            className="px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
           >
             die Nummer
           </button>
           <button
             onClick={() => navigate('/tage')}
-            className="px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
+            className="px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-blue-600 hover:bg-white/70"
           >
             die Tage
           </button>
@@ -178,17 +178,17 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                 placeholder="Cari kata Jerman atau Indonesia..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 rounded-md border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <select
                 value={selectedCat}
                 onChange={e => setSelectedCat(e.target.value)}
-                className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[180px]"
+                className="rounded-md border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[180px]"
               >
                 <option value="">Semua Kategori</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl p-1.5 text-xs">
+              <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg p-1.5 text-xs">
                 <span className="text-slate-400 px-1 font-medium">Suara:</span>
                 <select
                   value={currentPersonaId}
@@ -209,7 +209,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
             </div>
 
             {selectedWords.length > 0 && (
-              <div className="mb-4 flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2">
+              <div className="mb-4 flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
                 <span className="font-semibold">{selectedWords.length}</span> kata dipilih
                 <button onClick={clearSelection} className="ml-auto text-slate-400 hover:text-red-500 text-xs">Hapus pilihan</button>
               </div>
@@ -260,7 +260,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-sm font-medium">
                           {session.cefrLevel}
                         </span>
                       </div>
@@ -274,28 +274,28 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                     <div className="flex flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={e => { e.stopPropagation(); navigate('/view/' + session.id) }}
-                        className="p-2 text-slate-400 hover:text-blue-500 rounded-lg hover:bg-blue-50"
+                        className="p-2 text-slate-400 hover:text-blue-500 rounded-md hover:bg-blue-50"
                         title="Buka"
                       >
                         <ExternalLink size={16} />
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); setKeyModalSession(session) }}
-                        className="p-2 text-slate-400 hover:text-amber-500 rounded-lg hover:bg-amber-50"
+                        className="p-2 text-slate-400 hover:text-amber-500 rounded-md hover:bg-amber-50"
                         title="Kelola Kunci Akses Murid"
                       >
                         <Key size={16} />
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); navigate('/edit/' + session.id) }}
-                        className="p-2 text-slate-400 hover:text-blue-500 rounded-lg hover:bg-blue-50"
+                        className="p-2 text-slate-400 hover:text-blue-500 rounded-md hover:bg-blue-50"
                         title="Edit Skenario"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         onClick={e => handleDeleteSession(session.id, e)}
-                        className="p-2 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50"
+                        className="p-2 text-slate-400 hover:text-red-500 rounded-md hover:bg-red-50"
                         title="Hapus"
                       >
                         <Trash2 size={16} />

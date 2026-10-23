@@ -273,11 +273,11 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
       {/* Trainer Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm bg-blue-50 text-blue-700 text-xs font-semibold mb-2">
             <Sparkles size={14} />
             <span>Buchstabier-Trainer (Simulator Ejaan)</span>
           </div>
@@ -294,7 +294,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
           {isPlaying ? (
             <button
               onClick={stopPlayback}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm shadow-sm transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold text-sm shadow-sm transition-all"
             >
               <Square size={16} />
               <span>Berhenti</span>
@@ -303,7 +303,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
             <button
               onClick={handleStartPlayback}
               disabled={!inputText.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm shadow-sm transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm shadow-sm transition-all"
             >
               <Play size={16} fill="currentColor" />
               <span>Mainkan Ejaan Lengkap</span>
@@ -316,7 +316,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
                 stopPlayback()
                 setInputText('')
               }}
-              className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+              className="p-2.5 rounded-md border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
               title="Kosongkan teks"
             >
               <RotateCcw size={16} />
@@ -339,13 +339,13 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
               setInputText(e.target.value.toUpperCase())
             }}
             placeholder="Ketik kata, misal: AUTO, BECAK, ATAU NAMAMU..."
-            className="flex-1 text-lg sm:text-2xl font-mono uppercase font-bold tracking-wider px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50"
+            className="flex-1 text-lg sm:text-2xl font-mono uppercase font-bold tracking-wider px-4 py-3 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50"
           />
           {trimmedInput.length > 0 && !isInputInWordList && (
             <button
               type="button"
               onClick={handleSaveInstantWord}
-              className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer"
+              className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer"
               title="Simpan ke Daftar Kata"
             >
               <span>⭐ Simpan ke Daftar Kata</span>
@@ -410,7 +410,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
             <button
               type="button"
               onClick={handleOpenAddModal}
-              className="text-xs px-2.5 py-1 rounded-lg font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded-md font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1 transition-colors cursor-pointer"
             >
               <Plus size={14} />
               <span>+ Tambah Kata</span>
@@ -421,7 +421,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
             <button
               type="button"
               onClick={() => setIsManageMode(!isManageMode)}
-              className={`text-xs px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5 transition-colors border cursor-pointer ${
+              className={`text-xs px-2.5 py-1 rounded-md font-medium flex items-center gap-1.5 transition-colors border cursor-pointer ${
                 isManageMode
                   ? 'bg-amber-100 text-amber-900 border-amber-300 font-semibold'
                   : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'
@@ -435,7 +435,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
               <button
                 type="button"
                 onClick={handleResetToDefault}
-                className="text-xs px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                className="text-xs px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
                 title="Reset daftar kata ke bawaan awal"
               >
                 Reset ke Bawaan
@@ -457,11 +457,11 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
         </div>
 
         {characters.length === 0 ? (
-          <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <div className="text-center py-8 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
             Ketik kata di atas untuk melihat deretan ejaan huruf Jerman
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2.5 items-center justify-start min-h-[100px] p-4 bg-slate-50 rounded-2xl border border-slate-200">
+          <div className="flex flex-wrap gap-2.5 items-center justify-start min-h-[100px] p-4 bg-slate-50 rounded-lg border border-slate-200">
             {characters.map((char, index) => {
               const isActive = activeIndex === index
               const isSpacer = char.raw === ' '
@@ -482,7 +482,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
                   key={index}
                   type="button"
                   onClick={() => playSingleLetter(char.item, index)}
-                  className={`relative flex flex-col items-center justify-center min-w-[56px] h-20 px-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                  className={`relative flex flex-col items-center justify-center min-w-[56px] h-20 px-2 rounded-md transition-all duration-200 cursor-pointer ${
                     isActive
                       ? 'bg-blue-600 text-white scale-110 shadow-lg ring-4 ring-blue-300 z-10'
                       : isFullWordActive
@@ -518,7 +518,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
 
         {/* Full word playback feedback */}
         {isFullWordActive && (
-          <div className="mt-4 p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 flex items-center justify-center gap-2 text-sm font-semibold animate-pulse">
+          <div className="mt-4 p-3 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-200 flex items-center justify-center gap-2 text-sm font-semibold animate-pulse">
             <Volume2 size={18} />
             <span>Membunyikan kata utuh: &quot;{inputText}&quot;</span>
           </div>
@@ -528,7 +528,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
       {/* Modal / Dialog Tambah & Edit Kata */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-sm p-5 space-y-4">
+          <div className="bg-white rounded-lg shadow-xl border border-slate-200 w-full max-w-sm p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-800">
                 {editingWordId ? 'Edit Kata' : 'Tambah Kata Baru'}
@@ -536,7 +536,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -558,7 +558,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
                     if (e.key === 'Enter') handleSaveModal()
                   }}
                   placeholder="Misal: FLUGHAFEN"
-                  className="w-full text-base font-mono uppercase font-bold tracking-wide px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-base font-mono uppercase font-bold tracking-wide px-3 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                 />
               </div>
@@ -575,7 +575,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
                     if (e.key === 'Enter') handleSaveModal()
                   }}
                   placeholder="Misal: Bandara"
-                  className="w-full text-sm px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-sm px-3 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -590,14 +590,14 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={handleSaveModal}
-                className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow-xs transition-colors cursor-pointer"
               >
                 Simpan
               </button>

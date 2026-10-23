@@ -48,7 +48,7 @@ export default function DayPage({ navigate }: DayPageProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+              className="p-2 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
               aria-label="Kembali"
             >
               <ChevronLeft size={20} />
@@ -60,7 +60,7 @@ export default function DayPage({ navigate }: DayPageProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs">
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
               <select
                 value={currentPersonaId}
                 onChange={(e) => {
@@ -77,13 +77,13 @@ export default function DayPage({ navigate }: DayPageProps) {
                 ))}
               </select>
             </div>
-            <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl text-xs">
+            <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-lg text-xs">
               {[1.0, 0.75].map((rate) => (
                 <button
                   key={rate}
                   type="button"
                   onClick={() => setSpeechRate(rate)}
-                  className={`px-2 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                  className={`px-2 py-1 rounded-md font-medium transition-all cursor-pointer ${
                     speechRate === rate ? 'bg-white text-blue-600 shadow-xs font-semibold' : 'text-slate-500'
                   }`}
                 >
@@ -97,14 +97,14 @@ export default function DayPage({ navigate }: DayPageProps) {
 
       <main className="max-w-4xl mx-auto px-4 mt-6 space-y-6">
         {/* ============ KALENDER DINDING ============ */}
-        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
           {/* Kepala kalender */}
           <div className="bg-primary text-on-primary p-5">
             <div className="flex items-center justify-between">
               <button
                 type="button"
                 onClick={goPrev}
-                className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors cursor-pointer"
+                className="p-2 rounded-md bg-white/20 hover:bg-white/30 transition-colors cursor-pointer"
                 aria-label="Bulan sebelumnya"
               >
                 <ChevronLeft size={20} />
@@ -121,7 +121,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                 <button
                   type="button"
                   onClick={() => handlePlay(month.german)}
-                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 text-label font-semibold transition-colors cursor-pointer"
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/20 hover:bg-white/30 text-label font-semibold transition-colors cursor-pointer"
                 >
                   <Volume2 size={12} className={playing === month.german ? 'animate-pulse' : ''} />
                   Dengarkan
@@ -131,7 +131,7 @@ export default function DayPage({ navigate }: DayPageProps) {
               <button
                 type="button"
                 onClick={goNext}
-                className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors cursor-pointer"
+                className="p-2 rounded-md bg-white/20 hover:bg-white/30 transition-colors cursor-pointer"
                 aria-label="Bulan berikutnya"
               >
                 <ChevronRight size={20} />
@@ -197,7 +197,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                 key={h.german}
                 type="button"
                 onClick={() => handlePlay(h.german)}
-                className="bg-white rounded-2xl border border-slate-200 p-4 text-left hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
+                className="bg-white rounded-md border border-slate-200 p-4 text-left hover:border-rose-300 hover:shadow-sm transition-all cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -229,7 +229,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                 key={t.german}
                 type="button"
                 onClick={() => handlePlay(t.german)}
-                className="bg-white rounded-2xl border border-slate-200 p-3 text-left hover:border-indigo-300 hover:shadow-sm transition-all cursor-pointer"
+                className="bg-white rounded-md border border-slate-200 p-3 text-left hover:border-indigo-300 hover:shadow-sm transition-all cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">

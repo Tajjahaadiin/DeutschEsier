@@ -394,21 +394,21 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="inline-block bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-medium">
+                <span className="inline-block bg-white/20 text-white text-xs px-2.5 py-1 rounded-sm font-medium">
                   Level {session.cefrLevel}
                 </span>
                 {isTeacher ? (
-                  <span className="inline-flex items-center gap-1 bg-amber-400/30 text-amber-200 text-xs px-2.5 py-0.5 rounded-full font-semibold border border-amber-300/40">
+                  <span className="inline-flex items-center gap-1 bg-amber-400/30 text-amber-200 text-xs px-2.5 py-0.5 rounded-sm font-semibold border border-amber-300/40">
                     <ShieldCheck size={13} />
                     Mode Guru (Akses Penuh)
                   </span>
                 ) : (
                   <>
-                    <span className="inline-flex items-center gap-1 bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-full font-medium border border-white/30">
+                    <span className="inline-flex items-center gap-1 bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-sm font-medium border border-white/30">
                       🧑🎓 Ruang Belajar Siswa
                     </span>
                     {validKey ? (
-                      <span className="inline-flex items-center gap-1 bg-emerald-400/20 text-emerald-200 text-xs px-2.5 py-0.5 rounded-full font-mono font-medium border border-emerald-300/30">
+                      <span className="inline-flex items-center gap-1 bg-emerald-400/20 text-emerald-200 text-xs px-2.5 py-0.5 rounded-sm font-mono font-medium border border-emerald-300/30">
                         🔑 Kunci: {validKey}
                       </span>
                     ) : null}
@@ -436,7 +436,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                     type="button"
                     onClick={() => setShowKeyManager(true)}
                     title="Kelola Kunci Akses Siswa"
-                    className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-xs active:scale-95 cursor-pointer"
+                    className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-xs active:scale-95 cursor-pointer"
                   >
                     <Key size={14} />
                     <span>Kunci Akses Siswa</span>
@@ -447,7 +447,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                     type="button"
                     onClick={() => setShowAnalytics(true)}
                     title="Lihat Analitik & Rapor Kuis Siswa"
-                    className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-xl text-xs font-semibold transition-all shadow-xs active:scale-95 cursor-pointer"
+                    className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-xs active:scale-95 cursor-pointer"
                   >
                     <BarChart3 size={14} />
                     <span>Analitik & Kuis ({submissionsCount})</span>
@@ -458,7 +458,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                     type="button"
                     onClick={() => navigate('/edit/' + id)}
                     title="Edit skenario ini"
-                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-xl text-xs transition-colors text-white font-medium"
+                    className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-md text-xs transition-colors text-white font-medium"
                   >
                     <Pencil size={14} />
                     <span>Edit Skenario</span>
@@ -472,7 +472,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                   type="button"
                   onClick={handleCopyLink}
                   title="Salin link skenario ini"
-                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-xl text-xs transition-colors text-white font-medium cursor-pointer"
+                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-md text-xs transition-colors text-white font-medium cursor-pointer"
                 >
                   <Share2 size={14} />
                   <span>{copied ? 'Tersalin!' : 'Bagikan Link'}</span>
@@ -486,10 +486,10 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
       {/* GATE AKSES MURID: JIKA AKSES BELUM TERBUKA */}
       {!accessGranted ? (
         <div className="flex-1 max-w-lg w-full mx-auto p-4 flex items-center justify-center my-8">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl w-full text-center space-y-5">
+          <div className="bg-white rounded-lg p-6 sm:p-8 border border-slate-200 shadow-xl w-full text-center space-y-5">
             {accessError === 'expired' || accessError === 'not_found' ? (
               <>
-                <div className="w-16 h-16 rounded-2xl bg-rose-100 text-rose-600 mx-auto flex items-center justify-center">
+                <div className="w-16 h-16 rounded-lg bg-rose-100 text-rose-600 mx-auto flex items-center justify-center">
                   <Clock size={32} />
                 </div>
 
@@ -506,7 +506,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
               </>
             ) : (
               <>
-                <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 mx-auto flex items-center justify-center">
+                <div className="w-16 h-16 rounded-lg bg-blue-100 text-blue-600 mx-auto flex items-center justify-center">
                   <Lock size={32} />
                 </div>
 
@@ -523,7 +523,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
             )}
 
             {gateErrorMsg && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 text-left">
+              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 text-left">
                 <AlertCircle size={16} className="shrink-0" />
                 <span>{gateErrorMsg}</span>
               </div>
@@ -537,14 +537,14 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                   value={inputKey}
                   onChange={(e) => setInputKey(e.target.value.toUpperCase())}
                   placeholder="Contoh: DE-ABC12"
-                  className="w-full text-center font-mono text-base font-bold tracking-widest px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all placeholder-slate-400 uppercase"
+                  className="w-full text-center font-mono text-base font-bold tracking-widest px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-md focus:border-blue-500 focus:bg-white focus:outline-none transition-all placeholder-slate-400 uppercase"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={gateSubmitting}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
               >
                 <Key size={16} />
                 <span>{gateSubmitting ? 'Memverifikasi...' : 'Buka Akses Pembelajaran'}</span>
@@ -579,7 +579,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                     setActiveTab('dialog')
                     stopSpeech()
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                  className={`px-4 py-2 rounded-md text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                     activeTab === 'dialog'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -595,7 +595,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                     setActiveTab('flashcard')
                     stopSpeech()
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                  className={`px-4 py-2 rounded-md text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                     activeTab === 'flashcard'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -603,7 +603,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                 >
                   <span>🃏 Flashcard Kata</span>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                    className={`text-xs px-2 py-0.5 rounded-sm font-bold ${
                       activeTab === 'flashcard'
                         ? 'bg-white/20 text-white'
                         : 'bg-slate-200 text-slate-700'
@@ -620,7 +620,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                     setActiveTab('quiz')
                     stopSpeech()
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                  className={`px-4 py-2 rounded-md text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                     activeTab === 'quiz'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -636,7 +636,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                     setActiveTab('grammar')
                     stopSpeech()
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                  className={`px-4 py-2 rounded-md text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                     activeTab === 'grammar'
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -687,7 +687,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <button
                         type="button"
                         onClick={handleStopAll}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition-all shadow-xs cursor-pointer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition-all shadow-xs cursor-pointer"
                       >
                         <Square size={13} className="fill-rose-700" />
                         <span>Hentikan Audio</span>
@@ -697,7 +697,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                         type="button"
                         onClick={handlePlayAll}
                         disabled={session.dialogue.length === 0}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-50"
                       >
                         <Play size={13} className="fill-white" />
                         <span>Putar Seluruh Dialog</span>
@@ -718,7 +718,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <div
                         ref={(el) => (turnRefs.current[i] = el)}
                         className={
-                          'max-w-[88%] rounded-2xl p-4 shadow-sm transition-all ' +
+                          'max-w-[88%] rounded-lg p-4 shadow-sm transition-all ' +
                           (playingIndex === i
                             ? 'ring-2 ring-blue-400 ring-offset-2 shadow-md '
                             : '') +
@@ -737,13 +737,13 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                             {turn.speaker}
                           </span>
                           {turn.personaId ? (
-                            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-white/25 text-slate-800 dark:text-white border border-white/30">
+                            <span className="text-xs px-2 py-0.5 rounded-sm font-medium bg-white/25 text-slate-800 dark:text-white border border-white/30">
                               {getTtsPersona(turn.personaId)?.emoji} {getTtsPersona(turn.personaId)?.name || turn.personaId}
                             </span>
                           ) : (
                             <span
                               className={
-                                'text-xs px-2 py-0.5 rounded-full font-medium ' +
+                                'text-xs px-2 py-0.5 rounded-sm font-medium ' +
                                 (turnGender === 'female'
                                   ? 'bg-rose-100 text-rose-700'
                                   : 'bg-sky-100 text-sky-700')
@@ -773,7 +773,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                           type="button"
                           onClick={() => handlePlayTurn(i, turn.germanText, turnGender, turn.personaId)}
                           className={
-                            'flex items-center gap-1 text-xs px-2.5 py-1 rounded-full transition-colors ' +
+                            'flex items-center gap-1 text-xs px-2.5 py-1 rounded-md transition-colors ' +
                             (isA
                               ? 'bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600'
                               : 'bg-white/20 hover:bg-white/30 text-blue-100 hover:text-white')
@@ -816,7 +816,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                           <button
                             type="button"
                             onClick={() => speakGerman(clue.germanWord)}
-                            className="flex-shrink-0 p-1.5 text-slate-300 hover:text-blue-500 rounded-lg hover:bg-blue-50 transition-colors"
+                            className="flex-shrink-0 p-1.5 text-slate-300 hover:text-blue-500 rounded-md hover:bg-blue-50 transition-colors"
                             title="Putar pengucapan"
                           >
                             <Volume2 size={15} />

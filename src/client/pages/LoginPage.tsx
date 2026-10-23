@@ -32,14 +32,14 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
     <div className="min-h-screen bg-neutral flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Card Container */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-xl border border-slate-100 overflow-hidden">
           {/* Header */}
           <div className="bg-primary p-6 text-on-primary text-center relative">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm mb-3 shadow-inner">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-white/10 backdrop-blur-sm mb-3 shadow-inner">
               <BookOpen size={30} className="text-white" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight">DeutschEasier</h1>
-            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/30 border border-white/20 text-xs font-semibold text-blue-100">
+            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm bg-blue-500/30 border border-white/20 text-xs font-semibold text-blue-100">
               <Sparkles size={12} />
               <span>Portal Khusus Guru (Lehrer)</span>
             </div>
@@ -54,7 +54,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
 
             {/* Error state */}
             {error && (
-              <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2.5 text-red-700 text-sm">
+              <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2.5 text-red-700 text-sm">
                 <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -76,7 +76,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Masukkan password..."
                     disabled={loading}
-                    className="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all disabled:opacity-50"
+                    className="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all disabled:opacity-50"
                   />
                   <button
                     type="button"
@@ -96,7 +96,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -111,7 +111,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
 
             {/* Student Callout */}
             <div className="mt-8 pt-6 border-t border-slate-100">
-              <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/60 text-xs leading-relaxed text-amber-900">
+              <div className="p-4 rounded-lg bg-amber-50/70 border border-amber-200/60 text-xs leading-relaxed text-amber-900">
                 <span className="font-semibold block mb-1">🧑‍🎓 Apakah Anda seorang Murid?</span>
                 Anda tidak memerlukan akun untuk belajar. Cukup gunakan tautan skenario yang dibagikan oleh guru Anda beserta Kunci Aksesnya.
               </div>

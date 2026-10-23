@@ -374,7 +374,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate(isEditMode ? '/view/' + editId : '/')}
-          className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+          className="p-2 hover:bg-slate-100 rounded-md transition-colors"
           aria-label="Kembali"
         >
           <ChevronLeft size={20} />
@@ -384,7 +384,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             {isEditMode ? 'Edit Skenario Pembelajaran' : 'Buat Skenario Pembelajaran'}
           </h1>
           {isEditMode && (
-            <span className="text-xs bg-amber-100 text-amber-800 font-semibold px-2.5 py-0.5 rounded-full border border-amber-200">
+            <span className="text-xs bg-amber-100 text-amber-800 font-semibold px-2.5 py-0.5 rounded-sm border border-amber-200">
               Mode Edit
             </span>
           )}
@@ -401,7 +401,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             onChange={e => setPrompt(e.target.value)}
             rows={3}
             placeholder="Contoh: Di sebuah kafe di Berlin, Andi memesan kopi dan strudel..."
-            className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full p-3 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
         </div>
         <div className="flex items-center gap-4">
@@ -410,7 +410,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             <select
               value={cefrLevel}
               onChange={e => setCefrLevel(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               <option value="A1">A1 - Pemula</option>
               <option value="A2">A2 - Dasar</option>
@@ -434,7 +434,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                 if (Number.isNaN(parsed)) return
                 setDialogueCount(Math.min(20, Math.max(1, parsed)))
               }}
-              className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
             <p className="text-label text-slate-400 mt-1">1 - 20 baris</p>
           </div>
@@ -445,7 +445,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             <select
               value={speakerCount}
               onChange={e => setSpeakerCount(parseInt(e.target.value, 10))}
-              className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {[2, 3, 4, 5, 6].map(n => (
                 <option key={n} value={n}>{n} Orang</option>
@@ -494,7 +494,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   type="text"
                   value={editedTitle}
                   onChange={e => setEditedTitle(e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border border-slate-300 rounded-md text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -503,7 +503,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   value={editedSceneDesc}
                   onChange={e => setEditedSceneDesc(e.target.value)}
                   rows={2}
-                  className="w-full p-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
             </div>
@@ -541,7 +541,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   <button
                     type="button"
                     onClick={handleStopAll}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition-all shadow-xs cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition-all shadow-xs cursor-pointer"
                   >
                     <Square size={13} className="fill-rose-700" />
                     <span>Hentikan Audio</span>
@@ -551,7 +551,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                     type="button"
                     onClick={handlePlayAll}
                     disabled={editedDialogue.length === 0}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs hover:shadow cursor-pointer disabled:opacity-50"
                   >
                     <Play size={13} className="fill-white" />
                     <span>Putar Semua Dialog</span>
@@ -560,7 +560,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 p-3 bg-blue-50/60 rounded-xl border border-blue-100 mb-4">
+            <div className="flex flex-col gap-2 p-3 bg-blue-50/60 rounded-lg border border-blue-100 mb-4">
               <span className="text-xs font-semibold text-slate-700">Konfigurasi Persona Karakter ({speakerCount} Orang):</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                 {['A', 'B', 'C', 'D', 'E', 'F'].slice(0, speakerCount).map(letter => {
@@ -590,7 +590,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               {editedDialogue.map((turn, i) => (
                 <div
                   key={i}
-                  className={`flex gap-3 items-start p-3 bg-slate-50 rounded-xl border border-slate-200 transition-all ${
+                  className={`flex gap-3 items-start p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all ${
                     playingIndex === i ? 'ring-2 ring-blue-400 ring-offset-2 shadow-md' : ''
                   }`}
                 >
@@ -682,7 +682,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
             <button
               onClick={addTurn}
-              className="mt-3 w-full py-2 border-2 border-dashed border-slate-300 rounded-xl text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 text-sm"
+              className="mt-3 w-full py-2 border-2 border-dashed border-slate-300 rounded-md text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 text-sm"
             >
               <Plus size={16} /> Tambah Baris Dialog
             </button>
@@ -696,7 +696,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {editedVocab.map((clue, i) => (
-                <div key={i} className="p-3 bg-blue-50 border border-blue-100 rounded-xl relative group">
+                <div key={i} className="p-3 bg-blue-50 border border-blue-100 rounded-lg relative group">
                   <button
                     onClick={() => deleteVocab(i)}
                     title="Hapus vocab"
@@ -731,7 +731,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
             <button
               onClick={addVocab}
-              className="mt-3 w-full py-2 border-2 border-dashed border-blue-200 rounded-xl text-blue-400 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 text-sm"
+              className="mt-3 w-full py-2 border-2 border-dashed border-blue-200 rounded-md text-blue-400 hover:border-blue-400 hover:text-blue-500 transition-colors flex items-center justify-center gap-2 text-sm"
             >
               <Plus size={16} /> Tambah Vocab Clue
             </button>

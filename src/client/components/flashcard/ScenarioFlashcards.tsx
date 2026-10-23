@@ -93,7 +93,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
 
   if (!vocabClues || vocabClues.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 max-w-xl mx-auto shadow-sm my-6">
+      <div className="bg-white rounded-lg p-8 text-center border border-slate-200 max-w-xl mx-auto shadow-sm my-6">
         <p className="text-slate-500 font-medium">Belum ada kosakata untuk skenario ini.</p>
       </div>
     )
@@ -108,7 +108,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
       {/* Top Status & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-sm border border-blue-100">
             🃏 Flashcard Kosakata
           </span>
           <p className="text-xs text-slate-500 mt-1.5">
@@ -123,7 +123,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
             type="button"
             onClick={handleShuffle}
             title="Acak urutan kartu (Mischen)"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition-all shadow-xs cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition-all shadow-xs cursor-pointer active:scale-95"
           >
             <Shuffle size={14} className="text-indigo-600" />
             <span>Acak</span>
@@ -133,7 +133,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           <button
             type="button"
             onClick={() => currentVocab && toggleMastered(currentVocab.germanWord)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shadow-xs cursor-pointer active:scale-95 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all shadow-xs cursor-pointer active:scale-95 ${
               isCurrentMastered
                 ? 'bg-amber-100 text-amber-800 border border-amber-300'
                 : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -151,7 +151,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
       {/* Progress Bar Tipis */}
       <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mb-6">
         <div
-          className="bg-primary h-full transition-all duration-300 rounded-full"
+          className="bg-primary h-full transition-all duration-300 rounded-sm"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -164,7 +164,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
       >
         <div
           key={currentVocabIndex}
-          className="relative w-full h-full rounded-3xl shadow-xl transition-transform duration-500"
+          className="relative w-full h-full rounded-lg shadow-xl transition-transform duration-500"
           style={{
             transformStyle: 'preserve-3d',
             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -172,7 +172,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
         >
           {/* Bagian Depan (Vorderseite) */}
           <div
-            className="absolute inset-0 w-full h-full bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-b from-white via-slate-50/50 to-blue-50/20"
+            className="absolute inset-0 w-full h-full bg-white border border-slate-200/80 rounded-lg p-6 sm:p-8 flex flex-col justify-between shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-b from-white via-slate-50/50 to-blue-50/20"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
@@ -180,11 +180,11 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           >
             {/* Header Depan */}
             <div className="flex items-center justify-between">
-              <span className="text-label font-semibold tracking-wider uppercase text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
+              <span className="text-label font-semibold tracking-wider uppercase text-slate-400 bg-slate-100 px-2.5 py-1 rounded-sm">
                 Vorderseite (Jerman)
               </span>
               {isCurrentMastered && (
-                <span className="flex items-center gap-1 text-label text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 font-semibold">
+                <span className="flex items-center gap-1 text-label text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-sm border border-amber-200 font-semibold">
                   <Star size={12} className="fill-amber-500 text-amber-500" />
                   Dikuasai
                 </span>
@@ -205,7 +205,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
                       speakGerman(currentVocab.germanWord)
                     }
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-all border border-blue-200 active:scale-95 shadow-2xs"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-all border border-blue-200 active:scale-95 shadow-2xs"
                   title="Dengarkan pengucapan kata"
                 >
                   <Volume2 size={16} className="text-blue-600" />
@@ -225,7 +225,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
 
           {/* Bagian Belakang (Rückseite) */}
           <div
-            className="absolute inset-0 w-full h-full bg-slate-900 text-on-primary rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl"
+            className="absolute inset-0 w-full h-full bg-slate-900 text-on-primary rounded-lg p-6 sm:p-8 flex flex-col justify-between shadow-xl"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
@@ -234,7 +234,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           >
             {/* Header Belakang */}
             <div className="flex items-center justify-between">
-              <span className="text-label font-semibold tracking-wider uppercase text-blue-200 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-xs">
+              <span className="text-label font-semibold tracking-wider uppercase text-blue-200 bg-white/10 px-2.5 py-1 rounded-sm backdrop-blur-xs">
                 Rückseite (Arti & Tata Bahasa)
               </span>
               <button
@@ -245,7 +245,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
                     speakGerman(currentVocab.germanWord)
                   }
                 }}
-                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                className="p-1.5 rounded-md bg-white/10 hover:bg-white/20 text-white transition-colors"
                 title="Dengarkan pengucapan kata"
               >
                 <Volume2 size={15} />
@@ -262,7 +262,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
               </h4>
 
               {currentVocab?.grammarTip && (
-                <div className="mt-3 bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 text-left max-w-md mx-auto">
+                <div className="mt-3 bg-white/10 backdrop-blur-md rounded-lg p-3.5 border border-white/15 text-left max-w-md mx-auto">
                   <div className="text-label font-semibold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1">
                     💡 Catatan Tata Bahasa / Kognat:
                   </div>
@@ -290,7 +290,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           type="button"
           onClick={handlePrev}
           disabled={totalCards <= 1}
-          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-all shadow-xs disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-all shadow-xs disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
         >
           <ChevronLeft size={18} />
           <span>Sebelumnya (Zurück)</span>
@@ -300,7 +300,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           type="button"
           onClick={handleNext}
           disabled={totalCards <= 1}
-          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
+          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
         >
           {currentIndex === totalCards - 1 ? (
             <>
@@ -317,7 +317,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
       </div>
 
       {/* Rangkuman Penguasaan */}
-      <div className="mt-6 bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between text-xs text-slate-600">
+      <div className="mt-6 bg-slate-50 border border-slate-200/80 rounded-lg p-3.5 flex items-center justify-between text-xs text-slate-600">
         <div className="flex items-center gap-2">
           <CheckCircle2 size={16} className="text-emerald-500" />
           <span>

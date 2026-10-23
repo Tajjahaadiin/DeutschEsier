@@ -54,7 +54,7 @@ export default function GrammarTopicPicker({ selected, onChange }: GrammarTopicP
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 border border-slate-300 rounded-lg bg-white text-sm text-left hover:border-blue-400 transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 border border-slate-300 rounded-md bg-white text-sm text-left hover:border-blue-400 transition-colors cursor-pointer"
       >
         <span className={selected.length === 0 ? 'text-slate-400' : 'text-slate-700'}>
           {selected.length === 0
@@ -73,7 +73,7 @@ export default function GrammarTopicPicker({ selected, onChange }: GrammarTopicP
       </p>
 
       {open && (
-        <div className="mt-2 max-h-80 overflow-y-auto border border-slate-200 rounded-xl bg-white p-3 space-y-3">
+        <div className="mt-2 max-h-80 overflow-y-auto border border-slate-200 rounded-lg bg-white p-3 space-y-3">
           {[...grouped.entries()].map(([section, topics]) => (
             <div key={section}>
               <p className="text-label font-bold uppercase tracking-wider text-slate-400 mb-1.5">

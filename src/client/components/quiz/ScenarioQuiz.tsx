@@ -422,7 +422,7 @@ export default function ScenarioQuiz({
 
   if (questions.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 max-w-2xl mx-auto shadow-sm my-6">
+      <div className="bg-white rounded-lg p-8 text-center border border-slate-200 max-w-2xl mx-auto shadow-sm my-6">
         <HelpCircle size={40} className="mx-auto text-slate-300 mb-3" />
         <p className="text-slate-600 font-medium">Skenario ini belum memiliki soal kuis.</p>
       </div>
@@ -460,8 +460,8 @@ export default function ScenarioQuiz({
     return (
       <div className="max-w-2xl mx-auto w-full px-4 py-6 space-y-6">
         {/* Banner Rapor Siswa */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl text-center relative overflow-hidden">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold mb-4">
+        <div className="bg-white rounded-lg p-6 sm:p-8 border border-slate-200 shadow-xl text-center relative overflow-hidden">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-slate-100 text-slate-700 text-xs font-semibold mb-4">
             <Award size={15} className="text-amber-500" />
             <span>Rapor Hasil Kuis Siswa</span>
           </div>
@@ -472,7 +472,7 @@ export default function ScenarioQuiz({
           <p className="text-sm text-slate-500 mb-6">{praiseMessage}</p>
 
           {/* Badge Skor Besar */}
-          <div className="inline-flex flex-col items-center justify-center w-36 h-36 rounded-3xl shadow-lg border-4 border-white mb-6 mx-auto transition-transform hover:scale-105 duration-200 bg-primary text-on-primary">
+          <div className="inline-flex flex-col items-center justify-center w-36 h-36 rounded-lg shadow-lg border-4 border-white mb-6 mx-auto transition-transform hover:scale-105 duration-200 bg-primary text-on-primary">
             <span className="text-xs uppercase font-bold tracking-wider text-blue-200">
               Nilai Akhir
             </span>
@@ -486,12 +486,12 @@ export default function ScenarioQuiz({
 
           <div className="flex flex-wrap items-center justify-center gap-3">
             <div
-              className={`px-4 py-1.5 rounded-full text-xs font-bold shadow-xs ${badgeColor}`}
+              className={`px-4 py-1.5 rounded-sm text-xs font-bold shadow-xs ${badgeColor}`}
             >
               {isPassing ? '✓ Lulus KKM (>= 70)' : '✕ Perlu Remedial (< 70)'}
             </div>
             {accessKey && (
-              <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full font-mono font-medium">
+              <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-sm font-mono font-medium">
                 Kunci: {accessKey}
               </span>
             )}
@@ -513,7 +513,7 @@ export default function ScenarioQuiz({
               <button
                 type="button"
                 onClick={() => setResultFilter('all')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                   resultFilter === 'all'
                     ? 'bg-slate-800 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
@@ -525,7 +525,7 @@ export default function ScenarioQuiz({
               <button
                 type="button"
                 onClick={() => setResultFilter('wrong')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                   resultFilter === 'wrong'
                     ? 'bg-rose-600 text-white shadow-xs'
                     : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
@@ -537,7 +537,7 @@ export default function ScenarioQuiz({
               <button
                 type="button"
                 onClick={() => setResultFilter('correct')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                   resultFilter === 'correct'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
@@ -549,7 +549,7 @@ export default function ScenarioQuiz({
           </div>
 
           {filteredGradedAnswers.length === 0 && (
-            <div className="bg-white rounded-2xl p-6 text-center border border-slate-200 text-slate-500 text-xs">
+            <div className="bg-white rounded-lg p-6 text-center border border-slate-200 text-slate-500 text-xs">
               {resultFilter === 'wrong'
                 ? 'Luar biasa! Tidak ada jawaban yang salah. 🎉'
                 : 'Belum ada jawaban yang benar. Tetap semangat! 💪'}
@@ -564,7 +564,7 @@ export default function ScenarioQuiz({
             return (
               <div
                 key={ans.questionId}
-                className={`rounded-2xl p-5 border-2 transition-all shadow-xs ${
+                className={`rounded-lg p-5 border-2 transition-all shadow-xs ${
                   ans.isCorrect
                     ? 'border-emerald-300 bg-emerald-50/70 text-slate-800'
                     : 'border-rose-300 bg-rose-50/80 text-slate-800'
@@ -595,7 +595,7 @@ export default function ScenarioQuiz({
 
                 {/* Tampilan Kalimat Rumpang (jika cloze) */}
                 {ans.type === 'cloze' && (
-                  <div className="bg-white/80 p-3 rounded-xl border border-slate-200 font-mono text-xs sm:text-sm font-bold text-slate-800 mb-3">
+                  <div className="bg-white/80 p-3 rounded-lg border border-slate-200 font-mono text-xs sm:text-sm font-bold text-slate-800 mb-3">
                     {ans.prompt}
                   </div>
                 )}
@@ -604,7 +604,7 @@ export default function ScenarioQuiz({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                   {ans.isCorrect ? (
                     <>
-                      <div className="p-3.5 rounded-xl border bg-emerald-100/70 border-emerald-200 text-emerald-950">
+                      <div className="p-3.5 rounded-lg border bg-emerald-100/70 border-emerald-200 text-emerald-950">
                         <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
                           Jawaban Kamu:
                         </span>
@@ -614,7 +614,7 @@ export default function ScenarioQuiz({
                         </p>
                       </div>
 
-                      <div className="p-3.5 rounded-xl border bg-emerald-100/70 border-emerald-200 text-slate-800">
+                      <div className="p-3.5 rounded-lg border bg-emerald-100/70 border-emerald-200 text-slate-800">
                         <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
                           Kunci Jawaban yang Benar:
                         </span>
@@ -623,7 +623,7 @@ export default function ScenarioQuiz({
                     </>
                   ) : (
                     <>
-                      <div className="p-3.5 rounded-xl border bg-rose-100/70 border-rose-200 text-rose-950">
+                      <div className="p-3.5 rounded-lg border bg-rose-100/70 border-rose-200 text-rose-950">
                         <span className="block text-label font-bold uppercase tracking-wider text-rose-800 mb-1">
                           Jawaban Kamu:
                         </span>
@@ -636,7 +636,7 @@ export default function ScenarioQuiz({
                         </p>
                       </div>
 
-                      <div className="p-3.5 rounded-xl border bg-emerald-100/70 border-emerald-200 text-slate-800">
+                      <div className="p-3.5 rounded-lg border bg-emerald-100/70 border-emerald-200 text-slate-800">
                         <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
                           Kunci Jawaban yang Benar:
                         </span>
@@ -667,7 +667,7 @@ export default function ScenarioQuiz({
                   <button
                     type="button"
                     onClick={() => handlePlayAudio(ans.questionId, ans.audioText, ans.gender)}
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer ${
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-all shadow-2xs cursor-pointer ${
                       isPlayingAudio
                         ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse'
                         : 'bg-white hover:bg-slate-50 text-blue-700 border border-blue-200 active:scale-95'
@@ -688,7 +688,7 @@ export default function ScenarioQuiz({
           <button
             type="button"
             onClick={handleResetQuiz}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md active:scale-98 cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md active:scale-98 cursor-pointer"
           >
             <RotateCcw size={16} />
             <span>Ulangi Kuis (Noch einmal versuchen)</span>
@@ -703,9 +703,9 @@ export default function ScenarioQuiz({
     <div className="max-w-2xl mx-auto w-full px-4 py-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Banner Info Kuis */}
-        <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-3xl shadow-lg">
+        <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-lg shadow-lg">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
+            <span className="px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
               📝 Kuis Interaktif
             </span>
             <span className="text-xs text-blue-200 font-medium">
@@ -719,7 +719,7 @@ export default function ScenarioQuiz({
         </div>
 
         {/* Input Nama Siswa */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 sm:p-5 rounded-lg border border-slate-200 shadow-xs">
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <User size={15} className="text-blue-600" />
             Nama Lengkap Siswa <span className="text-rose-500">*</span>
@@ -730,7 +730,7 @@ export default function ScenarioQuiz({
             value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
             placeholder="Masukkan nama lengkap Anda..."
-            className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
+            className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
           />
           {accessKey && (
             <p className="text-label text-slate-400 mt-2 font-mono">
@@ -741,7 +741,7 @@ export default function ScenarioQuiz({
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+          <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertCircle size={16} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -756,7 +756,7 @@ export default function ScenarioQuiz({
             return (
               <div
                 key={q.id}
-                className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs hover:border-blue-200 transition-colors"
+                className="bg-white p-5 sm:p-6 rounded-lg border border-slate-200 shadow-xs hover:border-blue-200 transition-colors"
               >
                 {/* Header Soal */}
                 <div className="flex items-center justify-between gap-2 mb-3">
@@ -784,7 +784,7 @@ export default function ScenarioQuiz({
                       <button
                         type="button"
                         onClick={() => handleSpeedToggle(q.id)}
-                        className="text-label px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold transition-colors cursor-pointer"
+                        className="text-label px-2 py-1 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold transition-colors cursor-pointer"
                         title="Ubah kecepatan audio (1.0x / 0.8x)"
                       >
                         {currentSpeed}x
@@ -794,7 +794,7 @@ export default function ScenarioQuiz({
                       <button
                         type="button"
                         onClick={() => handlePlayAudio(q.id, q.audioText, q.gender)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
                           isPlaying
                             ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse'
                             : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 active:scale-95'
@@ -805,7 +805,7 @@ export default function ScenarioQuiz({
                       </button>
                     </div>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-label font-medium border border-slate-200">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm bg-slate-100 text-slate-600 text-label font-medium border border-slate-200">
                       ✍️ Murni Teks (Tanpa Audio)
                     </span>
                   )}
@@ -816,7 +816,7 @@ export default function ScenarioQuiz({
 
                 {/* Tampilan Khusus Tipe 2 (Lückentext Sentence) */}
                 {q.type === 'cloze' && q.displayPrompt && (
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-3 font-mono text-sm font-semibold text-slate-800 leading-relaxed">
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 mb-3 font-mono text-sm font-semibold text-slate-800 leading-relaxed">
                     {q.displayPrompt}
                   </div>
                 )}
@@ -834,7 +834,7 @@ export default function ScenarioQuiz({
                         ? 'Ketik kalimat bahasa Jerman yang didengar...'
                         : 'Ketik kata yang hilang di sini...'
                     }
-                    className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
+                    className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
                   />
                 </div>
 
@@ -861,7 +861,7 @@ export default function ScenarioQuiz({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-on-primary font-bold text-sm shadow-md transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-md bg-primary hover:bg-primary/90 text-on-primary font-bold text-sm shadow-md transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
           >
             <Send size={16} />
             <span>{submitting ? 'Memeriksa & Mengirim Jawaban...' : 'Kumpulkan Jawaban Kuis'}</span>

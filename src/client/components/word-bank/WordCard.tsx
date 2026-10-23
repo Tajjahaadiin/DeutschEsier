@@ -17,7 +17,7 @@ export function WordCard({ word, isSelected, onToggle, voiceGender }: { word: an
       </div>
       <div className="flex items-center gap-2 pr-8">
         {word.article && (
-          <span className={`text-xs px-2 py-0.5 rounded-full border ${getArticleColor(word.article)} font-medium`}>
+          <span className={`text-xs px-2 py-0.5 rounded-sm border ${getArticleColor(word.article)} font-medium`}>
             {word.article}
           </span>
         )}
