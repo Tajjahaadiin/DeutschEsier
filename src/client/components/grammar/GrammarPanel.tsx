@@ -9,6 +9,7 @@ import {
   Award,
   GraduationCap,
   Send,
+  PenTool,
 } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
 import { buildQuestions, isAnswerCorrect, type GrammarQuestion } from '../../lib/grammar'
@@ -244,20 +245,22 @@ export default function GrammarPanel({
         <button
           type="button"
           onClick={() => setTab('materi')}
-          className={`px-4 py-2 text-xs sm:text-sm font-bold rounded-md transition-all cursor-pointer ${
+          className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold rounded-md transition-all cursor-pointer ${
             tab === 'materi' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
-          📖 Materi
+          <BookOpen size={14} aria-hidden="true" />
+          <span>Materi</span>
         </button>
         <button
           type="button"
           onClick={() => setTab('latihan')}
-          className={`px-4 py-2 text-xs sm:text-sm font-bold rounded-md transition-all cursor-pointer ${
+          className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold rounded-md transition-all cursor-pointer ${
             tab === 'latihan' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
-          ✍️ Latihan ({questions.length})
+          <PenTool size={14} aria-hidden="true" />
+          <span>Latihan ({questions.length})</span>
         </button>
       </div>
 

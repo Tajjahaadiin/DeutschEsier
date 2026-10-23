@@ -74,7 +74,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="relative px-6 pt-6 pb-4 bg-linear-to-b from-slate-50 to-white border-b border-slate-100">
+        <div className="relative px-6 pt-6 pb-4 bg-slate-50 border-b border-slate-100">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
@@ -160,7 +160,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
           {/* Posisi Mulut & Lidah */}
           <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
             <div className="flex items-center gap-2 text-slate-700 font-semibold mb-1 text-xs">
-              <span>👄</span>
+              <Speech size={15} aria-hidden="true" />
               <span>Posisi Mulut & Lidah</span>
             </div>
             <p className="text-slate-800 leading-relaxed text-xs sm:text-sm">

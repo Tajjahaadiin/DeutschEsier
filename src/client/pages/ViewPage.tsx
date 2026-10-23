@@ -30,6 +30,10 @@ import {
   Clock,
   AlertCircle,
   ShieldCheck,
+  MessageSquare,
+  Layers,
+  FileCheck2,
+  GraduationCap,
 } from 'lucide-react'
 
 interface DialogTurn {
@@ -404,12 +408,14 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                   </span>
                 ) : (
                   <>
-                    <span className="inline-flex items-center gap-1 bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-sm font-medium border border-white/30">
-                      🧑🎓 Ruang Belajar Siswa
+                    <span className="inline-flex items-center gap-1.5 bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-sm font-medium border border-white/30">
+                      <GraduationCap size={13} aria-hidden="true" />
+                      Ruang Belajar Siswa
                     </span>
                     {validKey ? (
-                      <span className="inline-flex items-center gap-1 bg-emerald-400/20 text-emerald-200 text-xs px-2.5 py-0.5 rounded-sm font-mono font-medium border border-emerald-300/30">
-                        🔑 Kunci: {validKey}
+                      <span className="inline-flex items-center gap-1.5 bg-emerald-400/20 text-emerald-200 text-xs px-2.5 py-0.5 rounded-sm font-mono font-medium border border-emerald-300/30">
+                        <Key size={13} aria-hidden="true" />
+                        Kunci: {validKey}
                       </span>
                     ) : null}
                   </>
@@ -523,7 +529,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
             )}
 
             {gateErrorMsg && (
-              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 text-left">
+              <div role="alert" aria-live="assertive" className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 text-left">
                 <AlertCircle size={16} className="shrink-0" />
                 <span>{gateErrorMsg}</span>
               </div>
@@ -585,7 +591,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <span>💬 Dialog Percakapan</span>
+                  <MessageSquare size={15} aria-hidden="true" />
+                  <span>Dialog Percakapan</span>
                 </button>
 
                 {/* Tab 2: Flashcard Kosakata */}
@@ -601,7 +608,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <span>🃏 Flashcard Kata</span>
+                  <Layers size={15} aria-hidden="true" />
+                  <span>Flashcard Kata</span>
                   <span
                     className={`text-xs px-2 py-0.5 rounded-sm font-bold ${
                       activeTab === 'flashcard'
@@ -626,7 +634,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <span>📝 Kuis Pemahaman</span>
+                  <FileCheck2 size={15} aria-hidden="true" />
+                  <span>Kuis Pemahaman</span>
                 </button>
 
                 {/* Tab 4: Grammatik (Materi & Latihan) */}
@@ -638,11 +647,12 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                   }}
                   className={`px-4 py-2 rounded-md text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                     activeTab === 'grammar'
-                      ? 'bg-indigo-600 text-white shadow-xs'
+                      ? 'bg-primary text-on-primary shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
-                  <span>📚 Grammatik</span>
+                  <BookOpen size={15} aria-hidden="true" />
+                  <span>Grammatik</span>
                 </button>
               </div>
             </div>
@@ -749,11 +759,12 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                                   : 'bg-sky-100 text-sky-700')
                               }
                             >
-                              {turnGender === 'female' ? '👩 Wanita' : '👨 Pria'}
+                              {turnGender === 'female' ? 'Wanita' : 'Pria'}
                             </span>
                           )}
                         </div>
                         <p
+                          lang="de"
                           className={
                             'text-base font-semibold leading-snug mb-1 ' +
                             (isA ? 'text-slate-800' : 'text-white')
@@ -803,7 +814,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <Card key={i} className="p-3 bg-slate-50 border-slate-100">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="font-bold text-slate-800 text-sm">
+                            <p lang="de" className="font-bold text-slate-800 text-sm">
                               {clue.germanWord}
                             </p>
                             <p className="text-sm text-slate-600 mt-0.5">

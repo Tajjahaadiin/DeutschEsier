@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { WordCard } from '../components/word-bank/WordCard'
 import { SelectionBasket } from '../components/word-bank/SelectionBasket'
-import { BookOpen, Plus, ExternalLink, Trash2, Clock, Pencil, Key, LogOut } from 'lucide-react'
+import { BookOpen, Plus, ExternalLink, Trash2, Clock, Pencil, Key, LogOut, Languages, Hash, Calendar, GraduationCap } from 'lucide-react'
 import { Card } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { getStoredPersonaId, setStoredPersonaId, type TtsPersonaId } from '../lib/audio'
@@ -89,19 +89,22 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
               onClick={() => navigate('/alphabet')}
               className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             >
-              <span>🔤 Das Alphabet (30)</span>
+              <Languages size={15} aria-hidden="true" />
+              <span>Das Alphabet (30)</span>
             </button>
             <button
               onClick={() => navigate('/nummer')}
               className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             >
-              <span>🔢 die Nummer</span>
+              <Hash size={15} aria-hidden="true" />
+              <span>die Nummer</span>
             </button>
             <button
               onClick={() => navigate('/tage')}
               className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             >
-              <span>📅 die Tage</span>
+              <Calendar size={15} aria-hidden="true" />
+              <span>die Tage</span>
             </button>
             <Button
               onClick={() => navigate('/generate')}
@@ -112,7 +115,8 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
             </Button>
             <div className="h-5 w-px bg-slate-200 mx-0.5 hidden sm:block" />
             <div className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs font-semibold text-blue-700">
-              <span>👨‍🏫 Guru</span>
+              <GraduationCap size={15} aria-hidden="true" />
+              <span>Guru</span>
             </div>
             <button
               onClick={() => logoutTeacher()}
@@ -188,8 +192,8 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                 <option value="">Semua Kategori</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg p-1.5 text-xs">
-                <span className="text-slate-400 px-1 font-medium">Suara:</span>
+              <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg p-1.5 text-base">
+                <span className="text-slate-400 px-1 font-medium text-xs">Suara:</span>
                 <select
                   value={currentPersonaId}
                   onChange={(e) => {
@@ -197,7 +201,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                     setCurrentPersonaId(nextId)
                     setStoredPersonaId(nextId)
                   }}
-                  className="bg-transparent font-semibold text-slate-700 focus:outline-none cursor-pointer"
+                  className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer"
                 >
                   {TTS_PERSONAS.map((p) => (
                     <option key={p.id} value={p.id}>

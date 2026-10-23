@@ -21,7 +21,7 @@ export function WordCard({ word, isSelected, onToggle, personaId }: { word: any,
             {word.article}
           </span>
         )}
-        <h3 className="text-xl font-bold text-slate-800">{word.germanWord}</h3>
+        <h3 lang="de" className="text-xl font-bold text-slate-800">{word.germanWord}</h3>
         <button 
           onClick={(e) => { 
             e.stopPropagation(); 
@@ -44,7 +44,7 @@ export function WordCard({ word, isSelected, onToggle, personaId }: { word: any,
       )}
       
       <div className="mt-2 text-sm text-slate-500">
-        <p className="italic">"{word.exampleSentenceDe}"</p>
+        <p lang="de" className="italic">"{word.exampleSentenceDe}"</p>
         <p>"{word.exampleSentenceId}"</p>
       </div>
     </Card>

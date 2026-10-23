@@ -68,7 +68,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
               <select
                 value={currentPersonaId}
                 onChange={(e) => {
@@ -76,7 +76,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
                   setCurrentPersonaId(nextId)
                   setStoredPersonaId(nextId)
                 }}
-                className="bg-transparent font-semibold text-slate-700 focus:outline-none cursor-pointer px-1 py-0.5"
+                className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
               >
                 {TTS_PERSONAS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -305,8 +305,8 @@ export default function NumberPage({ navigate }: NumberPageProps) {
                     }}
                     className={`rounded-md border-2 p-3 text-center transition-all cursor-grab active:cursor-grabbing ${
                       objectSlot?.noun === obj.noun
-                        ? 'bg-indigo-600 border-indigo-600 text-white'
-                        : 'bg-white border-slate-200 hover:border-indigo-300'
+                        ? 'bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-slate-200 hover:border-blue-300'
                     }`}
                   >
                     <div className="text-2xl">{obj.emoji}</div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, Lock, Eye, EyeOff, Loader2, Sparkles, AlertCircle } from 'lucide-react'
+import { BookOpen, Lock, Eye, EyeOff, Loader2, Sparkles, AlertCircle, GraduationCap } from 'lucide-react'
 import { loginTeacher } from '../lib/auth'
 
 export default function LoginPage({ navigate }: { navigate: (path: string) => void }) {
@@ -54,7 +54,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
 
             {/* Error state */}
             {error && (
-              <div className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-sm">
+              <div role="alert" aria-live="assertive" className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-sm">
                 <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -112,7 +112,10 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
             {/* Student Callout */}
             <div className="mt-8 pt-6 border-t border-slate-100">
               <div className="p-4 rounded-lg bg-amber-50/70 border border-amber-200/60 text-xs leading-relaxed text-amber-900">
-                <span className="font-semibold block mb-1">🧑‍🎓 Apakah Anda seorang Murid?</span>
+                <span className="font-semibold flex items-center gap-1.5 mb-1">
+                  <GraduationCap size={16} aria-hidden="true" />
+                  <span>Apakah Anda seorang Murid?</span>
+                </span>
                 Anda tidak memerlukan akun untuk belajar. Cukup gunakan tautan skenario yang dibagikan oleh guru Anda beserta Kunci Aksesnya.
               </div>
             </div>

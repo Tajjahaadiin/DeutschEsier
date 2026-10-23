@@ -202,7 +202,7 @@ export default function KeyManagerModal({
         {/* Modal Body (Scrollable) */}
         <div className="p-5 overflow-y-auto space-y-6 flex-1">
           {error && (
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+            <div role="alert" aria-live="assertive" className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />
               <span>{error}</span>
             </div>

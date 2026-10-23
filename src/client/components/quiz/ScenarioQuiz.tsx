@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Volume2, CheckCircle2, XCircle, Lightbulb, Award, RotateCcw, Send, AlertCircle, HelpCircle, User, Headphones, FileEdit } from 'lucide-react'
+import { Volume2, CheckCircle2, XCircle, Lightbulb, Award, RotateCcw, Send, AlertCircle, HelpCircle, User, Headphones, FileEdit, FileCheck2 } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
 
 export interface DialogTurn {
@@ -666,7 +666,7 @@ export default function ScenarioQuiz({
                   <div className="mt-3 pt-2.5 border-t border-slate-200/60 text-label text-slate-600 flex flex-col gap-0.5">
                     {ans.indonesianHint && (
                       <span>
-                        🇮🇩 <strong>Arti:</strong> {ans.indonesianHint}
+                        <strong>Arti:</strong> {ans.indonesianHint}
                       </span>
                     )}
                     {ans.grammarTip && (
@@ -720,8 +720,9 @@ export default function ScenarioQuiz({
         {/* Banner Info Kuis */}
         <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-lg shadow-lg">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
-              📝 Kuis Interaktif
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
+              <FileCheck2 size={13} aria-hidden="true" />
+              <span>Kuis Interaktif</span>
             </span>
             <span className="text-xs text-blue-200 font-medium">
               {questions.length} Soal Auto-Grading
@@ -756,7 +757,7 @@ export default function ScenarioQuiz({
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+          <div role="alert" aria-live="assertive" className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertCircle size={16} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -781,7 +782,7 @@ export default function ScenarioQuiz({
                     </span>
                     <span className="text-xs font-bold text-slate-700">
                       {q.type === 'dictation' ? (
-                        <span className="flex items-center gap-1 text-indigo-600">
+                        <span className="flex items-center gap-1 text-blue-600">
                           <Headphones size={13} /> Hörverstehen
                         </span>
                       ) : (
@@ -857,7 +858,7 @@ export default function ScenarioQuiz({
                 <div className="text-label text-slate-500 space-y-0.5 pt-1">
                   {q.indonesianHint && (
                     <p>
-                      🇮🇩 <strong>Arti / Konteks:</strong> {q.indonesianHint}
+                      <strong>Arti / Konteks:</strong> {q.indonesianHint}
                     </p>
                   )}
                   {q.grammarTip && (

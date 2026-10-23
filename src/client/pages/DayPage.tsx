@@ -59,7 +59,7 @@ export default function DayPage({ navigate }: DayPageProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
               <select
                 value={currentPersonaId}
                 onChange={(e) => {
@@ -67,7 +67,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                   setCurrentPersonaId(nextId)
                   setStoredPersonaId(nextId)
                 }}
-                className="bg-transparent font-semibold text-slate-700 focus:outline-none cursor-pointer px-1 py-0.5"
+                className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
               >
                 {TTS_PERSONAS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -114,7 +114,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                   <CalendarDays size={18} />
                   <h2 className="text-xl sm:text-2xl font-extrabold">{month.german}</h2>
                 </div>
-                <p className="text-xs text-indigo-200 mt-0.5">
+                <p className="text-xs text-blue-200 mt-0.5">
                   {month.meaningId} {year}
                 </p>
                 <button
@@ -221,7 +221,7 @@ export default function DayPage({ navigate }: DayPageProps) {
         {/* ============ BONUS: KONTEKS WAKTU ============ */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <Clock size={18} className="text-indigo-500" />
+            <Clock size={18} className="text-slate-500" />
             <h3 className="text-sm font-extrabold text-slate-800">Zeitangaben — Konteks Waktu</h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -230,7 +230,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                 key={t.german}
                 type="button"
                 onClick={() => handlePlay(t.german)}
-                className="bg-white rounded-md border border-slate-200 p-3 text-left hover:border-indigo-300 hover:shadow-sm transition-all cursor-pointer"
+                className="bg-white rounded-md border border-slate-200 p-3 text-left hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
@@ -240,7 +240,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                   </div>
                   <Volume2
                     size={14}
-                    className={playing === t.german ? 'animate-pulse text-indigo-500' : 'text-slate-300'}
+                    className={playing === t.german ? 'animate-pulse text-blue-600' : 'text-slate-300'}
                   />
                 </div>
               </button>

@@ -459,7 +459,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         </div>
 
         {error && (
-          <div className="text-rose-600 text-sm bg-rose-50 border border-rose-200 p-3 rounded-lg">
+          <div role="alert" aria-live="assertive" className="text-rose-600 text-sm bg-rose-50 border border-rose-200 p-3 rounded-lg">
             {error}
           </div>
         )}

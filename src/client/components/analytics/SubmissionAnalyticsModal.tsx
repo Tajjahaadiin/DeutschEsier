@@ -15,6 +15,8 @@ import {
   BarChart3,
   HelpCircle,
   Lightbulb,
+  FileCheck2,
+  BookOpen,
 } from 'lucide-react'
 import { getAuthHeaders } from '../../lib/auth'
 import { speakGerman } from '../../lib/audio'
@@ -168,7 +170,7 @@ export default function SubmissionAnalyticsModal({
       label: '0–40',
       sublabel: 'Perlu Remedial',
       count: distribution['0-40'],
-      color: 'from-rose-500 to-rose-600',
+      color: 'bg-rose-600',
       textColor: 'text-rose-600',
     },
     {
@@ -176,7 +178,7 @@ export default function SubmissionAnalyticsModal({
       label: '41–60',
       sublabel: 'Cukup',
       count: distribution['41-60'],
-      color: 'from-amber-400 to-amber-500',
+      color: 'bg-amber-500',
       textColor: 'text-amber-600',
     },
     {
@@ -184,7 +186,7 @@ export default function SubmissionAnalyticsModal({
       label: '61–80',
       sublabel: 'Baik',
       count: distribution['61-80'],
-      color: 'from-sky-500 to-blue-600',
+      color: 'bg-blue-600',
       textColor: 'text-blue-600',
     },
     {
@@ -192,7 +194,7 @@ export default function SubmissionAnalyticsModal({
       label: '81–100',
       sublabel: 'Sangat Baik',
       count: distribution['81-100'],
-      color: 'from-emerald-500 to-green-600',
+      color: 'bg-emerald-600',
       textColor: 'text-emerald-600',
     },
   ]
@@ -229,7 +231,7 @@ export default function SubmissionAnalyticsModal({
         {/* Modal Body (Scrollable) */}
         <div className="p-5 overflow-y-auto space-y-6 flex-1">
           {error && (
-            <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+            <div role="alert" aria-live="assertive" className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
               {error}
             </div>
           )}
@@ -238,23 +240,27 @@ export default function SubmissionAnalyticsModal({
           {!loading && !selectedSubmission && (
             <div className="flex flex-wrap items-center gap-2">
               {([
-                { key: 'all', label: 'Semua', count: submissions.length },
-                { key: 'quiz', label: '📝 Kuis', count: byKind?.quiz.count ?? 0 },
-                { key: 'grammar', label: '📚 Grammatik', count: byKind?.grammar.count ?? 0 },
-              ] as const).map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  onClick={() => setKindFilter(f.key)}
-                  className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                    kindFilter === f.key
-                      ? 'bg-slate-800 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
-                  }`}
-                >
-                  {f.label} ({f.count})
-                </button>
-              ))}
+                { key: 'all', label: 'Semua', count: submissions.length, icon: null },
+                { key: 'quiz', label: 'Kuis', count: byKind?.quiz.count ?? 0, icon: FileCheck2 },
+                { key: 'grammar', label: 'Grammatik', count: byKind?.grammar.count ?? 0, icon: BookOpen },
+              ] as const).map((f) => {
+                const Icon = f.icon
+                return (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setKindFilter(f.key)}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                      kindFilter === f.key
+                        ? 'bg-slate-800 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                    }`}
+                  >
+                    {Icon && <Icon size={13} aria-hidden="true" />}
+                    <span>{f.label} ({f.count})</span>
+                  </button>
+                )
+              })}
             </div>
           )}
 
@@ -421,7 +427,7 @@ export default function SubmissionAnalyticsModal({
                         <div className="text-label text-slate-500 pt-1 space-y-0.5 border-t border-slate-200/60">
                           {ans.indonesianHint && (
                             <div>
-                              🇮🇩 <strong>Arti:</strong> {ans.indonesianHint}
+                              <strong>Arti:</strong> {ans.indonesianHint}
                             </div>
                           )}
                           {ans.grammarTip && (
@@ -458,12 +464,12 @@ export default function SubmissionAnalyticsModal({
                 {/* Rata-Rata Nilai */}
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
-                    <TrendingUp size={16} className="text-indigo-600" />
+                    <TrendingUp size={16} className="text-blue-600" />
                     <span className="text-xs font-semibold">
                       Rata-Rata
                     </span>
                   </div>
-                  <div className="text-2xl font-extrabold text-indigo-600">
+                  <div className="text-2xl font-extrabold text-blue-600">
                     {activeStats?.averageScore || 0}
                     <span className="text-xs font-normal text-slate-400">/100</span>
                   </div>
@@ -536,7 +542,7 @@ export default function SubmissionAnalyticsModal({
                           {/* Batang Diagram */}
                           <div className="w-full max-w-[56px] bg-slate-100 rounded-lg overflow-hidden flex items-end h-32 sm:h-36 p-1">
                             <div
-                              className={`w-full bg-gradient-to-t ${item.color} rounded-lg transition-all duration-500 shadow-xs`}
+                              className={`w-full ${item.color} rounded-md transition-all duration-500 shadow-xs`}
                               style={{ height: `${heightPercent}%` }}
                             />
                           </div>

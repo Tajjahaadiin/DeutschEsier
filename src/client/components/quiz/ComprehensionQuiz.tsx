@@ -200,23 +200,23 @@ export default function ComprehensionQuiz({
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
               <CheckCircle2 size={12} aria-hidden="true" /> Richtig oder Falsch
             </span>
-            <span className="text-xs text-indigo-100 font-medium">
+            <span className="text-xs text-blue-200 font-medium">
               Level {cefrLevel} · {questions.length} soal
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-extrabold mb-1">Kuis Pemahaman Skenario</h2>
-          <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed opacity-90">
+          <p className="text-xs sm:text-sm text-blue-100 leading-relaxed opacity-90">
             Nilai apakah setiap pernyataan <strong>sesuai (Richtig)</strong> atau{' '}
             <strong>tidak sesuai (Falsch)</strong> dengan dialog.
           </p>
           {sessionTitle && (
-            <p className="text-label text-indigo-200/80 mt-2">Skenario: {sessionTitle}</p>
+            <p className="text-label text-blue-200/80 mt-2">Skenario: {sessionTitle}</p>
           )}
         </div>
 
         <div className="bg-white p-4 sm:p-5 rounded-lg border border-slate-200 shadow-xs">
           <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-            <User size={15} className="text-indigo-600" />
+            <User size={15} className="text-blue-600" />
             Nama Lengkap Siswa <span className="text-rose-500">*</span>
           </label>
           <input
@@ -225,12 +225,12 @@ export default function ComprehensionQuiz({
             value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
             placeholder="Masukkan nama lengkap Anda..."
-            className="w-full text-base px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
+            className="w-full text-base px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
           />
         </div>
 
         {errorMessage && (
-          <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+          <div role="alert" aria-live="assertive" className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertCircle size={16} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
@@ -246,11 +246,11 @@ export default function ComprehensionQuiz({
               >
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex items-start gap-2 min-w-0">
-                    <span className="w-6 h-6 shrink-0 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">
+                    <span className="w-6 h-6 shrink-0 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">
                       {idx + 1}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 leading-snug">
+                      <p lang="de" className="text-sm font-semibold text-slate-800 leading-snug">
                         {q.statement}
                       </p>
                       <p className="text-xs text-slate-500 mt-1">{q.indonesianText}</p>
@@ -259,12 +259,12 @@ export default function ComprehensionQuiz({
                   <button
                     type="button"
                     onClick={() => handlePlay(idx, q.statement)}
-                    className="shrink-0 p-1.5 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                    className="shrink-0 p-1.5 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
                     title="Dengarkan pernyataan"
                   >
                     <Volume2
                       size={16}
-                      className={playingIndex === idx ? 'animate-pulse text-indigo-600' : ''}
+                      className={playingIndex === idx ? 'animate-pulse text-blue-600' : ''}
                     />
                   </button>
                 </div>

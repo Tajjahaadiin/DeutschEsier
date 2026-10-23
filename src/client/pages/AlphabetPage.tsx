@@ -100,7 +100,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
           {/* Voice & Speed Controls */}
           <div className="flex items-center gap-2">
             {/* Persona Selector */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
               <select
                 value={currentPersonaId}
                 onChange={(e) => {
@@ -108,7 +108,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                   setCurrentPersonaId(nextId)
                   setStoredPersonaId(nextId)
                 }}
-                className="bg-transparent font-semibold text-slate-700 focus:outline-none cursor-pointer px-1 py-0.5"
+                className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
               >
                 {TTS_PERSONAS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -162,7 +162,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
             }`}
           >
             <BookOpen size={16} />
-            <span>🔤 Kartu Alfabet (30)</span>
+            <span>Kartu Alfabet (30)</span>
           </button>
           <button
             onClick={() => setActiveTab('trainer')}
@@ -173,7 +173,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
             }`}
           >
             <Sparkles size={16} />
-            <span>🗣️ Buchstabier-Trainer</span>
+            <span>Buchstabier-Trainer</span>
           </button>
         </div>
 
@@ -266,7 +266,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
             </div>
 
             {/* Quick Helper Banner */}
-            <div className="mb-6 p-4 rounded-lg bg-linear-to-r from-blue-50 via-sky-50 to-indigo-50 border border-blue-200/80 flex items-center justify-between gap-4">
+            <div className="mb-6 p-4 rounded-lg bg-blue-50/60 border border-blue-200 flex items-center justify-between gap-4">
               <div className="text-xs text-slate-700 space-y-1">
                 <p className="font-semibold text-blue-900 flex items-center gap-1.5">
                   <Sparkles size={14} className="text-blue-600" />

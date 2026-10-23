@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Volume2, ChevronLeft, ChevronRight, Shuffle, RotateCw, Star, CheckCircle2, Lightbulb } from 'lucide-react'
+import { Volume2, ChevronLeft, ChevronRight, Shuffle, RotateCw, Star, CheckCircle2, Lightbulb, Layers } from 'lucide-react'
 import { speakGerman, stopSpeech } from '../../lib/audio'
 
 export interface VocabClueItem {
@@ -108,8 +108,9 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
       {/* Top Status & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-sm border border-blue-100">
-            🃏 Flashcard Kosakata
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-sm border border-blue-100">
+            <Layers size={13} aria-hidden="true" />
+            <span>Flashcard Kosakata</span>
           </span>
           <p className="text-xs text-slate-500 mt-1.5">
             Kartu <span className="font-bold text-slate-800">{currentIndex + 1}</span> dari{' '}
@@ -125,7 +126,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
             title="Acak urutan kartu (Mischen)"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition-all shadow-xs cursor-pointer active:scale-95"
           >
-            <Shuffle size={14} className="text-indigo-600" />
+            <Shuffle size={14} className="text-slate-500" />
             <span>Acak</span>
           </button>
 
@@ -172,7 +173,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
         >
           {/* Bagian Depan (Vorderseite) */}
           <div
-            className="absolute inset-0 w-full h-full bg-white border border-slate-200/80 rounded-lg p-6 sm:p-8 flex flex-col justify-between shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-b from-white via-slate-50/50 to-blue-50/20"
+            className="absolute inset-0 w-full h-full bg-white border border-slate-200 rounded-lg p-6 sm:p-8 flex flex-col justify-between shadow-xs transition-shadow"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
@@ -218,7 +219,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
             <div className="text-center pt-3 border-t border-slate-100">
               <p className="text-xs text-slate-400 flex items-center justify-center gap-1.5 font-medium">
                 <RotateCw size={13} className="text-slate-400" />
-                👆 Klik untuk membalik kartu (Klick zum Umdrehen)
+                Klik untuk membalik kartu (Klick zum Umdrehen)
               </p>
             </div>
           </div>
@@ -277,7 +278,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
             <div className="text-center pt-3 border-t border-white/10">
               <p className="text-xs text-blue-200/80 flex items-center justify-center gap-1.5 font-medium">
                 <RotateCw size={13} />
-                👆 Klik untuk membalik kartu kembali
+                Klik untuk membalik kartu kembali
               </p>
             </div>
           </div>

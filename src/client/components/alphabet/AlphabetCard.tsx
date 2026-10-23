@@ -77,7 +77,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
 
       {/* Main Letter Display */}
       <div className="text-center my-2">
-        <div className="flex items-baseline justify-center gap-1">
+        <div lang="de" className="flex items-baseline justify-center gap-1">
           <span className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight transition-transform group-hover:scale-105">
             {item.letter}
           </span>
@@ -88,7 +88,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
 
         {/* German Name & IPA */}
         <div className="mt-1 flex items-center justify-center gap-2">
-          <span className="font-bold text-slate-700 text-base">
+          <span lang="de" className="font-bold text-slate-700 text-base">
             &quot;{item.name}&quot;
           </span>
           <span className="text-xs font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
