@@ -110,6 +110,7 @@ export default function GrammarPanel({
         kindLabel: 'Tata Bahasa',
         legacyKind: undefined as 'sentence' | 'concept' | undefined,
         isAi: true,
+        topicId: q.topicId,
       }))
     }
     return legacyQuestions.map((q) => ({
@@ -123,6 +124,7 @@ export default function GrammarPanel({
       kindLabel: q.kind === 'sentence' ? 'Kalimat Skenario' : 'Konsep Tata Bahasa',
       legacyKind: q.kind as 'sentence' | 'concept' | undefined,
       isAi: false,
+      topicId: q.topicIds?.[0],
     }))
   }, [usingAiQuestions, aiQuestions, legacyQuestions])
 
@@ -508,13 +510,18 @@ export default function GrammarPanel({
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
                       {idx + 1}
                     </span>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       {q.kindLabel}
                     </span>
+                    {q.topicId && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
+                        {q.topicId}
+                      </span>
+                    )}
                   </div>
                   {submitted && (
                     <span

@@ -100,8 +100,15 @@ export default function GrammarTopicPicker({ selected, onChange }: GrammarTopicP
                         className="mt-0.5 cursor-pointer"
                       />
                       <span className="min-w-0">
-                        <span className="block text-xs font-semibold text-slate-700">
-                          {topic.german}
+                        <span className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-semibold text-slate-700">
+                            {topic.german}
+                          </span>
+                          {!topic.latihanCategory && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-medium">
+                              materi & dialog
+                            </span>
+                          )}
                         </span>
                         <span className="block text-[11px] text-slate-500">{topic.nameId}</span>
                       </span>
