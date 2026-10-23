@@ -7,6 +7,7 @@ export interface DialogTurn {
   germanText: string
   indonesianText: string
   gender?: 'female' | 'male'
+  personaId?: string
 }
 
 export interface VocabClue {
@@ -30,6 +31,8 @@ interface Question {
   displayPrompt?: string
   audioText: string
   gender: 'female' | 'male'
+  /** Persona pembicara aslinya, bila sesi dibuat setelah ADR-0003. */
+  personaId?: string
   indonesianHint: string
   grammarTip?: string
   correctAnswer: string
@@ -49,6 +52,7 @@ interface GradedAnswer {
   grammarTip?: string
   audioText: string
   gender: 'female' | 'male'
+  personaId?: string
 }
 
 function transliterateGerman(str: string): string {
@@ -136,6 +140,7 @@ export default function ScenarioQuiz({
         prompt: `Dengarkan ucapan ${turn.speaker}, lalu ketik kalimat lengkap dalam bahasa Jerman yang Anda dengar:`,
         audioText: turn.germanText,
         gender,
+        personaId: turn.personaId,
         indonesianHint: turn.indonesianText,
         correctAnswer: turn.germanText,
       })
@@ -310,10 +315,11 @@ export default function ScenarioQuiz({
     gradedAnswers: GradedAnswer[]
   } | null>(null)
 
-  const handlePlayAudio = (qId: string, text: string, gender: 'female' | 'male') => {
+  const handlePlayAudio = (qId: string, text: string, gender: 'female' | 'male', personaId?: string) => {
     const speed = playbackSpeed[qId] ?? 1.0
     setPlayingAudioId(qId)
     speakGerman(text, {
+      personaId,
       gender,
       rate: speed,
       onEnd: () => setPlayingAudioId(null),
@@ -368,6 +374,7 @@ export default function ScenarioQuiz({
           grammarTip: q.grammarTip,
           audioText: q.audioText,
           gender: q.gender,
+          personaId: q.personaId,
         }
       })
 
@@ -674,7 +681,7 @@ export default function ScenarioQuiz({
                 <div className="mt-3.5 pt-3 border-t border-slate-200/70 flex items-center justify-end">
                   <button
                     type="button"
-                    onClick={() => handlePlayAudio(ans.questionId, ans.audioText, ans.gender)}
+                    onClick={() => handlePlayAudio(ans.questionId, ans.audioText, ans.gender, ans.personaId)}
                     className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-all shadow-2xs cursor-pointer ${
                       isPlayingAudio
                         ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse'
@@ -801,7 +808,7 @@ export default function ScenarioQuiz({
                       {/* Tombol Play Audio */}
                       <button
                         type="button"
-                        onClick={() => handlePlayAudio(q.id, q.audioText, q.gender)}
+                        onClick={() => handlePlayAudio(q.id, q.audioText, q.gender, q.personaId)}
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
                           isPlaying
                             ? 'bg-rose-100 text-rose-700 border border-rose-300 animate-pulse'

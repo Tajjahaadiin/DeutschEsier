@@ -225,17 +225,17 @@ export default function GrammarPanel({
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
             <BookOpen size={12} aria-hidden="true" /> Grammatik
           </span>
-          <span className="text-xs text-indigo-200 font-medium">
+          <span className="text-xs text-blue-200 font-medium">
             {grammarPatterns.length} pola · {questions.length} soal latihan
           </span>
         </div>
         <h2 className="text-xl sm:text-2xl font-extrabold mb-1">Belajar Tata Bahasa Skenario</h2>
-        <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed opacity-90">
+        <p className="text-xs sm:text-sm text-blue-100 leading-relaxed opacity-90">
           Pelajari pola kalimat dari skenario ini, lalu uji pemahamanmu dengan latihan{' '}
           <strong>Richtig oder Falsch</strong> (benar atau salah).
         </p>
         {sessionTitle && (
-          <p className="text-label text-indigo-200/80 mt-2">Skenario: {sessionTitle}</p>
+          <p className="text-label text-blue-200/80 mt-2">Skenario: {sessionTitle}</p>
         )}
       </div>
 
@@ -245,7 +245,7 @@ export default function GrammarPanel({
           type="button"
           onClick={() => setTab('materi')}
           className={`px-4 py-2 text-xs sm:text-sm font-bold rounded-md transition-all cursor-pointer ${
-            tab === 'materi' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-700'
+            tab === 'materi' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           📖 Materi
@@ -254,7 +254,7 @@ export default function GrammarPanel({
           type="button"
           onClick={() => setTab('latihan')}
           className={`px-4 py-2 text-xs sm:text-sm font-bold rounded-md transition-all cursor-pointer ${
-            tab === 'latihan' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-700'
+            tab === 'latihan' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
           ✍️ Latihan ({questions.length})
@@ -289,7 +289,7 @@ export default function GrammarPanel({
                     <h3 className="font-bold text-slate-800 text-sm sm:text-base">
                       {pattern.name}
                     </h3>
-                    <span className="text-label px-2 py-0.5 rounded-sm bg-indigo-50 text-indigo-700 font-bold border border-indigo-100">
+                    <span className="text-label px-2 py-0.5 rounded-sm bg-blue-50 text-blue-700 font-bold border border-blue-100">
                       {pattern.nameId}
                     </span>
                   </div>
@@ -375,7 +375,7 @@ export default function GrammarPanel({
                         <h4 className="font-bold text-slate-800 text-sm sm:text-base">
                           {topic.name}
                         </h4>
-                        <span className="text-label px-2 py-0.5 rounded-sm bg-violet-50 text-violet-700 font-bold border border-violet-100">
+                        <span className="text-label px-2 py-0.5 rounded-sm bg-blue-50 text-blue-700 font-bold border border-blue-100">
                           {topic.nameId}
                         </span>
                       </div>
@@ -402,12 +402,12 @@ export default function GrammarPanel({
                               <button
                                 type="button"
                                 onClick={() => handlePlay(ex.german)}
-                                className="shrink-0 p-1 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                                className="shrink-0 p-1 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
                                 title="Dengarkan contoh"
                               >
                                 <Volume2
                                   size={14}
-                                  className={playingWord === ex.german ? 'animate-pulse text-indigo-600' : ''}
+                                  className={playingWord === ex.german ? 'animate-pulse text-blue-600' : ''}
                                 />
                               </button>
                             </div>
@@ -461,7 +461,7 @@ export default function GrammarPanel({
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
                     placeholder="Nama lengkap siswa..."
-                    className="w-full text-base px-3 py-2 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-slate-400"
+                    className="w-full text-base px-3 py-2 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-400"
                   />
                   {saveError && (
                     <p className="text-label text-rose-600 mt-1.5">{saveError}</p>
@@ -470,7 +470,7 @@ export default function GrammarPanel({
                     type="button"
                     onClick={handleSaveResult}
                     disabled={saving || studentName.trim() === ''}
-                    className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <Send size={13} />
                     <span>{saving ? 'Menyimpan...' : 'Simpan Hasil Latihan'}</span>
@@ -515,14 +515,14 @@ export default function GrammarPanel({
               >
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center shrink-0">
                       {idx + 1}
                     </span>
                     <span className="text-label font-bold text-slate-500">
                       {q.kindLabel}
                     </span>
                     {q.topicId && (
-                      <span className="text-label px-2 py-0.5 rounded-sm bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
+                      <span className="text-label px-2 py-0.5 rounded-sm bg-blue-50 text-blue-700 font-semibold border border-blue-100">
                         {q.topicId}
                       </span>
                     )}
@@ -598,8 +598,8 @@ export default function GrammarPanel({
                             : showAsWrong
                             ? 'bg-rose-600 border-rose-600 text-white'
                             : selected
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-slate-300 text-slate-700 hover:border-indigo-400 hover:bg-indigo-50'
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : 'bg-white border-slate-300 text-slate-700 hover:border-blue-400 hover:bg-blue-50'
                         }`}
                       >
                         {choice === 'richtig' ? (
