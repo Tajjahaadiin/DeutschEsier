@@ -16,7 +16,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/db/seed.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "tts:smoke": "tsx scripts/check-tts-voices.ts"
   },
   "dependencies": {
     "@google/genai": "^0.2.0",
