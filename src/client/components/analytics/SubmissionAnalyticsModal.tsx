@@ -14,6 +14,7 @@ import {
   Key,
   BarChart3,
   HelpCircle,
+  Lightbulb,
 } from 'lucide-react'
 import { getAuthHeaders } from '../../lib/auth'
 import { speakGerman } from '../../lib/audio'
@@ -425,7 +426,7 @@ export default function SubmissionAnalyticsModal({
                           )}
                           {ans.grammarTip && (
                             <div className="text-amber-700">
-                              💡 <strong>Tip Grammar:</strong> {ans.grammarTip}
+                              <Lightbulb size={12} className="inline -mt-0.5" aria-hidden="true" /> <strong>Tip Grammar:</strong> {ans.grammarTip}
                             </div>
                           )}
                         </div>

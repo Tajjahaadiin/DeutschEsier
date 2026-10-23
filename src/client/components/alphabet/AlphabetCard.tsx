@@ -70,7 +70,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
             title="Sering salah diucapkan lidah Indonesia"
           >
             <AlertTriangle size={11} />
-            ⚠️ Kritis
+            Kritis
           </span>
         )}
       </div>

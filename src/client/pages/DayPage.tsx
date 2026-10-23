@@ -170,7 +170,7 @@ export default function DayPage({ navigate }: DayPageProps) {
                   <span className={`text-sm font-bold ${holiday ? 'text-rose-700' : 'text-slate-700'}`}>
                     {day}
                   </span>
-                  {holiday && <span className="text-label text-rose-600 font-semibold">🎉</span>}
+                  {holiday && <PartyPopper size={12} className="text-rose-600" aria-label="Hari libur" />}
                 </button>
               )
             })}
@@ -181,7 +181,9 @@ export default function DayPage({ navigate }: DayPageProps) {
             <span className="text-label text-slate-500">
               Klik tanggal untuk mendengar hari + tanggalnya dalam bahasa Jerman.
             </span>
-            <span className="text-label text-rose-600 font-semibold">🎉 = hari libur</span>
+            <span className="text-label text-rose-600 font-semibold flex items-center gap-1">
+              <PartyPopper size={12} aria-hidden="true" /> = hari libur
+            </span>
           </div>
         </div>
 

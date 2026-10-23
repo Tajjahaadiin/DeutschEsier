@@ -3,6 +3,7 @@ import {
   BookOpen,
   CheckCircle2,
   XCircle,
+  Lightbulb,
   Volume2,
   RotateCcw,
   Award,
@@ -221,8 +222,8 @@ export default function GrammarPanel({
       {/* Header */}
       <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-lg shadow-lg">
         <div className="flex items-center gap-2 mb-2">
-          <span className="px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
-            📚 Grammatik
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
+            <BookOpen size={12} aria-hidden="true" /> Grammatik
           </span>
           <span className="text-xs text-indigo-200 font-medium">
             {grammarPatterns.length} pola · {questions.length} soal latihan
@@ -412,7 +413,7 @@ export default function GrammarPanel({
                             </div>
                             <p className="text-xs text-slate-600 mt-1 italic">{ex.indonesian}</p>
                             {ex.note && (
-                              <p className="text-label text-amber-800 mt-1.5">💡 {ex.note}</p>
+                              <p className="text-label text-amber-800 mt-1.5"><Lightbulb size={12} className="inline -mt-0.5" aria-hidden="true" /> {ex.note}</p>
                             )}
                           </div>
                         ))}
@@ -601,7 +602,15 @@ export default function GrammarPanel({
                             : 'bg-white border-slate-300 text-slate-700 hover:border-indigo-400 hover:bg-indigo-50'
                         }`}
                       >
-                        {choice === 'richtig' ? '✓ Richtig' : '✕ Falsch'}
+                        {choice === 'richtig' ? (
+                          <>
+                            <CheckCircle2 size={12} aria-hidden="true" /> Richtig
+                          </>
+                        ) : (
+                          <>
+                            <XCircle size={12} aria-hidden="true" /> Falsch
+                          </>
+                        )}
                       </button>
                     )
                   })}
@@ -615,7 +624,7 @@ export default function GrammarPanel({
                       {q.isCorrect ? 'Richtig (benar)' : 'Falsch (salah)'}
                     </p>
                     <p className="text-label text-amber-800 mt-1 leading-relaxed">
-                      💡 {q.explanation}
+                      <Lightbulb size={12} className="inline -mt-0.5" aria-hidden="true" /> {q.explanation}
                     </p>
                     {/* Selalu tampilkan bentuk yang benar agar kalimat yang salah
                         selalu berpasangan dengan koreksinya. */}

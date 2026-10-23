@@ -151,7 +151,7 @@ describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
     )
     openLatihan()
 
-    fireEvent.click(screen.getByRole('button', { name: '✓ Richtig' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Richtig' }))
     fireEvent.click(screen.getByRole('button', { name: /Periksa Jawaban/ }))
 
     expect(screen.getByText(/Putzen memakai haben/)).toBeTruthy()
@@ -182,7 +182,7 @@ describe('GrammarPanel — tab Latihan (soal tata bahasa AI)', () => {
 
     expect(screen.getByRole('button', { name: /Latihan/ })).toBeTruthy()
     // Ada beberapa soal, jadi tombol Richtig muncul lebih dari satu.
-    expect(screen.getAllByRole('button', { name: '✓ Richtig' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Richtig' }).length).toBeGreaterThan(0)
   })
 
   it('tetap berfungsi tanpa prop level apa pun', () => {
@@ -236,7 +236,7 @@ describe('GrammarPanel — K4: submit parsial tidak boleh lolos', () => {
     openLatihan()
 
     // Jawab hanya soal pertama, lalu coba periksa.
-    fireEvent.click(screen.getAllByRole('button', { name: '✓ Richtig' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Richtig' })[0])
     fireEvent.click(screen.getByRole('button', { name: /Periksa Jawaban/ }))
 
     // Harus ada pesan bahwa masih ada soal belum dijawab, dan hasil TIDAK terbuka.
@@ -250,8 +250,8 @@ describe('GrammarPanel — K4: submit parsial tidak boleh lolos', () => {
 
     // Jawab SEMUA soal. Soal 1 (kunci Falsch) dijawab "Richtig" -> salah.
     // Soal 2 (kunci Richtig) dijawab "Richtig" -> benar.
-    fireEvent.click(screen.getAllByRole('button', { name: '✓ Richtig' })[0])
-    fireEvent.click(screen.getAllByRole('button', { name: '✓ Richtig' })[1])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Richtig' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Richtig' })[1])
     fireEvent.click(screen.getByRole('button', { name: /Periksa Jawaban/ }))
 
     fireEvent.change(screen.getByPlaceholderText(/Nama lengkap/i), {

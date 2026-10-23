@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Play, Square, Sparkles, Volume2, RotateCcw, Plus, Pencil, Trash2, Settings, X } from 'lucide-react'
+import { Play, Square, Sparkles, Volume2, RotateCcw, Plus, Pencil, Trash2, Settings, X, Star } from 'lucide-react'
 import { GERMAN_ALPHABET, GermanAlphabetItem } from '../../data/alphabetData'
 import { speakGerman, type VoiceGender } from '../../lib/audio'
 
@@ -348,7 +348,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
               className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer"
               title="Simpan ke Daftar Kata"
             >
-              <span>⭐ Simpan ke Daftar Kata</span>
+              <Star size={14} aria-hidden="true" /> Simpan ke Daftar Kata
             </button>
           )}
         </div>

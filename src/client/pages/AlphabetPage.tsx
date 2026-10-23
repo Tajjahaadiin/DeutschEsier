@@ -262,7 +262,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                   }`}
                 >
                   <AlertTriangle size={13} />
-                  <span>⚠️ 7 Kritis Lidah RI ({counts.critical})</span>
+                  <span>7 Kritis Lidah RI ({counts.critical})</span>
                 </button>
               </div>
             </div>

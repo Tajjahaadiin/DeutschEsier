@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Volume2, ChevronLeft, ChevronRight, Shuffle, RotateCw, Star, CheckCircle2 } from 'lucide-react'
+import { Volume2, ChevronLeft, ChevronRight, Shuffle, RotateCw, Star, CheckCircle2, Lightbulb } from 'lucide-react'
 import { speakGerman, stopSpeech } from '../../lib/audio'
 
 export interface VocabClueItem {
@@ -264,7 +264,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
               {currentVocab?.grammarTip && (
                 <div className="mt-3 bg-white/10 backdrop-blur-md rounded-lg p-3.5 border border-white/15 text-left max-w-md mx-auto">
                   <div className="text-label font-semibold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1">
-                    💡 Catatan Tata Bahasa / Kognat:
+                    <Lightbulb size={12} aria-hidden="true" /> Catatan Tata Bahasa / Kognat:
                   </div>
                   <p className="text-xs text-blue-100 leading-relaxed font-normal">
                     {currentVocab.grammarTip}

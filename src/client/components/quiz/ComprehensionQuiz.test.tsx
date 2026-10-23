@@ -52,8 +52,8 @@ describe('ComprehensionQuiz — soal Richtig/Falsch level B1', () => {
     })
 
     // Soal 1 kuncinya Falsch, soal 2 kuncinya Richtig.
-    fireEvent.click(screen.getAllByText('❌ Falsch (Salah)')[0])
-    fireEvent.click(screen.getAllByText('✅ Richtig (Benar)')[1])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Falsch (Salah)' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Richtig (Benar)' })[1])
     fireEvent.click(screen.getByText('Kumpulkan Jawaban Kuis'))
 
     await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
@@ -74,8 +74,8 @@ describe('ComprehensionQuiz — soal Richtig/Falsch level B1', () => {
 
     // Soal 1 dijawab SALAH (kuncinya Falsch, tapi pilih Richtig).
     // Soal 2 dijawab BENAR (kuncinya Richtig).
-    fireEvent.click(screen.getAllByText('✅ Richtig (Benar)')[0])
-    fireEvent.click(screen.getAllByText('✅ Richtig (Benar)')[1])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Richtig (Benar)' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Richtig (Benar)' })[1])
     fireEvent.click(screen.getByText('Kumpulkan Jawaban Kuis'))
 
     await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Volume2, CheckCircle2, Award, RotateCcw, Send, AlertCircle, HelpCircle, User, Headphones, FileEdit } from 'lucide-react'
+import { Volume2, CheckCircle2, XCircle, Lightbulb, Award, RotateCcw, Send, AlertCircle, HelpCircle, User, Headphones, FileEdit } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
 
 export interface DialogTurn {
@@ -488,7 +488,15 @@ export default function ScenarioQuiz({
             <div
               className={`px-4 py-1.5 rounded-sm text-xs font-bold shadow-xs ${badgeColor}`}
             >
-              {isPassing ? '✓ Lulus KKM (>= 70)' : '✕ Perlu Remedial (< 70)'}
+              {isPassing ? (
+                <>
+                  <CheckCircle2 size={12} className="inline -mt-0.5" aria-hidden="true" /> Lulus KKM (&gt;= 70)
+                </>
+              ) : (
+                <>
+                  <XCircle size={12} className="inline -mt-0.5" aria-hidden="true" /> Perlu Remedial (&lt; 70)
+                </>
+              )}
             </div>
             {accessKey && (
               <span className="text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-sm font-mono font-medium">
@@ -525,25 +533,25 @@ export default function ScenarioQuiz({
               <button
                 type="button"
                 onClick={() => setResultFilter('wrong')}
-                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                   resultFilter === 'wrong'
                     ? 'bg-rose-600 text-white shadow-xs'
                     : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
                 }`}
               >
-                ❌ Salah ({result.totalCount - result.correctCount})
+                <XCircle size={12} aria-hidden="true" /> Salah ({result.totalCount - result.correctCount})
               </button>
 
               <button
                 type="button"
                 onClick={() => setResultFilter('correct')}
-                className={`px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
                   resultFilter === 'correct'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
                 }`}
               >
-                ✅ Benar ({result.correctCount})
+                <CheckCircle2 size={12} aria-hidden="true" /> Benar ({result.correctCount})
               </button>
             </div>
           </div>
@@ -575,11 +583,11 @@ export default function ScenarioQuiz({
                   <div className="flex items-center gap-2.5">
                     {ans.isCorrect ? (
                       <span className="inline-flex items-center px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold tracking-wide shadow-xs">
-                        ✅ JAWABAN BENAR
+                        <CheckCircle2 size={12} aria-hidden="true" /> JAWABAN BENAR
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-3 py-1 rounded-lg bg-rose-600 text-white text-xs font-bold tracking-wide shadow-xs">
-                        ❌ JAWABAN SALAH
+                        <XCircle size={12} aria-hidden="true" /> JAWABAN SALAH
                       </span>
                     )}
                     <span className="text-xs font-bold text-slate-700">
@@ -656,7 +664,7 @@ export default function ScenarioQuiz({
                     )}
                     {ans.grammarTip && (
                       <span className="text-amber-800 font-medium">
-                        💡 <strong>Tip Grammar:</strong> {ans.grammarTip}
+                        <Lightbulb size={12} className="inline -mt-0.5" aria-hidden="true" /> <strong>Tip Grammar:</strong> {ans.grammarTip}
                       </span>
                     )}
                   </div>
@@ -675,7 +683,7 @@ export default function ScenarioQuiz({
                     title="Dengarkan pengucapan yang tepat untuk bahan evaluasi belajar"
                   >
                     <Volume2 size={14} className={isPlayingAudio ? 'animate-bounce' : 'text-blue-600'} />
-                    <span>{isPlayingAudio ? 'Memutar...' : '🔊 Dengar Pelafalan Benar'}</span>
+                    <span>{isPlayingAudio ? 'Memutar...' : 'Dengar Pelafalan Benar'}</span>
                   </button>
                 </div>
               </div>
@@ -801,7 +809,7 @@ export default function ScenarioQuiz({
                         }`}
                       >
                         <Volume2 size={14} className={isPlaying ? 'animate-bounce' : ''} />
-                        <span>{isPlaying ? 'Memutar...' : '🔊 Putar Audio'}</span>
+                        <span>{isPlaying ? 'Memutar...' : 'Putar Audio'}</span>
                       </button>
                     </div>
                   ) : (
@@ -847,7 +855,7 @@ export default function ScenarioQuiz({
                   )}
                   {q.grammarTip && (
                     <p className="text-amber-700 font-medium">
-                      💡 <strong>Tip Grammar:</strong> {q.grammarTip}
+                      <Lightbulb size={12} className="inline -mt-0.5" aria-hidden="true" /> <strong>Tip Grammar:</strong> {q.grammarTip}
                     </p>
                   )}
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Volume2, Award, RotateCcw, Send, AlertCircle, User, CheckCircle2, XCircle } from 'lucide-react'
+import { Volume2, Award, RotateCcw, Send, AlertCircle, User, CheckCircle2, XCircle, Lightbulb } from 'lucide-react'
 import { speakGerman } from '../../lib/audio'
 import {
   isCorrectAnswer,
@@ -179,7 +179,7 @@ export default function ComprehensionQuiz({
                       Kunci: {q.isCorrect ? 'Richtig (Benar)' : 'Falsch (Salah)'}
                     </p>
                     <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-2 mt-1.5">
-                      💡 {q.explanation}
+                      <Lightbulb size={12} className="inline -mt-0.5" aria-hidden="true" /> {q.explanation}
                     </p>
                   </div>
                 </div>
@@ -197,8 +197,8 @@ export default function ComprehensionQuiz({
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="bg-primary text-on-primary p-5 sm:p-6 rounded-lg shadow-lg">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
-              ✅ Richtig oder Falsch
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm bg-white/20 text-xs font-semibold">
+              <CheckCircle2 size={12} aria-hidden="true" /> Richtig oder Falsch
             </span>
             <span className="text-xs text-indigo-100 font-medium">
               Level {cefrLevel} · {questions.length} soal
@@ -278,7 +278,7 @@ export default function ComprehensionQuiz({
                         key={value}
                         type="button"
                         onClick={() => handleAnswer(idx, value)}
-                        className={`flex-1 py-2.5 rounded-md text-xs font-bold border-2 transition-all cursor-pointer ${
+                        className={`flex items-center justify-center gap-1.5 flex-1 py-2.5 rounded-md text-xs font-bold border-2 transition-all cursor-pointer ${
                           active
                             ? isRight
                               ? 'bg-emerald-600 border-emerald-600 text-white'
@@ -286,7 +286,15 @@ export default function ComprehensionQuiz({
                             : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                         }`}
                       >
-                        {isRight ? '✅ Richtig (Benar)' : '❌ Falsch (Salah)'}
+                        {isRight ? (
+                          <>
+                            <CheckCircle2 size={12} aria-hidden="true" /> Richtig (Benar)
+                          </>
+                        ) : (
+                          <>
+                            <XCircle size={12} aria-hidden="true" /> Falsch (Salah)
+                          </>
+                        )}
                       </button>
                     )
                   })}
