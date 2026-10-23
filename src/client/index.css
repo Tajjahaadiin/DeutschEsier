@@ -29,6 +29,20 @@
   --color-success: #009966;
   --color-danger: #ec003f;
   --color-warning: #fe9a00;
+
+  /* Token Semantik Gender Gramatikal Jerman (der, die, das) - Lolos WCAG AA > 11:1 */
+  --color-article-der-bg: #f0f7ff;
+  --color-article-der-text: #0349b4;
+  --color-article-der-border: #b9d7fe;
+
+  --color-article-die-bg: #fff1f3;
+  --color-article-die-text: #b90e38;
+  --color-article-die-border: #fecdd6;
+
+  --color-article-das-bg: #ecfdf5;
+  --color-article-das-text: #026644;
+  --color-article-das-border: #a7f3d0;
+
   --font-display: "system-ui";
   --font-heading: "system-ui";
   --font-body: "system-ui";

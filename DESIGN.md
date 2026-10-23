@@ -17,6 +17,15 @@ colors:
   success: "oklch(59.6% 0.145 163.225)"
   danger: "oklch(58.6% 0.253 17.585)"
   warning: "oklch(76.9% 0.188 70.08)"
+  article-der-bg: "oklch(97.2% 0.015 250)"
+  article-der-text: "oklch(42.5% 0.175 250)"
+  article-der-border: "oklch(88.2% 0.065 250)"
+  article-die-bg: "oklch(96.8% 0.025 15)"
+  article-die-text: "oklch(43.1% 0.195 15)"
+  article-die-border: "oklch(87.5% 0.075 15)"
+  article-das-bg: "oklch(97.5% 0.022 160)"
+  article-das-text: "oklch(41.8% 0.145 160)"
+  article-das-border: "oklch(88.9% 0.065 160)"
 typography:
   display:
     fontFamily: system-ui
@@ -91,6 +100,10 @@ semantik; tidak ada warna baru yang dikarang.
 - **Success** — emerald 600. Hanya untuk jawaban benar dan status berhasil.
 - **Danger** — rose 600. Hanya untuk jawaban salah, error, dan aksi merusak.
 - **Warning** — amber 500. Hanya untuk peringatan.
+- **Gender Artikel Gramatikal Jerman (`der` / `die` / `das`)** — palet warna semantik terkalibrasi WCAG AA (> 11:1 kontras):
+  - `der` (Maskulin): Biru tua di atas latar biru pastel (`article-der-text` / `article-der-bg` / `article-der-border`).
+  - `die` (Feminin): Merah mawar di atas latar mawar pastel (`article-die-text` / `article-die-bg` / `article-die-border`).
+  - `das` (Netral): Hijau zamrud di atas latar zamrud pastel (`article-das-text` / `article-das-bg` / `article-das-border`).
 
 **Aturan warna semantik:** `success` dan `danger` **tidak boleh** dipakai sebagai warna aksen
 dekoratif. Kalau sebuah elemen berwarna hijau, artinya benar — bukan "supaya menarik".
@@ -136,6 +149,13 @@ Kepadatan berbeda menurut peran, dan itu disengaja:
 | :--- | :--- | :--- |
 | Siswa (mengerjakan) | lapang | satu tugas per layar, target sentuh besar |
 | Guru (membaca hasil) | padat | banyak baris, tabel, perbandingan |
+
+### Penanganan Virtual Keyboard di Ponsel
+
+Ketika input pada ponsel difokuskan, keyboard virtual perangkat muncul dan memotong area pandang (viewport) hingga ~50%.
+- **Area aksi bawah (Floating Action Bar)**: Elemen yang dipin ke bawah (`fixed bottom`) seperti `SelectionBasket` wajib memberi ruang untuk home indicator iOS (`padding-bottom: env(safe-area-inset-bottom)`).
+- **Hindari menutupi tombol submit**: Form interaktif kuis dan latihan harus berada dalam container scrollable (`overflow-y-auto`) dengan padding bawah minimum `pb-24` agar tombol konfirmasi/submit tetap dapat digulir ke atas keyboard tanpa terhalang.
+- **Ukuran input 16px wajib**: Mencegah iOS Safari memicu auto-zoom mendadak yang merusak tata letak keyboard dan layout layar.
 
 ## Elevation & Depth
 
@@ -210,7 +230,7 @@ menggandakan temuannya di sini.
 
 | Ornamen | Batas |
 | :--- | :--- |
-| Tiga pita bendera Jerman (datarm bukan gradient) | Halaman login saja, satu kali |
+| Tiga pita bendera Jerman (datar, bukan gradient) | Halaman login saja, satu kali |
 | Warna semantik `der`/`die`/`das` | Sebagai penanda gender kata, konsisten di seluruh aplikasi |
 | Nama huruf Jerman (`Be`, `Em`, `Ha`) | Halaman alfabet |
 | Format tanggal Jerman (`Montag, 3. Oktober`) | Halaman kalender |
@@ -218,3 +238,23 @@ menggandakan temuannya di sini.
 
 Tidak ada ilustrasi, maskot, atau tekstur latar. Kalau sebuah ornamen tidak menyampaikan
 informasi, hapus.
+
+## Frontend & React Architecture
+
+Aturan arsitektur frontend dan performa React untuk menjaga kesederhanaan kode dan kecepatan antarmuka:
+
+1. **Purity & Satu Arah Aliran Data (Unidirectional Data Flow)**:
+   - Komponen dan hook harus murni (idempotent). Hindari mutasi state langsung atau side-effects saat proses render.
+   - Parsing dan normalisasi data server dilakukan sekali di layer perbatasan (boundary), bukan di dalam logika render komponen.
+2. **Kendalikan Render Lambat Sebelum Mengurangi Re-render**:
+   - Komputasi berat (seperti pembuatan soal permutasi acak atau kalender 42 sel) dibungkus dengan `useMemo` dengan dependensi minimalis.
+   - Hindari operasi string/regex berulang di dalam siklus loop render.
+3. **Komponen Tetap Ringkas (Lean Components)**:
+   - Satu komponen menangani satu konsep visual/interaksi. Hindari komponen monolitik ribuan baris dengan memecahnya menjadi modul-modul modular (seperti yang dilakukan pada `DashboardLayout` dan portal `GrundlagenPage`).
+4. **Pemisahan State Lokal vs State Global**:
+   - State interaksi sementara (dropdown terbuka, input pencarian lokal, form draft) dimiliki secara lokal oleh komponen.
+   - State bersama (auth guru, preferensi suara persona global) disiarkan melalui storage & event reaktif terstandarisasi (`persona-change`).
+5. **Transisi Terarah & Hairline Borders**:
+   - Gunakan hairline border (`1px solid var(--color-border)`) dan penataan ruang (*whitespace*) alih-alih bayangan tebal (shadow) berlapis.
+   - Animasikan hanya properti komposit browser (`transform` dan `opacity`) dengan durasi mikro 120–150ms untuk mencegah layout thrashing / reflow.
+

@@ -16,10 +16,10 @@ export function WordCard({
   selectable?: boolean
 }) {
   const getArticleColor = (article: string) => {
-    if (article === 'der') return 'bg-sky-100 text-sky-800 border-sky-300'
-    if (article === 'die') return 'bg-rose-100 text-rose-800 border-rose-300'
-    if (article === 'das') return 'bg-emerald-100 text-emerald-800 border-emerald-300'
-    return 'bg-gray-100 text-gray-800 border-gray-300'
+    if (article === 'der') return 'bg-[var(--color-article-der-bg)] text-[var(--color-article-der-text)] border-[var(--color-article-der-border)]'
+    if (article === 'die') return 'bg-[var(--color-article-die-bg)] text-[var(--color-article-die-text)] border-[var(--color-article-die-border)]'
+    if (article === 'das') return 'bg-[var(--color-article-das-bg)] text-[var(--color-article-das-text)] border-[var(--color-article-das-border)]'
+    return 'bg-surface-muted text-text-muted border-border'
   }
 
   return (

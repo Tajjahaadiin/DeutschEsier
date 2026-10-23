@@ -59,9 +59,9 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
   }[item.category]
 
   const articleColor = {
-    der: 'bg-blue-100 text-blue-700 border-blue-200',
-    die: 'bg-rose-100 text-rose-700 border-rose-200',
-    das: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    der: 'bg-[var(--color-article-der-bg)] text-[var(--color-article-der-text)] border-[var(--color-article-der-border)]',
+    die: 'bg-[var(--color-article-die-bg)] text-[var(--color-article-die-text)] border-[var(--color-article-die-border)]',
+    das: 'bg-[var(--color-article-das-bg)] text-[var(--color-article-das-text)] border-[var(--color-article-das-border)]',
   }
 
   return (

@@ -29,23 +29,26 @@ adalah cacat; di tombol justru benar. Jangan terapkan membabi buta.
 | :--- | :--- | :--- |
 | Jangan `user-scalable=no` / `maximum-scale=1` | ✅ | `index.html:5` hanya `width=device-width, initial-scale=1.0` |
 | Jangan `:hover` tanpa gate | ✅ | Tailwind v4 menggating otomatis — output build memuat `@media(hover:hover)` |
-| Input minimal 16px | ❌ **18 pelanggaran** | lihat §2.1 |
-| Hormati `prefers-reduced-motion` | ❌ **0 dari 2 animasi** | lihat §2.2 |
-| `100vh` untuk app shell → `100dvh` | ⚠️ **8 tempat** | lihat §2.3 |
-| `env(safe-area-inset-*)` butuh `viewport-fit=cover` | ❌ keduanya absen | lihat §2.4 |
+| Input minimal 16px | ✅ **0 pelanggaran** (selesai di b9aa940 & ceee182) | seluruh input/textarea/select minimal `text-base` |
+| Hormati `prefers-reduced-motion` | ✅ (selesai di c677479) | `index.css:57` meredam transform animasi |
+| `100vh` untuk app shell → `100dvh` | ✅ (selesai di 32d0907) | semua app shell memakai `min-h-dvh` |
+| `env(safe-area-inset-*)` butuh `viewport-fit=cover` | ✅ (selesai di 61427c5) | `index.html:5` & bottom pinned padding |
 | Jangan `touchmove` + `preventDefault()` untuk overscroll | ✅ | tidak dipakai |
 | Jangan `user-select: none` di body | ✅ | tidak dipakai |
 | Jangan `touch-action: none` pada area yang harus bisa di-scroll | ✅ | tidak dipakai |
 | Jangan satu `theme-color` untuk dua skema | ✅ | tidak memakai `theme-color` |
 | Jangan sniffing user-agent untuk deteksi sentuh | ✅ | tidak ada |
 | Jangan menyatakan "selesai" dari emulator | ⚠️ | semua temuan di dokumen ini **analisis statis** |
-| Jangan gradient indigo/violet sebagai aksen | ❌ **15 tempat** | lihat §4.2 |
-| Jangan gradient pada tombol | ❌ **12 tombol** | lihat §4.3 |
-| Radius harus punya hierarki | ❌ **6 tingkat, tanpa hierarki** | lihat §4.4 |
-| Jangan micro-type di bawah 12px | ❌ **78 kemunculan** | lihat §4.5 |
-| Jangan emoji sebagai ikonografi | ❌ **31 emoji unik** | lihat §4.6 |
-| Jangan `uppercase` + `tracking` sebagai label universal | ❌ **49 tempat** | lihat §4.7 |
-| Jangan glassmorphism / frosted panel | ⚠️ **7 tempat, sebagian wajar** | lihat §4.8 |
+| Jangan gradient indigo/violet sebagai aksen | ✅ **0 kemunculan** (selesai di ec2ca5c & ceee182) | aksen solid `primary` biru |
+| Jangan gradient pada tombol | ✅ **0 tombol** (selesai di ceee182) | tombol solid fill atau outline datar |
+| Radius harus punya hierarki | ✅ (selesai di 6d55b22 & ceee182) | 4 tingkat: `sm: 6px`, `md: 8px`, `lg: 12px`, `full` |
+| Jangan micro-type di bawah 12px | ✅ **0 kemunculan** (selesai di 4535837) | lantai tipografi 12px (`text-xs` / `text-label`) |
+| Jangan emoji sebagai ikonografi | ✅ **0 emoji kontrol UI** (selesai di 26d4422 & ceee182) | diganti ikon Lucide React |
+| Jangan `uppercase` + `tracking` sebagai label universal | ✅ (selesai di 790bfcc) | dibatasi hanya untuk label kategori sejati |
+| Jangan glassmorphism / frosted panel | ✅ | hanya latar gelap modal `slate-900/60` |
+| Teks bahasa Jerman ditandai `lang="de"` | ✅ | pelafalan akurat screen reader |
+| Form error diumumkan ke screen reader | ✅ | `role="alert"` & `aria-live="assertive"` |
+| Kontras warna semantik gender `der/die/das` | ✅ | terkalibrasi rasio kontras WCAG AA > 11:1 |
 
 ---
 
@@ -212,8 +215,17 @@ grep -rho "text-\[9px\]\|text-\[10px\]\|text-\[11px\]" src/client --include=*.ts
 # 9. Radius: hitung tingkat unik (target: <= 4 termasuk 'full')
 grep -rho "rounded-\(sm\|md\|lg\|xl\|2xl\|3xl\|full\)" src/client --include=*.tsx | sort -u | wc -l
 
-# 10. Glassmorphism (target: 0)
-grep -rn "backdrop-blur" src/client --include=*.tsx | wc -l
+# 11. Deteksi pemakaian transition-all yang dilarang (target: 0)
+grep -rn "transition-all" src/client --include=*.tsx | wc -l
+
+# 12. Deteksi pemakaian warna red-* di luar semantik danger/rose (target: 0)
+grep -rn "text-red-\|bg-red-\|border-red-" src/client --include=*.tsx | wc -l
+
+# 13. Verifikasi ketersediaan token artikel der/die/das terkalibrasi di index.css
+grep -c "color-article-" src/client/index.css
+
+# 14. Deteksi kelengkapan role="alert" pada pesan error form (harus >= 5)
+grep -rc "role=\"alert\"" src/client --include=*.tsx | grep -v ":0" | wc -l
 ```
 
 **Baseline saat dokumen ini ditulis:** 15 / 12 / 78 / 6 / 7.
@@ -343,11 +355,13 @@ radius untuk semua adalah kebiasaan, bukan keputusan.
 Enam tingkat, dan tidak ada aturan mana dipakai kapan. `rounded-full` 72× (pill) juga termasuk
 tell tersendiri — pill button di mana-mana.
 
-**Perbaikan:** tetapkan maksimal 3 tingkat + `full`, dengan aturan:
-- kontrol kecil (input, tombol) → 6–8px
-- kartu → 12px
-- modal/sheet → 16px
-- `full` hanya untuk avatar dan chip status, bukan tombol
+**Perbaikan:** tetapkan maksimal 3 tingkat + `full` sesuai `DESIGN.md`:
+- `sm` (6px): chip, badge, penanda kecil
+- `md` (8px): kontrol (tombol, input)
+- `lg` (12px): kartu, panel, modal
+- `full`: avatar dan status bulat, bukan tombol
+
+**Dilarang:** `rounded-2xl` (16px) dan `rounded-3xl` (24px). Radius sebesar itu membuat kontrol terlihat seperti kartu dan tombol terlihat seperti pil buatan mesin.
 
 ---
 
@@ -443,11 +457,10 @@ Tell berikut ada di taksonomi tapi **tidak berlaku** untuk repo ini — jangan d
 
 Checklist ini **tidak** memeriksa:
 
-- **Kontras warna (WCAG AA)** — butuh pengukuran, bukan grep. Lihat catatan di §6.
-- **Aksesibilitas penuh** — ARIA, navigasi keyboard, urutan fokus.
-- **Performa** — ukuran bundle, LCP, CLS.
-- **Perilaku keyboard di HP** — saat keyboard muncul, apakah tombol submit tertutup.
+- **Performa runtime perangkat rendah** — LCP, CLS, dan alokasi memori Web Audio API pada HP berspesifikasi rendah.
 - **Apakah desainnya *bagus*** — anti-slop hanya mencegah yang generik, bukan menjamin yang baik.
+
+*Catatan pembaharuan:* Poin kontras warna semantik OKLCH (WCAG AA > 11:1), aksesibilitas form dasar (`role="alert"`), dan penanganan *virtual keyboard* HP kini telah secara resmi dicakup dan distandardisasi di `DESIGN.md`.
 
 Untuk itu, skill `mobile-native` punya 11 gejala lain (pull-to-refresh, carousel, status bar,
 tap delay). Sebagian besar tidak relevan untuk repo ini dan sengaja tidak dimasukkan.
