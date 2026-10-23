@@ -4,6 +4,7 @@ import { quizSubmission } from '../../db/schema'
 import { eq, desc, and } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { requireTeacherAuth } from './auth'
+import { authorizeSessionAccess } from './access-guard'
 
 const submissionsRouter = new Hono()
 
@@ -21,6 +22,19 @@ submissionsRouter.post('/:id/submissions', async (c) => {
   try {
     const sessionId = c.req.param('id')
     const body = await c.req.json().catch(() => ({}))
+
+    // Menulis submission juga butuh kunci valid untuk sesi ini, supaya analitik
+    // guru tidak dicemari pihak yang tidak berhak. Guru selalu boleh (termasuk
+    // TEACHER-PREVIEW). Default fitur MATI = perilaku lama dipertahankan.
+    const keyFromBody = typeof body.accessKey === 'string' ? body.accessKey : null
+    const access = await authorizeSessionAccess(
+      c.req.raw.headers,
+      sessionId,
+      keyFromBody ?? c.req.query('key')
+    )
+    if (!access.allowed) {
+      return c.json({ error: 'Access key required', reason: access.reason }, 403)
+    }
 
     const rawScore = typeof body.score === 'number' ? body.score : 0
     const score = Math.max(0, Math.min(100, Math.round(rawScore)))

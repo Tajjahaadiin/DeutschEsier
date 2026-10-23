@@ -42,7 +42,8 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
   }, [search, selectedCat])
 
   useEffect(() => {
-    fetch('/api/sessions')
+    // GET /api/sessions hanya untuk guru, jadi token wajib ikut dikirim.
+    fetch('/api/sessions', { headers: getAuthHeaders() })
       .then(res => res.json())
       .then(data => setSessions(data.sessions || []))
       .catch(console.error)

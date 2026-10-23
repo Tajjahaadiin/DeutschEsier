@@ -9031,6 +9031,42 @@ authRouter.get("/verify", (c) => {
 });
 var auth_default = authRouter;
 
+// src/server/routes/access-guard.ts
+function accessKeyRequired() {
+  return process.env.REQUIRE_ACCESS_KEY === "true";
+}
+function teacherTokenFrom(headers) {
+  const authHeader = headers.get("Authorization");
+  const explicit = headers.get("X-Teacher-Token");
+  if (explicit) return explicit;
+  if (!authHeader) return "";
+  return authHeader.startsWith("Bearer ") ? authHeader.substring(7).trim() : authHeader.trim();
+}
+function isTeacherRequest(headers) {
+  const token = teacherTokenFrom(headers);
+  return Boolean(token) && isValidTeacherToken(token);
+}
+async function verifySessionKey(sessionId, rawKey) {
+  const key = (rawKey || "").trim().toUpperCase();
+  if (!key) return { allowed: false, reason: "missing_key" };
+  const [found] = await db.select().from(scenarioAccessKey).where(
+    and(
+      eq(scenarioAccessKey.sessionId, sessionId),
+      eq(scenarioAccessKey.key, key),
+      eq(scenarioAccessKey.isActive, true)
+    )
+  ).limit(1);
+  if (!found) return { allowed: false, reason: "not_found" };
+  if (found.sessionId !== sessionId) return { allowed: false, reason: "not_found" };
+  if (new Date(found.expiresAt) < /* @__PURE__ */ new Date()) return { allowed: false, reason: "expired" };
+  return { allowed: true };
+}
+async function authorizeSessionAccess(headers, sessionId, rawKey) {
+  if (isTeacherRequest(headers)) return { allowed: true };
+  if (!accessKeyRequired()) return { allowed: true };
+  return verifySessionKey(sessionId, rawKey);
+}
+
 // src/server/routes/sessions.ts
 var sessionsRouter = new Hono2();
 function normalizeDialogueCount(raw2) {
@@ -9057,7 +9093,7 @@ function grammarQuestionsColumn(raw2) {
   if (raw2 === null) return { grammarQuestionsJson: null };
   return { grammarQuestionsJson: JSON.stringify(raw2) };
 }
-sessionsRouter.get("/", async (c) => {
+sessionsRouter.get("/", requireTeacherAuth, async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt));
     return c.json({ sessions });
@@ -9068,6 +9104,10 @@ sessionsRouter.get("/", async (c) => {
 sessionsRouter.get("/:id", async (c) => {
   try {
     const id = c.req.param("id");
+    const access = await authorizeSessionAccess(c.req.raw.headers, id, c.req.query("key"));
+    if (!access.allowed) {
+      return c.json({ error: "Access key required", reason: access.reason }, 403);
+    }
     const [session] = await db.select().from(learningSession).where(eq(learningSession.id, id)).limit(1);
     if (!session) return c.json({ error: "Session not found" }, 404);
     return c.json(session);
@@ -38380,6 +38420,15 @@ submissionsRouter.post("/:id/submissions", async (c) => {
   try {
     const sessionId = c.req.param("id");
     const body = await c.req.json().catch(() => ({}));
+    const keyFromBody = typeof body.accessKey === "string" ? body.accessKey : null;
+    const access = await authorizeSessionAccess(
+      c.req.raw.headers,
+      sessionId,
+      keyFromBody ?? c.req.query("key")
+    );
+    if (!access.allowed) {
+      return c.json({ error: "Access key required", reason: access.reason }, 403);
+    }
     const rawScore = typeof body.score === "number" ? body.score : 0;
     const score = Math.max(0, Math.min(100, Math.round(rawScore)));
     const totalQuestions = typeof body.totalQuestions === "number" ? Math.max(0, Math.round(body.totalQuestions)) : 0;

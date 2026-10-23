@@ -16,6 +16,42 @@ Di dashboard Render (bagian **Environment**), atur variabel lingkungan berikut:
 | `TEACHER_PASSWORD`| **Wajib** | Password login guru; juga dipakai sebagai secret HMAC token sesi | `rahasia_guru_123` |
 | `PORT` | Otomatis | Port diatur otomatis oleh Render (default fallback `3001`) | `10000` |
 | `NODE_ENV` | Opsional | Mode environment | `production` |
+| `REQUIRE_ACCESS_KEY` | Opsional | Wajibkan kunci akses untuk membaca sesi dan mengirim submission. **Default `false`.** Lihat §1a sebelum menyalakan. | `true` |
+
+---
+
+## 1a. Kunci akses di level API (`REQUIRE_ACCESS_KEY`)
+
+Secara default (`false`) endpoint sesi dapat dibaca tanpa kunci. Ini
+mempertahankan **link lama** yang sudah beredar tanpa `?key=` agar tidak mati.
+
+Bila dinyalakan (`true`), dua endpoint menjadi wajib kunci:
+
+| Endpoint | Aturan |
+| :--- | :--- |
+| `GET /api/sessions/:id` | Guru (token) **atau** `?key=` yang valid untuk sesi itu |
+| `POST /api/sessions/:id/submissions` | Guru **atau** kunci valid (body `{{sec:accesskey}}` atau `?key=`) |
+
+`GET /api/sessions` (daftar) **selalu** khusus guru, tidak terpengaruh flag ini.
+Kunci selalu terikat ke `sessionId`-nya: kunci milik sesi lain ditolak.
+
+### Sebelum menyalakan — verifikasi link yang sudah beredar
+
+1. Kumpulkan semua link yang pernah dibagikan ke siswa.
+2. Pastikan masing-masing berbentuk `/view/<id>?key=DE-XXXXX` (ada `key=`).
+   Link tanpa `key=` akan berhenti berfungsi setelah flag dinyalakan.
+3. Cek satu per satu di browser: buka link, pastikan dialog tampil (bukan layar kunci).
+4. Baru set `REQUIRE_ACCESS_KEY=true` lalu redeploy.
+
+### Akibat menyalakannya
+
+- Link **tanpa** `?key=` → `403` dengan `reason: "missing_key"`.
+- Kunci kedaluwarsa → `403` `reason: "expired"`.
+- Kunci milik sesi lain / salah → `403` `reason: "not_found"`.
+- Guru yang login tetap bisa membuka sesi mana pun tanpa kunci.
+
+Untuk mematikan lagi, set `false` (atau hapus variabelnya) dan redeploy —
+tidak ada perubahan data, jadi aman bolak-balik.
 
 ---
 

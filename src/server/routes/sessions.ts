@@ -3,6 +3,7 @@ import { db } from '../../db/client'
 import { learningSession } from '../../db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { requireTeacherAuth } from './auth'
+import { authorizeSessionAccess } from './access-guard'
 
 const sessionsRouter = new Hono()
 
@@ -58,7 +59,7 @@ function grammarQuestionsColumn(raw: unknown): { grammarQuestionsJson?: string |
   return { grammarQuestionsJson: JSON.stringify(raw) }
 }
 
-sessionsRouter.get('/', async (c) => {
+sessionsRouter.get('/', requireTeacherAuth, async (c) => {
   try {
     const sessions = await db.select().from(learningSession).orderBy(desc(learningSession.createdAt))
     return c.json({ sessions })
@@ -70,6 +71,14 @@ sessionsRouter.get('/', async (c) => {
 sessionsRouter.get('/:id', async (c) => {
   try {
     const id = c.req.param('id')
+
+    // Siswa wajib membawa kunci akses untuk sesi ini (bila fitur dinyalakan);
+    // guru boleh tanpa kunci. Default fitur MATI, jadi link lama tetap hidup.
+    const access = await authorizeSessionAccess(c.req.raw.headers, id, c.req.query('key'))
+    if (!access.allowed) {
+      return c.json({ error: 'Access key required', reason: access.reason }, 403)
+    }
+
     const [session] = await db.select().from(learningSession).where(eq(learningSession.id, id)).limit(1)
     if (!session) return c.json({ error: 'Session not found' }, 404)
     return c.json(session)
