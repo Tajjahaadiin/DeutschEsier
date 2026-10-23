@@ -486,7 +486,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       {lesson && (
         <div className="space-y-6">
           <Card className="p-6">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Judul & Latar</h2>
+            <h2 className="text-xs font-semibold text-slate-400 mb-3">Judul & Latar</h2>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs text-slate-500 mb-1">Judul Pelajaran</label>
@@ -512,7 +512,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Dialog</h2>
+                <h2 className="text-xs font-semibold text-slate-400">Dialog</h2>
                 <span className="text-xs text-slate-400">({editedDialogue.length} baris)</span>
               </div>
               <div className="flex items-center gap-2">
@@ -690,7 +690,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Vocab Clues</h2>
+              <h2 className="text-xs font-semibold text-slate-400">Vocab Clues</h2>
               <span className="text-xs text-slate-400">{editedVocab.length} kata</span>
             </div>
 

@@ -145,7 +145,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
         <div className="overflow-y-auto px-6 py-4 space-y-4 text-slate-700 text-sm">
           {/* Kata Jangkar Indonesia */}
           <div className="p-3.5 rounded-lg bg-sky-50/80 border border-sky-200">
-            <div className="flex items-center gap-2 text-sky-800 font-semibold mb-1 text-xs tracking-wider uppercase">
+            <div className="flex items-center gap-2 text-sky-800 font-semibold mb-1 text-xs">
               <Anchor size={15} />
               <span>Kata Jangkar Indonesia</span>
             </div>
@@ -159,7 +159,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
 
           {/* Posisi Mulut & Lidah */}
           <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
-            <div className="flex items-center gap-2 text-slate-700 font-semibold mb-1 text-xs tracking-wider uppercase">
+            <div className="flex items-center gap-2 text-slate-700 font-semibold mb-1 text-xs">
               <span>👄</span>
               <span>Posisi Mulut & Lidah</span>
             </div>
@@ -170,7 +170,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
 
           {/* Perangkap Lidah Indonesia */}
           <div className="p-3.5 rounded-lg bg-amber-50/80 border border-amber-200">
-            <div className="flex items-center gap-2 text-amber-800 font-semibold mb-1 text-xs tracking-wider uppercase">
+            <div className="flex items-center gap-2 text-amber-800 font-semibold mb-1 text-xs">
               <AlertTriangle size={15} />
               <span>Perangkap Lidah Indonesia</span>
             </div>
@@ -181,7 +181,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
 
           {/* Trik Rahasia Sensomotorik */}
           <div className="p-3.5 rounded-lg bg-purple-50/80 border border-purple-200">
-            <div className="flex items-center gap-2 text-purple-800 font-semibold mb-1 text-xs tracking-wider uppercase">
+            <div className="flex items-center gap-2 text-purple-800 font-semibold mb-1 text-xs">
               <Sparkles size={15} />
               <span>Trik Rahasia Sensomotorik</span>
             </div>
@@ -193,7 +193,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
           {/* Contoh Kata dalam Bahasa Jerman */}
           <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
                 <Lightbulb size={14} /> Contoh Kata A1
               </span>
               {item.example.isCognate && (

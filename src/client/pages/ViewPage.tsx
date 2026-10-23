@@ -537,7 +537,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                   value={inputKey}
                   onChange={(e) => setInputKey(e.target.value.toUpperCase())}
                   placeholder="Contoh: DE-ABC12"
-                  className="w-full text-center font-mono text-base font-bold tracking-widest px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-md focus:border-blue-500 focus:bg-white focus:outline-none transition-all placeholder-slate-400 uppercase"
+                  className="w-full text-center font-mono text-base font-bold px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-md focus:border-blue-500 focus:bg-white focus:outline-none transition-all placeholder-slate-400 uppercase"
                 />
               </div>
 
@@ -654,7 +654,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
               <div className="flex-1 max-w-2xl w-full mx-auto p-4 space-y-4 mt-4">
                 <div className="flex items-center justify-between px-1 mb-2">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <h2 className="text-xs font-semibold text-slate-400">
                       Dialog
                     </h2>
                     <span className="text-xs text-slate-400">
@@ -795,7 +795,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
               {/* Vocab Clues */}
               <div className="bg-white border-t mt-8 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)]">
                 <div className="max-w-2xl mx-auto p-6">
-                  <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                  <h2 className="text-xs font-semibold text-slate-400 mb-4">
                     Vocab Clues
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

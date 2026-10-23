@@ -230,7 +230,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
               {/* Hasil */}
               {generated && (
                 <div className="mt-5 bg-surface-muted border border-border rounded-lg p-5 text-center">
-                  <p className="text-label font-bold uppercase tracking-wider text-blue-600 mb-1">
+                  <p className="text-label font-bold text-blue-600 mb-1">
                     Hasil
                   </p>
                   <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">{generated}</p>
@@ -248,7 +248,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
 
             {/* Kartu angka */}
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+              <h3 className="text-xs font-bold text-slate-400 mb-2">
                 Kartu Angka
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -277,7 +277,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
             {/* Kartu benda */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <h3 className="text-xs font-bold text-slate-400">
                   Kartu Benda
                 </h3>
                 <select

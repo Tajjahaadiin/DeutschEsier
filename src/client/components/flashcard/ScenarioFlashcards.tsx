@@ -108,7 +108,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
       {/* Top Status & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-sm border border-blue-100">
+          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-sm border border-blue-100">
             🃏 Flashcard Kosakata
           </span>
           <p className="text-xs text-slate-500 mt-1.5">
@@ -180,7 +180,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           >
             {/* Header Depan */}
             <div className="flex items-center justify-between">
-              <span className="text-label font-semibold tracking-wider uppercase text-slate-400 bg-slate-100 px-2.5 py-1 rounded-sm">
+              <span className="text-label font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-sm">
                 Vorderseite (Jerman)
               </span>
               {isCurrentMastered && (
@@ -234,7 +234,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
           >
             {/* Header Belakang */}
             <div className="flex items-center justify-between">
-              <span className="text-label font-semibold tracking-wider uppercase text-blue-200 bg-white/10 px-2.5 py-1 rounded-sm backdrop-blur-xs">
+              <span className="text-label font-semibold text-blue-200 bg-white/10 px-2.5 py-1 rounded-sm backdrop-blur-xs">
                 Rückseite (Arti & Tata Bahasa)
               </span>
               <button
@@ -254,7 +254,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
 
             {/* Konten Utama Belakang */}
             <div className="text-center my-auto px-2">
-              <div className="text-xs font-medium text-blue-200 uppercase tracking-wider mb-1">
+              <div className="text-xs font-medium text-blue-200 mb-1">
                 Arti Bahasa Indonesia:
               </div>
               <h4 className="text-2xl sm:text-3xl font-bold text-white mb-4 leading-snug">
@@ -263,7 +263,7 @@ export default function ScenarioFlashcards({ vocabClues }: ScenarioFlashcardsPro
 
               {currentVocab?.grammarTip && (
                 <div className="mt-3 bg-white/10 backdrop-blur-md rounded-lg p-3.5 border border-white/15 text-left max-w-md mx-auto">
-                  <div className="text-label font-semibold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <div className="text-label font-semibold text-amber-300 mb-1 flex items-center gap-1">
                     <Lightbulb size={12} aria-hidden="true" /> Catatan Tata Bahasa / Kognat:
                   </div>
                   <p className="text-xs text-blue-100 leading-relaxed font-normal">

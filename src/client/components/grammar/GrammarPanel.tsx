@@ -300,7 +300,7 @@ export default function GrammarPanel({
                   {/* Contoh kalimat dengan pewarnaan peran */}
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <p className="text-label font-bold uppercase tracking-wider text-slate-400">
+                      <p className="text-label font-bold text-slate-400">
                         Contoh
                       </p>
                       <button
@@ -453,7 +453,7 @@ export default function GrammarPanel({
               {/* Kirim hasil ke guru (submission terpisah dari nilai kuis) */}
               {sessionId && !saved && (
                 <div className="mt-4 pt-4 border-t border-slate-200/70 text-left max-w-sm mx-auto">
-                  <label className="block text-label font-bold text-slate-600 uppercase tracking-wider mb-1.5">
+                  <label className="block text-label font-bold text-slate-600 mb-1.5">
                     Kirim ke Guru (opsional)
                   </label>
                   <input
@@ -518,7 +518,7 @@ export default function GrammarPanel({
                     <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
                       {idx + 1}
                     </span>
-                    <span className="text-label font-bold uppercase tracking-wider text-slate-500">
+                    <span className="text-label font-bold text-slate-500">
                       {q.kindLabel}
                     </span>
                     {q.topicId && (

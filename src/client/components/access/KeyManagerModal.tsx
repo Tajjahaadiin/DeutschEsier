@@ -210,7 +210,7 @@ export default function KeyManagerModal({
 
           {/* Form Buat Kunci Baru */}
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-1.5">
               <Plus size={15} className="text-blue-600" />
               Buat Kunci Akses Baru
             </h3>
@@ -299,7 +299,7 @@ export default function KeyManagerModal({
           {/* Daftar Kunci */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                 <Clock size={15} className="text-slate-400" />
                 Daftar Kunci Akses ({keys.length})
               </h3>

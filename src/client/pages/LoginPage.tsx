@@ -63,7 +63,7 @@ export default function LoginPage({ navigate }: { navigate: (path: string) => vo
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2">
                   Password / PIN Guru
                 </label>
                 <div className="relative">

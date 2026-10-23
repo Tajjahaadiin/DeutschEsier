@@ -473,7 +473,7 @@ export default function ScenarioQuiz({
 
           {/* Badge Skor Besar */}
           <div className="inline-flex flex-col items-center justify-center w-36 h-36 rounded-lg shadow-lg border-4 border-white mb-6 mx-auto transition-transform hover:scale-105 duration-200 bg-primary text-on-primary">
-            <span className="text-xs uppercase font-bold tracking-wider text-blue-200">
+            <span className="text-xs font-bold text-blue-200">
               Nilai Akhir
             </span>
             <span className="text-4xl sm:text-5xl font-extrabold tracking-tight my-1">
@@ -510,7 +510,7 @@ export default function ScenarioQuiz({
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1">
             <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+              <h3 className="text-sm font-bold text-slate-700">
                 Rincian Jawaban ({result.gradedAnswers.length} Soal)
               </h3>
               <span className="text-xs text-slate-400">Tinjau koreksi untuk refleksi belajar</span>
@@ -613,7 +613,7 @@ export default function ScenarioQuiz({
                   {ans.isCorrect ? (
                     <>
                       <div className="p-3.5 rounded-lg border bg-emerald-100/70 border-emerald-200 text-emerald-950">
-                        <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
+                        <span className="block text-label font-bold text-emerald-800 mb-1">
                           Jawaban Kamu:
                         </span>
                         <p className="font-bold text-sm flex items-center gap-1.5 text-emerald-900">
@@ -623,7 +623,7 @@ export default function ScenarioQuiz({
                       </div>
 
                       <div className="p-3.5 rounded-lg border bg-emerald-100/70 border-emerald-200 text-slate-800">
-                        <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
+                        <span className="block text-label font-bold text-emerald-800 mb-1">
                           Kunci Jawaban yang Benar:
                         </span>
                         <p className="font-bold text-sm text-emerald-900">{ans.correctAnswer}</p>
@@ -632,7 +632,7 @@ export default function ScenarioQuiz({
                   ) : (
                     <>
                       <div className="p-3.5 rounded-lg border bg-rose-100/70 border-rose-200 text-rose-950">
-                        <span className="block text-label font-bold uppercase tracking-wider text-rose-800 mb-1">
+                        <span className="block text-label font-bold text-rose-800 mb-1">
                           Jawaban Kamu:
                         </span>
                         <p className="font-semibold text-sm">
@@ -645,7 +645,7 @@ export default function ScenarioQuiz({
                       </div>
 
                       <div className="p-3.5 rounded-lg border bg-emerald-100/70 border-emerald-200 text-slate-800">
-                        <span className="block text-label font-bold uppercase tracking-wider text-emerald-800 mb-1">
+                        <span className="block text-label font-bold text-emerald-800 mb-1">
                           Kunci Jawaban yang Benar:
                         </span>
                         <p className="font-bold text-sm text-emerald-900">{ans.correctAnswer}</p>
@@ -728,7 +728,7 @@ export default function ScenarioQuiz({
 
         {/* Input Nama Siswa */}
         <div className="bg-white p-4 sm:p-5 rounded-lg border border-slate-200 shadow-xs">
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
             <User size={15} className="text-blue-600" />
             Nama Lengkap Siswa <span className="text-rose-500">*</span>
           </label>
@@ -772,7 +772,7 @@ export default function ScenarioQuiz({
                     <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">
                       {idx + 1}
                     </span>
-                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-slate-700">
                       {q.type === 'dictation' ? (
                         <span className="flex items-center gap-1 text-indigo-600">
                           <Headphones size={13} /> Hörverstehen

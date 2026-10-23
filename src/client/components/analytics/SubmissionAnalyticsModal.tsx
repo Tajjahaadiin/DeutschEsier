@@ -445,7 +445,7 @@ export default function SubmissionAnalyticsModal({
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <Users size={16} className="text-blue-600" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">
+                    <span className="text-xs font-semibold">
                       Total Siswa
                     </span>
                   </div>
@@ -459,7 +459,7 @@ export default function SubmissionAnalyticsModal({
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <TrendingUp size={16} className="text-indigo-600" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">
+                    <span className="text-xs font-semibold">
                       Rata-Rata
                     </span>
                   </div>
@@ -474,7 +474,7 @@ export default function SubmissionAnalyticsModal({
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <Target size={16} className="text-emerald-600" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">
+                    <span className="text-xs font-semibold">
                       Kelulusan
                     </span>
                   </div>
@@ -488,7 +488,7 @@ export default function SubmissionAnalyticsModal({
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-2 text-slate-500 mb-1">
                     <Trophy size={16} className="text-amber-500" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">
+                    <span className="text-xs font-semibold">
                       Tertinggi
                     </span>
                   </div>

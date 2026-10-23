@@ -215,7 +215,7 @@ export default function ComprehensionQuiz({
         </div>
 
         <div className="bg-white p-4 sm:p-5 rounded-lg border border-slate-200 shadow-xs">
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <label className="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
             <User size={15} className="text-indigo-600" />
             Nama Lengkap Siswa <span className="text-rose-500">*</span>
           </label>

@@ -76,7 +76,7 @@ export default function GrammarTopicPicker({ selected, onChange }: GrammarTopicP
         <div className="mt-2 max-h-80 overflow-y-auto border border-slate-200 rounded-lg bg-white p-3 space-y-3">
           {[...grouped.entries()].map(([section, topics]) => (
             <div key={section}>
-              <p className="text-label font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              <p className="text-label font-bold text-slate-400 mb-1.5">
                 {section}
               </p>
               <div className="space-y-1">

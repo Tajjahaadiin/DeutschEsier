@@ -327,7 +327,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
 
       {/* Input Form */}
       <div className="my-6">
-        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-semibold text-slate-700 mb-2">
           Ketik Kata / Nama:
         </label>
         <div className="flex flex-col sm:flex-row gap-2.5 items-stretch">
@@ -339,7 +339,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
               setInputText(e.target.value.toUpperCase())
             }}
             placeholder="Ketik kata, misal: AUTO, BECAK, ATAU NAMAMU..."
-            className="flex-1 text-lg sm:text-2xl font-mono uppercase font-bold tracking-wider px-4 py-3 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50"
+            className="flex-1 text-lg sm:text-2xl font-mono uppercase font-bold px-4 py-3 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50"
           />
           {trimmedInput.length > 0 && !isInputInWordList && (
             <button
@@ -448,7 +448,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
       {/* Letter Visual Cards Row */}
       <div className="mt-6 pt-6 border-t border-slate-100">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-slate-500">
             Urutan Ejaan ({characters.filter((c) => c.item).length} Huruf)
           </span>
           <span className="text-xs text-slate-400">
@@ -544,7 +544,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Kata Jerman
                 </label>
                 <input
@@ -558,13 +558,13 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
                     if (e.key === 'Enter') handleSaveModal()
                   }}
                   placeholder="Misal: FLUGHAFEN"
-                  className="w-full text-base font-mono uppercase font-bold tracking-wide px-3 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-base font-mono uppercase font-bold px-3 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Arti Bahasa Indonesia (Opsional)
                 </label>
                 <input
