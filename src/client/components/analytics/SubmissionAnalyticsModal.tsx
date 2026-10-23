@@ -580,7 +580,7 @@ export default function SubmissionAnalyticsModal({
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Cari nama siswa..."
-                      className="w-full text-xs pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400"
+                      className="w-full text-base pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400"
                     />
                   </div>
                 </div>

@@ -461,7 +461,7 @@ export default function GrammarPanel({
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
                     placeholder="Nama lengkap siswa..."
-                    className="w-full text-xs px-3 py-2 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-slate-400"
+                    className="w-full text-base px-3 py-2 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-slate-400"
                   />
                   {saveError && (
                     <p className="text-label text-rose-600 mt-1.5">{saveError}</p>

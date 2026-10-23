@@ -194,7 +194,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                   placeholder="Cari huruf, nama Jerman, kata jangkar (cth: Yoyo, Pizza), atau contoh kata..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-md border border-slate-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 />
                 {searchQuery && (
                   <button

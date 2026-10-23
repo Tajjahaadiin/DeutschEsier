@@ -738,7 +738,7 @@ export default function ScenarioQuiz({
             value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
             placeholder="Masukkan nama lengkap Anda..."
-            className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
+            className="w-full text-base px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
           />
           {accessKey && (
             <p className="text-label text-slate-400 mt-2 font-mono">
@@ -842,7 +842,7 @@ export default function ScenarioQuiz({
                         ? 'Ketik kalimat bahasa Jerman yang didengar...'
                         : 'Ketik kata yang hilang di sini...'
                     }
-                    className="w-full text-sm px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
+                    className="w-full text-base px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder-slate-400 font-medium"
                   />
                 </div>
 

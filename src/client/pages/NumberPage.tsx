@@ -283,7 +283,7 @@ export default function NumberPage({ navigate }: NumberPageProps) {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="text-xs px-2 py-1 border border-slate-300 rounded-md bg-white cursor-pointer"
+                  className="text-base px-2 py-1 border border-slate-300 rounded-md bg-white cursor-pointer"
                 >
                   <option value="Semua">Semua kategori</option>
                   {OBJECT_CATEGORIES.map((c) => (

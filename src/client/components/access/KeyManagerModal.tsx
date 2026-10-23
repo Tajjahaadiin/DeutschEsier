@@ -262,7 +262,7 @@ export default function KeyManagerModal({
                       max={8760}
                       value={customHours}
                       onChange={(e) => setCustomHours(e.target.value)}
-                      className="w-28 text-xs px-3 py-1.5 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-28 text-base px-3 py-1.5 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       placeholder="Contoh: 48"
                     />
                     <span className="text-xs text-slate-500">Jam dari sekarang</span>
@@ -279,7 +279,7 @@ export default function KeyManagerModal({
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder='Misal: "Kelas 10 IPS 1", "Tugas Mandiri"'
-                  className="w-full text-xs px-3 py-2 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-400"
+                  className="w-full text-base px-3 py-2 bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-slate-400"
                 />
               </div>
 

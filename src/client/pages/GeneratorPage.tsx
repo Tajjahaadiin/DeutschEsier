@@ -401,7 +401,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             onChange={e => setPrompt(e.target.value)}
             rows={3}
             placeholder="Contoh: Di sebuah kafe di Berlin, Andi memesan kopi dan strudel..."
-            className="w-full p-3 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full p-3 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
         </div>
         <div className="flex items-center gap-4">
@@ -410,7 +410,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             <select
               value={cefrLevel}
               onChange={e => setCefrLevel(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               <option value="A1">A1 - Pemula</option>
               <option value="A2">A2 - Dasar</option>
@@ -434,7 +434,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                 if (Number.isNaN(parsed)) return
                 setDialogueCount(Math.min(20, Math.max(1, parsed)))
               }}
-              className="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             />
             <p className="text-label text-slate-400 mt-1">1 - 20 baris</p>
           </div>
@@ -445,7 +445,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             <select
               value={speakerCount}
               onChange={e => setSpeakerCount(parseInt(e.target.value, 10))}
-              className="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full p-2 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {[2, 3, 4, 5, 6].map(n => (
                 <option key={n} value={n}>{n} Orang</option>
@@ -494,7 +494,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   type="text"
                   value={editedTitle}
                   onChange={e => setEditedTitle(e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded-md text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border border-slate-300 rounded-md text-base font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -503,7 +503,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   value={editedSceneDesc}
                   onChange={e => setEditedSceneDesc(e.target.value)}
                   rows={2}
-                  className="w-full p-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full p-2 border border-slate-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
             </div>
@@ -572,7 +572,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                       <select
                         value={currentPersona}
                         onChange={e => handleSpeakerPersonaChange(speaker, e.target.value as TtsPersonaId)}
-                        className="p-1 border border-slate-300 rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 max-w-[150px] truncate"
+                        className="p-1 border border-slate-300 rounded text-base bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 max-w-[150px] truncate"
                       >
                         {TTS_PERSONAS.map(p => (
                           <option key={p.id} value={p.id}>
@@ -605,7 +605,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                           updateTurn(i, 'personaId', targetPersona)
                           updateTurn(i, 'gender', targetPersona.startsWith('male') ? 'male' : 'female')
                         }}
-                        className="w-32 p-1.5 border border-slate-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-400 focus:outline-none font-medium"
+                        className="w-32 p-1.5 border border-slate-300 rounded text-base bg-white focus:ring-1 focus:ring-blue-400 focus:outline-none font-medium"
                       >
                         {['A', 'B', 'C', 'D', 'E', 'F'].slice(0, speakerCount).map(l => (
                           <option key={l} value={`Sprecher ${l}`}>Sprecher {l}</option>
@@ -618,7 +618,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                           updateTurn(i, 'personaId', pId)
                           updateTurn(i, 'gender', pId.startsWith('male') ? 'male' : 'female')
                         }}
-                        className="p-1.5 border border-slate-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-400 focus:outline-none"
+                        className="p-1.5 border border-slate-300 rounded text-base bg-white focus:ring-1 focus:ring-blue-400 focus:outline-none"
                       >
                         {TTS_PERSONAS.map(p => (
                           <option key={p.id} value={p.id}>
@@ -632,14 +632,14 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                       value={turn.germanText}
                       onChange={e => updateTurn(i, 'germanText', e.target.value)}
                       placeholder="Teks Jerman..."
-                      className="w-full p-2 border border-slate-300 rounded text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      className="w-full p-2 border border-slate-300 rounded text-base font-medium focus:outline-none focus:ring-1 focus:ring-blue-400"
                     />
                     <input
                       type="text"
                       value={turn.indonesianText}
                       onChange={e => updateTurn(i, 'indonesianText', e.target.value)}
                       placeholder="Terjemahan Indonesia..."
-                      className="w-full p-2 border border-slate-200 rounded text-sm text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      className="w-full p-2 border border-slate-200 rounded text-base text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-400"
                     />
                   </div>
                   <div className="flex flex-col gap-1 pt-8">
@@ -709,21 +709,21 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                     value={clue.germanWord}
                     onChange={e => updateVocab(i, 'germanWord', e.target.value)}
                     placeholder="Kata Jerman..."
-                    className="w-full bg-transparent font-bold text-blue-900 text-sm mb-1 focus:outline-none border-b border-blue-200 pb-0.5"
+                    className="w-full bg-transparent font-bold text-blue-900 text-base mb-1 focus:outline-none border-b border-blue-200 pb-0.5"
                   />
                   <input
                     type="text"
                     value={clue.indonesianMeaning}
                     onChange={e => updateVocab(i, 'indonesianMeaning', e.target.value)}
                     placeholder="Arti Indonesia..."
-                    className="w-full bg-transparent text-blue-800 text-xs mb-1 focus:outline-none"
+                    className="w-full bg-transparent text-blue-800 text-base mb-1 focus:outline-none"
                   />
                   <input
                     type="text"
                     value={clue.grammarTip}
                     onChange={e => updateVocab(i, 'grammarTip', e.target.value)}
                     placeholder="Tips grammar..."
-                    className="w-full bg-transparent text-blue-600 text-xs italic focus:outline-none"
+                    className="w-full bg-transparent text-blue-600 text-base italic focus:outline-none"
                   />
                 </div>
               ))}
