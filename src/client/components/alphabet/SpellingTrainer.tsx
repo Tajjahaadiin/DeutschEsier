@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Play, Square, Sparkles, Volume2, RotateCcw, Plus, Pencil, Trash2, Settings, X, Star } from 'lucide-react'
 import { GERMAN_ALPHABET, GermanAlphabetItem } from '../../data/alphabetData'
-import { speakGerman, type VoiceGender } from '../../lib/audio'
+import { speakGerman, type TtsPersonaId } from '../../lib/audio'
 
 interface SpellingTrainerProps {
-  voiceGender?: VoiceGender
+  personaId: TtsPersonaId
   speechRate?: number
 }
 
@@ -33,7 +33,7 @@ GERMAN_ALPHABET.forEach((item) => {
 })
 
 export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
-  voiceGender = 'female',
+  personaId,
   speechRate = 1.0,
 }) => {
   const [wordList, setWordList] = useState<SpellingWordItem[]>(() => {
@@ -194,7 +194,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
     if (!item) return
     setActiveIndex(index)
     speakGerman(item.audioText.letterOnly, {
-      gender: voiceGender,
+      personaId,
       rate: speechRate,
       onEnd: () => setActiveIndex(-1),
     })
@@ -229,7 +229,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
 
         if (current.item) {
           speakGerman(current.item.audioText.letterOnly, {
-            gender: voiceGender,
+            personaId,
             rate: speechRate,
             onEnd: done,
           })
@@ -257,7 +257,7 @@ export const SpellingTrainer: React.FC<SpellingTrainerProps> = ({
         }
 
         speakGerman(inputText.trim(), {
-          gender: voiceGender,
+          personaId,
           rate: speechRate,
           onEnd: done,
         })

@@ -223,7 +223,7 @@ export default function HomePage({ navigate }: { navigate: (path: string) => voi
                   word={w}
                   isSelected={selectedWords.includes(w.id)}
                   onToggle={() => toggleWord(w.id)}
-                  voiceGender={currentPersonaId.startsWith('male') ? 'male' : 'female'}
+                  personaId={currentPersonaId}
                 />
               ))}
             </div>

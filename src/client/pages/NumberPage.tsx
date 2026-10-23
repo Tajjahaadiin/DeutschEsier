@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, Volume2, RotateCcw, Sparkles, Hash, Gamepad2 } from 'lucide-react'
-import { speakGerman, getStoredPersonaId, setStoredPersonaId, type TtsPersonaId, type VoiceGender } from '../lib/audio'
+import { speakGerman, getStoredPersonaId, setStoredPersonaId, type TtsPersonaId } from '../lib/audio'
 import { TTS_PERSONAS } from '../../shared/ttsPersonas'
 import { combineNumberAndNoun } from '../lib/numberGame'
 import { NUMBER_ITEMS } from '../data/numberData'
@@ -27,11 +27,10 @@ export default function NumberPage({ navigate }: NumberPageProps) {
   const [generated, setGenerated] = useState<string | null>(null)
   const [category, setCategory] = useState<string>('Semua')
 
-  const voiceGender: VoiceGender = currentPersonaId.startsWith('male') ? 'male' : 'female'
 
   const handlePlay = (text: string) => {
     setPlaying(text)
-    speakGerman(text, { personaId: currentPersonaId, gender: voiceGender, rate: speechRate, onEnd: () => setPlaying(null) })
+    speakGerman(text, { personaId: currentPersonaId, rate: speechRate, onEnd: () => setPlaying(null) })
   }
 
   const gameObjects = useMemo(

@@ -1,19 +1,19 @@
 import React, { useState } from 'react'
 import { Volume2, BookOpen, Info, AlertTriangle, Anchor } from 'lucide-react'
 import { GermanAlphabetItem } from '../../data/alphabetData'
-import { speakGerman, type VoiceGender } from '../../lib/audio'
+import { speakGerman, type TtsPersonaId } from '../../lib/audio'
 
 interface AlphabetCardProps {
   item: GermanAlphabetItem
   onOpenDetail: (item: GermanAlphabetItem) => void
-  voiceGender?: VoiceGender
+  personaId: TtsPersonaId
   speechRate?: number
 }
 
 export const AlphabetCard: React.FC<AlphabetCardProps> = ({
   item,
   onOpenDetail,
-  voiceGender = 'female',
+  personaId,
   speechRate = 1.0,
 }) => {
   const [activeAudio, setActiveAudio] = useState<'letter' | 'word' | null>(null)
@@ -22,7 +22,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
     e.stopPropagation()
     setActiveAudio('letter')
     speakGerman(item.audioText.letterOnly, {
-      gender: voiceGender,
+      personaId,
       rate: speechRate,
       onEnd: () => setActiveAudio(null),
     })
@@ -32,7 +32,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
     e.stopPropagation()
     setActiveAudio('word')
     speakGerman(item.audioText.exampleWord, {
-      gender: voiceGender,
+      personaId,
       rate: speechRate,
       onEnd: () => setActiveAudio(null),
     })

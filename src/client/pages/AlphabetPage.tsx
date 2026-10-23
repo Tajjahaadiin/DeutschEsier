@@ -15,10 +15,9 @@ import { SpellingTrainer } from '../components/alphabet/SpellingTrainer'
 import {
   getStoredPersonaId,
   setStoredPersonaId,
-  type TtsPersonaId,
-  type VoiceGender
+  type TtsPersonaId
 } from '../lib/audio'
-import { TTS_PERSONAS } from '../../shared/ttsPersonas'
+import { TTS_PERSONAS, getTtsPersona } from '../../shared/ttsPersonas'
 
 interface AlphabetPageProps {
   navigate: (path: string) => void
@@ -35,7 +34,6 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
   const [selectedItem, setSelectedItem] = useState<GermanAlphabetItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const voiceGender: VoiceGender = currentPersonaId.startsWith('male') ? 'male' : 'female'
 
   const counts = {
     all: GERMAN_ALPHABET.length,
@@ -280,7 +278,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
               </div>
               <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-600 bg-white/80 px-3 py-1.5 rounded-lg border border-blue-200 shrink-0">
                 <Gauge size={14} className="text-blue-600" />
-                <span>Audio: {voiceGender === 'female' ? 'Katja' : 'Conrad'} ({speechRate}x)</span>
+                <span>Audio: {getTtsPersona(currentPersonaId)?.name ?? 'Katja'} ({speechRate}x)</span>
               </div>
             </div>
 
@@ -298,7 +296,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
                     key={item.id}
                     item={item}
                     onOpenDetail={openDetail}
-                    voiceGender={voiceGender}
+                    personaId={currentPersonaId}
                     speechRate={speechRate}
                   />
                 ))}
@@ -308,7 +306,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
         ) : (
           /* Trainer Mode */
           <div>
-            <SpellingTrainer voiceGender={voiceGender} speechRate={speechRate} />
+            <SpellingTrainer personaId={currentPersonaId} speechRate={speechRate} />
           </div>
         )}
       </main>
@@ -318,7 +316,7 @@ export default function AlphabetPage({ navigate }: AlphabetPageProps) {
         item={selectedItem}
         isOpen={isModalOpen}
         onClose={closeDetail}
-        voiceGender={voiceGender}
+        personaId={currentPersonaId}
         speechRate={speechRate}
       />
     </div>

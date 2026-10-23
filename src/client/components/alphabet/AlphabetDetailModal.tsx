@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { X, Volume2, Anchor, AlertTriangle, Sparkles, Speech, Lightbulb } from 'lucide-react'
 import { GermanAlphabetItem } from '../../data/alphabetData'
-import { speakGerman, type VoiceGender } from '../../lib/audio'
+import { speakGerman, type TtsPersonaId } from '../../lib/audio'
 
 interface AlphabetDetailModalProps {
   item: GermanAlphabetItem | null
   isOpen: boolean
   onClose: () => void
-  voiceGender?: VoiceGender
+  personaId: TtsPersonaId
   speechRate?: number
 }
 
@@ -15,7 +15,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
   item,
   isOpen,
   onClose,
-  voiceGender = 'female',
+  personaId,
   speechRate = 1.0,
 }) => {
   const [playingTarget, setPlayingTarget] = useState<'letter' | 'example' | null>(null)
@@ -40,7 +40,7 @@ export const AlphabetDetailModal: React.FC<AlphabetDetailModalProps> = ({
     const text = target === 'letter' ? item.audioText.letterOnly : item.audioText.exampleWord
     setPlayingTarget(target)
     speakGerman(text, {
-      gender: voiceGender,
+      personaId,
       rate: speechRate,
       onEnd: () => setPlayingTarget(null),
     })

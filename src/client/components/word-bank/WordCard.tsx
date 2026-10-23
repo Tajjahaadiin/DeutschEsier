@@ -1,8 +1,8 @@
 import { Card } from '../ui/card'
-import { playWordAudio } from '../../lib/audio'
+import { playWordAudio, type TtsPersonaId } from '../../lib/audio'
 import { Volume2 } from 'lucide-react'
 
-export function WordCard({ word, isSelected, onToggle, voiceGender }: { word: any, isSelected: boolean, onToggle: () => void, voiceGender?: 'male' | 'female' }) {
+export function WordCard({ word, isSelected, onToggle, personaId }: { word: any, isSelected: boolean, onToggle: () => void, personaId?: TtsPersonaId }) {
   const getArticleColor = (article: string) => {
     if (article === 'der') return 'bg-sky-100 text-sky-800 border-sky-300'
     if (article === 'die') return 'bg-rose-100 text-rose-800 border-rose-300'
@@ -25,7 +25,7 @@ export function WordCard({ word, isSelected, onToggle, voiceGender }: { word: an
         <button 
           onClick={(e) => { 
             e.stopPropagation(); 
-            playWordAudio(word.germanWord, { gender: voiceGender || 'female' }) 
+            playWordAudio(word.germanWord, { personaId }) 
           }} 
           className="text-gray-400 hover:text-blue-500 transition-colors"
           aria-label={`Putar pengucapan ${word.germanWord}`}

@@ -377,7 +377,7 @@ export default function SubmissionAnalyticsModal({
                             onClick={() => {
                               const textToSpeak = ans.audioText || ans.correctAnswer
                               if (textToSpeak && typeof textToSpeak === 'string') {
-                                speakGerman(textToSpeak, { gender: 'female' })
+                                speakGerman(textToSpeak)
                               }
                             }}
                             className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
