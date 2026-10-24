@@ -37749,12 +37749,93 @@ var GeneratedLessonSchema = Schema_exports.Struct({
 var GeminiApiError = class extends Error {
   _tag = "GeminiApiError";
 };
+var DahlApiError = class extends Error {
+  _tag = "DahlApiError";
+};
 var JsonParseError = class extends Error {
   _tag = "JsonParseError";
 };
 var SchemaValidationError = class extends Error {
   _tag = "SchemaValidationError";
 };
+var dahlKeyIndex = 0;
+function getDahlConfig() {
+  const base = process.env.DAHL_API_BASE || "https://inference.dahl.global/v1";
+  const rawKeys = process.env.DAHL_API_KEYS || process.env.DAHL_API_KEY || "";
+  const keys5 = rawKeys.split(",").map((k) => k.trim()).filter((k) => k.length > 0);
+  const model = process.env.DAHL_MODEL || "MiniMaxAI/MiniMax-M2.7";
+  if (keys5.length === 0) return null;
+  return { base, keys: keys5, model };
+}
+function extractCleanJson(rawText) {
+  let cleaned = rawText.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+  const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (codeBlockMatch) {
+    cleaned = codeBlockMatch[1].trim();
+  }
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  }
+  return cleaned;
+}
+async function callDahlWithKeyRotation(fullPrompt) {
+  const config3 = getDahlConfig();
+  if (!config3) {
+    throw new DahlApiError("DAHL_API_KEYS tidak dikonfigurasi di environment.");
+  }
+  const { base, keys: keys5, model } = config3;
+  let lastError = null;
+  for (let attempt = 0; attempt < keys5.length; attempt++) {
+    const currentKey = keys5[dahlKeyIndex % keys5.length];
+    dahlKeyIndex = (dahlKeyIndex + 1) % keys5.length;
+    try {
+      const res = await fetch(`${base}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${currentKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert German language teacher. Respond ONLY with a valid, raw JSON object matching the requested schema. Do not include markdown formatting, codeblocks, or explanatory text."
+            },
+            {
+              role: "user",
+              content: fullPrompt
+            }
+          ],
+          temperature: 0.3
+        })
+      });
+      if (res.status === 429) {
+        console.warn(`[Dahl Key ${dahlKeyIndex}] 429 Rate limited, mencoba key berikutnya...`);
+        lastError = new Error(`Dahl 429 Rate Limit (Key ${dahlKeyIndex})`);
+        continue;
+      }
+      if (!res.ok) {
+        const errText = await res.text();
+        console.warn(`[Dahl Key ${dahlKeyIndex}] HTTP Error ${res.status}:`, errText);
+        lastError = new Error(`Dahl HTTP ${res.status}: ${errText}`);
+        continue;
+      }
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (!content || !content.trim()) {
+        throw new Error("Dahl returned empty content");
+      }
+      return content;
+    } catch (err) {
+      console.warn(`[Dahl attempt ${attempt + 1}/${keys5.length} failed]:`, err.message || err);
+      lastError = err;
+    }
+  }
+  throw new DahlApiError(`Semua key Dahl gagal: ${lastError?.message || lastError}`);
+}
 function getAiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -37965,14 +38046,30 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, gram
     },
     catch: (err) => new GeminiApiError(`Gemini API call failed: ${err}`)
   });
-  const callAndParse = callGemini.pipe(
+  const callAndParseGemini = callGemini.pipe(
     Effect_exports.flatMap(
       (rawText) => Effect_exports.try({
-        try: () => JSON.parse(rawText),
+        try: () => JSON.parse(extractCleanJson(rawText)),
         catch: (err) => new JsonParseError(`JSON parse failed: ${err}`)
       })
     ),
     Effect_exports.retry(retryPolicy)
+  );
+  const callAndParse = callAndParseGemini.pipe(
+    Effect_exports.catchAll((geminiErr) => {
+      console.warn("[Gemini Quota Exceeded / Failed, beralih ke Dahl Multi-Key Fallback...]:", geminiErr.message);
+      return Effect_exports.tryPromise({
+        try: () => callDahlWithKeyRotation(fullPrompt),
+        catch: (dahlErr) => new DahlApiError(`Gemini & Dahl kedua provider gagal: ${dahlErr}`)
+      }).pipe(
+        Effect_exports.flatMap(
+          (rawText) => Effect_exports.try({
+            try: () => JSON.parse(extractCleanJson(rawText)),
+            catch: (err) => new JsonParseError(`JSON parse failed: ${err}`)
+          })
+        )
+      );
+    })
   );
   return callAndParse.pipe(
     Effect_exports.flatMap(

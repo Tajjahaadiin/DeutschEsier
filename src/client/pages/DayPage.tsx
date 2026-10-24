@@ -46,10 +46,13 @@ export default function DayPage({ navigate, embedded = false }: DayPageProps) {
     const weekdaySlug = weekdayGerman.toLowerCase().trim().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
     const monthSlug = monthGerman.toLowerCase().trim().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
 
-    // Rangkaian audio statis Martin: Hari -> Angka Tanggal -> Nama Bulan
+    // Rangkaian audio statis Martin alami:
+    // 1. Nama Hari (mis. "Mittwoch")
+    // 2. Angka Ordinal Tanggal Utuh Jerman (mis. "der erste", bukan cuma "eins")
+    // 3. Nama Bulan (mis. "Juni")
     playAudioSequence([
       { url: `/audio/days/${weekdaySlug}.mp3`, fallbackText: weekdayGerman },
-      { url: `/audio/numbers/${dayNumber}.mp3`, fallbackText: dayNumber.toString() },
+      { url: `/audio/days/tag-${dayNumber}.mp3`, fallbackText: `der ${dayNumber}.` },
       { url: `/audio/days/${monthSlug}.mp3`, fallbackText: monthGerman },
     ], {
       personaId: currentPersonaId,

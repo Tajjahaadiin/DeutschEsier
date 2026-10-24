@@ -7,11 +7,123 @@ import { GRAMMAR_ROLES } from '../../shared/grammarRoles'
 export class GeminiApiError extends Error {
   readonly _tag = 'GeminiApiError'
 }
+export class DahlApiError extends Error {
+  readonly _tag = 'DahlApiError'
+}
 export class JsonParseError extends Error {
   readonly _tag = 'JsonParseError'
 }
 export class SchemaValidationError extends Error {
   readonly _tag = 'SchemaValidationError'
+}
+
+let dahlKeyIndex = 0
+
+function getDahlConfig(): { base: string; keys: string[]; model: string } | null {
+  const base = process.env.DAHL_API_BASE || 'https://inference.dahl.global/v1'
+  const rawKeys = process.env.DAHL_API_KEYS || process.env.DAHL_API_KEY || ''
+  const keys = rawKeys
+    .split(',')
+    .map((k) => k.trim())
+    .filter((k) => k.length > 0)
+  const model = process.env.DAHL_MODEL || 'MiniMaxAI/MiniMax-M2.7'
+
+  if (keys.length === 0) return null
+  return { base, keys, model }
+}
+
+/**
+ * Membersihkan respon teks dari model (misal tag <think>...</think> atau markdown code fences)
+ * agar JSON.parse dapat mengekstrak objek JSON yang valid.
+ */
+export function extractCleanJson(rawText: string): string {
+  // 1. Hapus tag <think>...</think> dari model reasoning
+  let cleaned = rawText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+
+  // 2. Jika dibungkus code block markdown ```json ... ```, ekstrak isinya
+  const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+  if (codeBlockMatch) {
+    cleaned = codeBlockMatch[1].trim()
+  }
+
+  // 3. Cari bracket pembuka { pertama dan bracket penutup } terakhir
+  const firstBrace = cleaned.indexOf('{')
+  const lastBrace = cleaned.lastIndexOf('}')
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1)
+  }
+
+  return cleaned
+}
+
+/**
+ * Panggilan fallback ke Dahl Inference dengan rotasi multi-key otomatis
+ */
+async function callDahlWithKeyRotation(fullPrompt: string): Promise<string> {
+  const config = getDahlConfig()
+  if (!config) {
+    throw new DahlApiError('DAHL_API_KEYS tidak dikonfigurasi di environment.')
+  }
+
+  const { base, keys, model } = config
+  let lastError: any = null
+
+  // Coba semua key yang tersedia secara bergiliran (round-robin)
+  for (let attempt = 0; attempt < keys.length; attempt++) {
+    const currentKey = keys[dahlKeyIndex % keys.length]
+    dahlKeyIndex = (dahlKeyIndex + 1) % keys.length
+
+    try {
+      const res = await fetch(`${base}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are an expert German language teacher. Respond ONLY with a valid, raw JSON object matching the requested schema. Do not include markdown formatting, codeblocks, or explanatory text.',
+            },
+            {
+              role: 'user',
+              content: fullPrompt,
+            },
+          ],
+          temperature: 0.3,
+        }),
+      })
+
+      if (res.status === 429) {
+        console.warn(`[Dahl Key ${dahlKeyIndex}] 429 Rate limited, mencoba key berikutnya...`)
+        lastError = new Error(`Dahl 429 Rate Limit (Key ${dahlKeyIndex})`)
+        continue
+      }
+
+      if (!res.ok) {
+        const errText = await res.text()
+        console.warn(`[Dahl Key ${dahlKeyIndex}] HTTP Error ${res.status}:`, errText)
+        lastError = new Error(`Dahl HTTP ${res.status}: ${errText}`)
+        continue
+      }
+
+      const data = await res.json()
+      const content = data.choices?.[0]?.message?.content
+      if (!content || !content.trim()) {
+        throw new Error('Dahl returned empty content')
+      }
+
+      return content
+    } catch (err: any) {
+      console.warn(`[Dahl attempt ${attempt + 1}/${keys.length} failed]:`, err.message || err)
+      lastError = err
+    }
+  }
+
+  throw new DahlApiError(`Semua key Dahl gagal: ${lastError?.message || lastError}`)
 }
 
 function getAiClient(): GoogleGenAI {
@@ -241,15 +353,33 @@ export function generateLesson(
     },
     catch: (err) => new GeminiApiError(`Gemini API call failed: ${err}`),
   })
-  
-  const callAndParse = callGemini.pipe(
+
+  const callAndParseGemini = callGemini.pipe(
     Effect.flatMap((rawText) =>
       Effect.try({
-        try: () => JSON.parse(rawText) as unknown,
+        try: () => JSON.parse(extractCleanJson(rawText)) as unknown,
         catch: (err) => new JsonParseError(`JSON parse failed: ${err}`),
       })
     ),
     Effect.retry(retryPolicy)
+  )
+
+  // Jaring pengaman multi-provider: Coba Gemini -> Jika 429 / kuota habis -> Fallback ke Dahl Multi-Key
+  const callAndParse = callAndParseGemini.pipe(
+    Effect.catchAll((geminiErr) => {
+      console.warn('[Gemini Quota Exceeded / Failed, beralih ke Dahl Multi-Key Fallback...]:', geminiErr.message)
+      return Effect.tryPromise({
+        try: () => callDahlWithKeyRotation(fullPrompt),
+        catch: (dahlErr) => new DahlApiError(`Gemini & Dahl kedua provider gagal: ${dahlErr}`),
+      }).pipe(
+        Effect.flatMap((rawText) =>
+          Effect.try({
+            try: () => JSON.parse(extractCleanJson(rawText)) as unknown,
+            catch: (err) => new JsonParseError(`JSON parse failed: ${err}`),
+          })
+        )
+      )
+    })
   )
 
   return callAndParse.pipe(
