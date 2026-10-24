@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Volume2, CalendarDays, PartyPopper, Clock } from 'lucide-react'
-import { speakGerman } from '../lib/audio'
+import { playCalendarAudio } from '../lib/audio'
 import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 import {
   WEEKDAYS,
@@ -31,7 +31,11 @@ export default function DayPage({ navigate, embedded = false }: DayPageProps) {
 
   const handlePlay = (text: string) => {
     setPlaying(text)
-    speakGerman(text, { personaId: currentPersonaId, rate: speechRate, onEnd: () => setPlaying(null) })
+    playCalendarAudio(text, {
+      personaId: currentPersonaId,
+      rate: speechRate,
+      onEnd: () => setPlaying(null),
+    })
   }
 
   const grid = buildMonthGrid(year, monthIndex)

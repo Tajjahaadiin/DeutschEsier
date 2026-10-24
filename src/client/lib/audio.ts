@@ -368,6 +368,50 @@ export function playNumberGameAudio(
   audio.play().catch(() => runFallback())
 }
 
+// Memutar audio konteks kalender pada die Tage (hari, bulan, waktu, hari libur).
+// Memprioritaskan file statis Martin (/audio/days/{slug}.wav), jika tidak ada fallback ke speakGerman.
+export function playCalendarAudio(
+  text: string,
+  optionsOrOnEnd?: SpeakOptions | (() => void)
+) {
+  stopSpeech()
+  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
+
+  const slug = text
+    .toLowerCase()
+    .trim()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  const staticUrl = `/audio/days/${slug}.wav`
+  const audio = new Audio(staticUrl)
+  if (options.rate !== undefined) {
+    audio.playbackRate = options.rate
+    audio.defaultPlaybackRate = options.rate
+  }
+  currentHtmlAudio = audio
+
+  let staticFailed = false
+  const runFallback = () => {
+    if (staticFailed) return
+    staticFailed = true
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    speakGerman(text, options)
+  }
+
+  audio.onended = () => {
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    if (options.onEnd) options.onEnd()
+  }
+
+  audio.onerror = () => runFallback()
+  audio.play().catch(() => runFallback())
+}
+
 export function getStoredPersonaId(): TtsPersonaId {
   if (typeof window === 'undefined') return DEFAULT_FEMALE_PERSONA
   try {
