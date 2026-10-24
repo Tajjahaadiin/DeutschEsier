@@ -8,6 +8,23 @@ import app from './app'
 const distPath = join(process.cwd(), 'dist')
 const indexHtmlPath = join(distPath, 'index.html')
 
+// Melayani aset audio statis (/audio/*) dengan MIME type audio/wav yang valid
+// Browser Audio player memerlukan Content-Type audio/wav (bukan application/octet-stream)
+app.get('/audio/*', (c) => {
+  const filePath = join(distPath, c.req.path)
+  if (existsSync(filePath)) {
+    const buffer = readFileSync(filePath)
+    const isWav = filePath.endsWith('.wav')
+    return new Response(buffer, {
+      headers: {
+        'Content-Type': isWav ? 'audio/wav' : 'audio/mpeg',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    })
+  }
+  return c.text('Audio file not found', 404)
+})
+
 // Serve static assets for standalone local production mode
 app.use(
   '/assets/*',
