@@ -38403,6 +38403,7 @@ function nanoid(size10 = 21) {
 
 // src/server/routes/tts.ts
 var ttsRouter = new Hono2();
+var MAX_TTS_TEXT_LENGTH = 1e3;
 ttsRouter.get("/", async (c) => {
   const text2 = c.req.query("text");
   const voiceParam = c.req.query("voice") || c.req.query("persona");
@@ -38410,6 +38411,9 @@ ttsRouter.get("/", async (c) => {
   const fallbackGender = genderParam === "male" ? "male" : "female";
   if (!text2 || text2.trim() === "") {
     return c.json({ error: "Text parameter is required" }, 400);
+  }
+  if (text2.length > MAX_TTS_TEXT_LENGTH) {
+    return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400);
   }
   const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : void 0), fallbackGender);
   const tempPath = join3(tmpdir(), `tts-${nanoid()}.mp3`);

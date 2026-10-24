@@ -156,6 +156,46 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
     expect(spoken[0].pitch).toBe(1)
   })
 
+  it('safeFallback tidak dijalankan jika audio sudah di-stop via stopSpeech', () => {
+    speakGerman('Hallo', { personaId: 'male-1' })
+    const audio = FakeAudio.instances[0]
+
+    stopSpeech()
+    audio.onerror?.()
+
+    expect(spoken).toHaveLength(0)
+  })
+
+  it('safeFallback audio lama diabaikan saat audio baru sudah mulai diputar', () => {
+    speakGerman('Hallo A', { personaId: 'male-1' })
+    const audioA = FakeAudio.instances[0]
+
+    speakGerman('Hallo B', { personaId: 'female-1' })
+    const audioB = FakeAudio.instances[1]
+
+    audioA.onerror?.()
+    expect(spoken).toHaveLength(0)
+    expect(audioB.played).toBe(true)
+  })
+
+  it('fallback memanggil onEnd bila window.speechSynthesis tidak tersedia', () => {
+    const onEnd = vi.fn()
+    const origSynthesis = window.speechSynthesis
+    // @ts-expect-error simulasi browser tanpa speechSynthesis
+    window.speechSynthesis = undefined
+
+    try {
+      speakGerman('Hallo', { onEnd })
+      const audio = FakeAudio.instances[0]
+      audio.onerror?.()
+
+      expect(onEnd).toHaveBeenCalledTimes(1)
+      expect(spoken).toHaveLength(0)
+    } finally {
+      window.speechSynthesis = origSynthesis
+    }
+  })
+
   it('resolveVoice tidak lagi menggeser pitch per gender', () => {
     expect(resolveVoice('male').pitch).toBe(1)
     expect(resolveVoice('female').pitch).toBe(1)

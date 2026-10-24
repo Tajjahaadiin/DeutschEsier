@@ -293,9 +293,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
       await new Promise<void>((resolve) => {
         let finished = false
+        let safetyTimer: any = null
         const done = () => {
           if (!finished) {
             finished = true
+            if (safetyTimer) clearTimeout(safetyTimer)
             if (!cancelledRef.current) {
               timeoutRef.current = setTimeout(resolve, 650)
             } else {
@@ -303,6 +305,14 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             }
           }
         }
+
+        // Safety timeout fallback jika browser engine men-drop event onend
+        const estimatedDurationMs = Math.max(5000, Math.round((turn.germanText.length / 10) * 1000) + 4000)
+        safetyTimer = setTimeout(() => {
+          console.warn('Speech onEnd event timed out, auto-advancing turn...')
+          done()
+        }, estimatedDurationMs)
+
         speakGerman(turn.germanText, {
           gender: turnGender,
           personaId: turnPersonaId,

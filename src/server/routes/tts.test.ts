@@ -57,4 +57,12 @@ describe('GET /api/tts', () => {
     expect(res.status).toBe(200)
     expect(lastConfig?.voice).toBe('de-DE-ConradNeural')
   })
+
+  it('menolak teks yang melebihi batas 1000 karakter (400)', async () => {
+    const longText = 'a'.repeat(1001)
+    const res = await app.request(`/api/tts?text=${encodeURIComponent(longText)}`)
+    expect(res.status).toBe(400)
+    expect(((await res.json()) as any).error).toContain('exceeds maximum allowed length')
+    expect(ttsPromiseMock).not.toHaveBeenCalled()
+  })
 })

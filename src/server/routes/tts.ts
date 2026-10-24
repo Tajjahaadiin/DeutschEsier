@@ -8,6 +8,8 @@ import { nanoid } from 'nanoid'
 
 const ttsRouter = new Hono()
 
+export const MAX_TTS_TEXT_LENGTH = 1000
+
 ttsRouter.get('/', async (c) => {
   const text = c.req.query('text')
   const voiceParam = c.req.query('voice') || c.req.query('persona')
@@ -16,6 +18,10 @@ ttsRouter.get('/', async (c) => {
 
   if (!text || text.trim() === '') {
     return c.json({ error: 'Text parameter is required' }, 400)
+  }
+
+  if (text.length > MAX_TTS_TEXT_LENGTH) {
+    return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400)
   }
 
   const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : undefined), fallbackGender)

@@ -126,7 +126,10 @@ export function stopSpeech() {
 }
 
 function fallbackSpeechSynthesis(text: string, options: SpeakOptions) {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return
+  if (typeof window === 'undefined' || !window.speechSynthesis) {
+    options.onEnd?.()
+    return
+  }
 
   window.speechSynthesis.cancel()
 
@@ -172,8 +175,10 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
   let fallbackExecuted = false
   const safeFallback = () => {
     if (fallbackExecuted) return
+    // Jika audio sudah di-stop atau digantikan permintaan lain, batalkan fallback
+    if (currentHtmlAudio !== audio) return
     fallbackExecuted = true
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    currentHtmlAudio = null
     // Sadar-diri: suara lokal biasa, tanpa manipulasi nada. Tidak berpura-pura
     // menjadi persona yang dipilih pengguna.
     console.warn('[tts] /api/tts gagal, memakai suara browser tanpa perubahan nada')
