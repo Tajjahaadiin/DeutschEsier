@@ -88,6 +88,34 @@ export async function prefetchGermanModel(
 }
 
 /**
+ * Pre-synthesize kalimat teks ke dalam memori RAM (memoryWavCache).
+ * Menjamin saat tombol putar ditekan, latensi = 0ms karena komputasi VITS sudah selesai.
+ */
+export async function warmUpSpeechCache(
+  text: string,
+  personaId = 'weiblich'
+): Promise<void> {
+  if (typeof window === 'undefined') return
+  const config = PERSONA_WASM_MAP[personaId] ?? PERSONA_WASM_MAP['weiblich']
+  const clean = text.trim()
+  if (!clean) return
+
+  const cacheKey = `${config.modelId}:${clean}`
+  if (memoryWavCache.has(cacheKey)) return
+
+  try {
+    const blob = await tts.predict({
+      text: clean,
+      voiceId: config.modelId,
+    })
+    const rawWav = await blob.arrayBuffer()
+    memoryWavCache.set(cacheKey, rawWav)
+  } catch (err) {
+    console.warn('[warmUpSpeechCache warning]:', err)
+  }
+}
+
+/**
  * Sintesis dan putar audio lokal menggunakan VITS WASM & Web Audio API.
  */
 export async function synthesizeAndPlayWasm(

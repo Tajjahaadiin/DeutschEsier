@@ -16,7 +16,7 @@ import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPattern
 import { buildSessionRequest, accessDenialFrom } from '../lib/sessionRequest'
 import { parseGrammarTopics, type GrammarTopicContent } from '../lib/grammarTopicsParser'
 import { getTtsPersona } from '../../shared/ttsPersonas'
-import { isModelStored, prefetchGermanModel, PERSONA_WASM_MAP } from '../lib/vitsEngine'
+import { isModelStored, prefetchGermanModel, warmUpSpeechCache, PERSONA_WASM_MAP } from '../lib/vitsEngine'
 import {
   Volume2,
   Share2,
@@ -273,7 +273,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   const speakers = session ? [...new Set(session.dialogue.map((d) => d.speaker))] : []
   const speakerA = speakers[0] || 'Sprecher A'
 
-  // Preload model WASM yang dibutuhkan skenario ini begitu akses terbuka & data session tersedia
+  // Preload model WASM dan sintesis seluruh baris dialog ke RAM sebelum card dibuka
   useEffect(() => {
     if (!accessGranted || !session || session.dialogue.length === 0) return
 
@@ -281,7 +281,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     const checkAndPreload = async () => {
       setAssetsLoading(true)
       try {
-        // Cari model neural yang benar-benar dibutuhkan oleh turn dialog ini
+        // 1. Unduh model neural yang dibutuhkan skenario ke OPFS jika belum ada
         const neededModels = new Set<string>()
         for (const turn of session.dialogue) {
           const resolvedPersona = turn.personaId || (turn.speaker === speakerA ? 'weiblich' : 'männlich-1')
@@ -295,13 +295,24 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
           const modelId = modelsList[i] as any
           const already = await isModelStored(modelId)
           if (!already) {
-            setAssetsProgress(`Sedang memuat model audio Jerman (${i + 1}/${modelsList.length})...`)
+            setAssetsProgress(`Mengunduh model audio Jerman (${i + 1}/${modelsList.length})...`)
             await prefetchGermanModel(modelId, (loaded, total) => {
               if (cancelled) return
               const pct = total > 0 ? Math.round((loaded / total) * 100) : 0
-              setAssetsProgress(`Sedang memuat model audio Jerman (${pct}%)...`)
+              setAssetsProgress(`Mengunduh model audio Jerman (${pct}%)...`)
             })
           }
+        }
+
+        // 2. Pre-generate/sintesis seluruh kalimat dialog ke RAM agar saat tombol play ditekan: latensi 0ms!
+        const totalTurns = session.dialogue.length
+        for (let i = 0; i < totalTurns; i++) {
+          if (cancelled) return
+          const turn = session.dialogue[i]
+          if (!turn.germanText?.trim()) continue
+          const turnPersona = turn.personaId || (turn.speaker === speakerA ? 'weiblich' : 'männlich-1')
+          setAssetsProgress(`Menyiapkan audio percakapan (${i + 1}/${totalTurns})...`)
+          await warmUpSpeechCache(turn.germanText, turnPersona)
         }
       } catch (err) {
         console.warn('[Asset readiness check warning]:', err)
