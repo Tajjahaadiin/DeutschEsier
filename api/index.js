@@ -37767,7 +37767,7 @@ var retryPolicy = Schedule_exports.exponential(Duration_exports.millis(500), 2).
 );
 function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, grammarTopicIds = [], speakerCount = 2) {
   const fullPrompt = buildPrompt(prompt, cefrLevel, cognateWords, dialogueCount, grammarTopicIds, speakerCount);
-  const wantsComprehension = cefrLevel === "B1";
+  const wantsComprehension = cefrLevel === "B1" || cefrLevel === "A2";
   const topics = topicsForPrompt(grammarTopicIds);
   const wantsGrammarTopics = cefrLevel === "B1" && topics.length > 0;
   const callGemini = Effect_exports.tryPromise({
@@ -37807,13 +37807,10 @@ function generateLesson(prompt, cefrLevel, cognateWords, dialogueCount = 8, gram
                   required: ["germanWord", "indonesianMeaning", "grammarTip"]
                 }
               },
-              // Hanya diminta untuk level B1 (menggantikan kuis pemahaman).
+              // Hanya diminta untuk level B1 dan A2
               ...wantsComprehension ? {
                 comprehensionQuestions: {
                   type: Type3.ARRAY,
-                  // Petunjuk jumlah ke model; bukan jaminan keras, karena
-                  // Effect Schema sengaja tetap toleran (lihat schemas.ts).
-                  // SDK @google/genai mengetikkan minItems/maxItems sebagai string.
                   minItems: "10",
                   maxItems: "10",
                   items: {
@@ -38037,9 +38034,9 @@ Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
   const count3 = Math.min(3, Math.max(2, speakerCount || 2));
   const speakerNames = letters.slice(0, count3).map((l) => `"Sprecher ${l}"`).join(", ");
   const speakerGenderGuide = count3 === 3 ? '\n   - Komposisi gender pembicara WAJIB deterministik: Tepat 1 Perempuan ("Sprecher A" - weiblich) dan 2 Laki-laki ("Sprecher B" - m\xE4nnlich-1 dan "Sprecher C" - m\xE4nnlich-2). Sesuaikan kata ganti orang (er/sie) dan sapaan (Herr/Frau) secara konsisten.' : '\n   - Komposisi gender pembicara WAJIB deterministik: "Sprecher A" adalah Perempuan (weiblich) dan "Sprecher B" adalah Laki-laki (m\xE4nnlich-1).';
-  const comprehensionBlock = level === "B1" ? `
+  const comprehensionBlock = level === "B1" || level === "A2" ? `
 
-Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):
+Soal Pemahaman Dialog (Richtig oder Falsch) untuk level ${level}:
 9. Buat tepat 10 soal Richtig oder Falsch berdasarkan dialog di atas
 10. Sebagian soal harus SALAH: ubah satu fakta penting dari dialog (subjek, objek, tempat, waktu, atau angka) sehingga pernyataannya tidak sesuai dialog
 11. Sebagian soal lainnya harus BENAR: pernyataannya sesuai dialog
@@ -38047,6 +38044,19 @@ Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):
 13. indonesianText adalah terjemahan Indonesia dari statement
 14. isCorrect diisi true bila pernyataan sesuai dialog, false bila tidak
 15. explanation menjelaskan singkat mengapa jawabannya demikian berdasarkan dialog` : "";
+  const cefrPatternsGuide = level === "A1" ? `
+Pola kalimat untuk tab Materi grammatik level A1 \u2014 sertakan tepat 3 pola dasar:
+- name "Aussagesatz", nameId "Kalimat Berita": pola Subjekt \u2013 Pr\xE4dikat \u2013 Objekt dengan kata kerja di posisi kedua
+- name "W-Frage", nameId "Kalimat Tanya W": kata tanya (wer, was, wo, wann) di awal, kata kerja di posisi kedua
+- name "Ja/Nein-Frage", nameId "Kalimat Tanya Ya/Tidak": kata kerja di posisi pertama` : level === "A2" ? `
+Pola kalimat untuk tab Materi grammatik level A2 \u2014 sertakan 3 pola kalimat tingkat dasar-lanjut:
+- name "Perfekt mit haben/sein", nameId "Kalimat Bentuk Lampau Perfekt": Hilfsverb posisi kedua + Partizip II di akhir kalimat
+- name "Kausalsatz mit weil", nameId "Kalimat Sebab-Akibat (weil)": Subjunktion "weil" dengan kata kerja terkonjugasi di posisi paling akhir
+- name "Modalverben im Pr\xE4sens", nameId "Kalimat Kata Kerja Modal": Modalverb di posisi kedua + Infinitiv di akhir kalimat` : `
+Pola kalimat untuk tab Materi grammatik level B1 \u2014 sertakan 3 pola kalimat tingkat mandiri:
+- name "Konzessivsatz mit obwohl", nameId "Kalimat Pertentangan (obwohl)": Subjunktion "obwohl" dengan kata kerja di posisi paling akhir
+- name "Relativsatz", nameId "Klausa Relatif (yang...)": Relativpronomen + Verbfall am Ende
+- name "Infinitiv mit zu", nameId "Konstruksi Infinitiv dengan zu": Klausa tujuan/keterangan dengan "zu + Infinitiv"`;
   return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.
 
 Skenario: ${prompt}${cognateList}
@@ -38060,11 +38070,7 @@ Panduan:
 6. sceneDescription menggambarkan latar tempat dan konteks dialog
 7. Sertakan tepat ${dialogueCount} baris dialog
 8. vocabClues minimal 4-6 kata${comprehensionBlock}
-
-Pola kalimat untuk tab Materi grammatik \u2014 sertakan tepat 3 pola berikut:
-- name "Aussagesatz", nameId "Kalimat Berita": pola Subjekt \u2013 Pr\xE4dikat \u2013 Objekt dengan kata kerja di posisi kedua
-- name "W-Frage", nameId "Kalimat Tanya W": kata tanya (wer, was, wo, wann) di awal, kata kerja di posisi kedua
-- name "Ja/Nein-Frage", nameId "Kalimat Tanya Ya/Tidak": kata kerja di posisi pertama
+${cefrPatternsGuide}
 
 Aturan pengisian tiap pola:
 1. formula diisi rumus singkat memakai istilah Jerman, mis. "Subjekt \u2013 Pr\xE4dikat \u2013 Objekt"
@@ -38145,7 +38151,28 @@ generateRouter.post("/", requireTeacherAuth, async (c) => {
     const result = await Effect_exports.runPromise(
       generateLesson(prompt, cefrLevel, cognateWords, count3, topicIds, speakers)
     );
-    return c.json({ lesson: result });
+    const dialogueWithPersonas = result.dialogue.map((turn) => {
+      let assignedPersona = "weiblich";
+      let assignedGender = "female";
+      if (turn.speaker.includes("B")) {
+        assignedPersona = "m\xE4nnlich-1";
+        assignedGender = "male";
+      } else if (turn.speaker.includes("C")) {
+        assignedPersona = "m\xE4nnlich-2";
+        assignedGender = "male";
+      }
+      return {
+        ...turn,
+        personaId: assignedPersona,
+        gender: assignedGender
+      };
+    });
+    return c.json({
+      lesson: {
+        ...result,
+        dialogue: dialogueWithPersonas
+      }
+    });
   } catch (error) {
     console.error("Generation Error:", error);
     return c.json({ error: error?.message || "Failed to generate lesson" }, 500);

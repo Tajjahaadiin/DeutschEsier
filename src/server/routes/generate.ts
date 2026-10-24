@@ -96,8 +96,33 @@ generateRouter.post('/', requireTeacherAuth, async (c) => {
     const result = await Effect.runPromise(
       generateLesson(prompt, cefrLevel, cognateWords, count, topicIds, speakers)
     )
-    
-    return c.json({ lesson: result })
+
+    // Suntikkan personaId deterministik ke tiap baris dialog secara otomatis di backend
+    const dialogueWithPersonas = result.dialogue.map((turn) => {
+      let assignedPersona = 'weiblich'
+      let assignedGender: 'male' | 'female' = 'female'
+
+      if (turn.speaker.includes('B')) {
+        assignedPersona = 'männlich-1'
+        assignedGender = 'male'
+      } else if (turn.speaker.includes('C')) {
+        assignedPersona = 'männlich-2'
+        assignedGender = 'male'
+      }
+
+      return {
+        ...turn,
+        personaId: assignedPersona,
+        gender: assignedGender,
+      }
+    })
+
+    return c.json({
+      lesson: {
+        ...result,
+        dialogue: dialogueWithPersonas,
+      },
+    })
   } catch (error: any) {
     console.error('Generation Error:', error)
     return c.json({ error: error?.message || 'Failed to generate lesson' }, 500)

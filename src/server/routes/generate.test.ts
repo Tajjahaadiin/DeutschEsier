@@ -620,4 +620,19 @@ describe('buildPrompt — guard level untuk topik grammar', () => {
     expect(prompt).toContain('3 pembicara: "Sprecher A", "Sprecher B", "Sprecher C"')
     expect(prompt).toContain('Tepat 1 Perempuan ("Sprecher A" - weiblich) dan 2 Laki-laki ("Sprecher B" - männlich-1 dan "Sprecher C" - männlich-2)')
   })
+
+  it('menyesuaikan pola kalimat grammar bertingkat per level CEFR (A1 vs A2 vs B1)', async () => {
+    const { buildPrompt } = await import('../effect/ai-service')
+    const promptA1 = buildPrompt('Di kafe', 'A1', [], 8)
+    expect(promptA1).toContain('Aussagesatz')
+    expect(promptA1).toContain('W-Frage')
+
+    const promptA2 = buildPrompt('Liburan musim panas', 'A2', [], 8)
+    expect(promptA2).toContain('Perfekt mit haben/sein')
+    expect(promptA2).toContain('Kausalsatz mit weil')
+
+    const promptB1 = buildPrompt('Wawancara kerja', 'B1', [], 8)
+    expect(promptB1).toContain('Konzessivsatz mit obwohl')
+    expect(promptB1).toContain('Relativsatz')
+  })
 })
