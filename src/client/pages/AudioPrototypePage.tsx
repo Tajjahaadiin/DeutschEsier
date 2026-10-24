@@ -16,6 +16,16 @@ interface CandidateOption {
 
 const CANDIDATES: CandidateOption[] = [
   {
+    id: 'male-interpolation',
+    name: 'Kandidat Pilihan Anda: Male Interpolation (dari Base Female Kerstin)',
+    gender: 'male',
+    model: 'de_DE-kerstin-low',
+    initialDetune: -250,
+    initialRate: 1.06,
+    role: 'Pria Dewasa / Karakter Kontras',
+    note: 'Base female diturunkan -250 cents dengan speed 1.06x. Menghasilkan formant unik yang membedakannya secara tajam dari Killian dan Amala!',
+  },
+  {
     id: 'male-1-candidate',
     name: 'Kandidat Pria A: Conrad (Bariton Tenang)',
     gender: 'male',
@@ -90,6 +100,7 @@ export default function AudioPrototypePage({ navigate }: { navigate: (path: stri
 
   // Live tuning state per candidate
   const [tuning, setTuning] = useState<Record<string, { detune: number; rate: number }>>({
+    'male-interpolation': { detune: -250, rate: 1.06 },
     'male-1-candidate': { detune: -90, rate: 0.96 },
     'male-3-candidate': { detune: 0, rate: 1.0 },
     'female-1-candidate': { detune: 0, rate: 0.98 },
