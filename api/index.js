@@ -38451,7 +38451,26 @@ ttsRouter.get("/", async (c) => {
     c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
     return c.body(audioBuffer);
   } catch (error) {
-    console.error("Edge TTS generation failed:", error);
+    console.error("Edge TTS generation failed, falling back to HTTP audio stream:", error?.message || error);
+    try {
+      const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text2)}&tl=de&client=tw-ob`;
+      const fallbackResp = await fetch(googleTtsUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Referer": "https://translate.google.com/"
+        }
+      });
+      if (fallbackResp.ok) {
+        const audioBuffer = Buffer.from(await fallbackResp.arrayBuffer());
+        c.header("Content-Type", "audio/mpeg");
+        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
+        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
+        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+        return c.body(audioBuffer);
+      }
+    } catch (fbErr) {
+      console.error("HTTP audio fallback also failed:", fbErr);
+    }
     return c.json({ error: error?.message || "TTS generation failed" }, 500);
   } finally {
     fs.unlink(tempPath).catch(() => {

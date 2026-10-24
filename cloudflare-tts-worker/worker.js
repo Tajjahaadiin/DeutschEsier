@@ -1,12 +1,7 @@
-/**
- * Cloudflare Worker: Edge TTS Proxy untuk DeutschEasier (JavaScript murni)
- * Menggunakan protokol DRM Sec-MS-GEC v2 (100% didukung Microsoft Edge 2026).
- */
 
 const EDGE_SPEECH_URL = 'wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1'
 const EDGE_API_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4'
 const CHROMIUM_FULL_VERSION = '143.0.3650.75'
-const CHROMIUM_MAJOR_VERSION = CHROMIUM_FULL_VERSION.split('.')[0]
 const WIN_EPOCH_OFFSET = 11644473600
 const S_TO_NS = 1000000000
 const GEC_PREFIX_LENGTH = 57
@@ -159,39 +154,12 @@ export default {
     const secMsGec = await generateSecMsGecV2()
     const targetWsUrl = `${EDGE_SPEECH_URL}?ConnectionId=${connectId}&Ocp-Apim-Subscription-Key=${EDGE_API_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=2-${CHROMIUM_FULL_VERSION}`
 
-    const baseHeaders = {
-      'User-Agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROMIUM_MAJOR_VERSION}.0.0.0 Safari/537.36 Edg/${CHROMIUM_MAJOR_VERSION}.0.0.0`,
-      'Accept-Encoding': 'gzip, deflate, br, zstd',
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Pragma': 'no-cache',
-      'Cache-Control': 'no-cache',
-      'Origin': 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
-      'Sec-WebSocket-Version': '13',
-      'Cookie': `muid=${randomMd5().toUpperCase()};`,
-    }
-
     try {
-      const upgradeUrl = targetWsUrl.replace(/^wss:\/\//i, 'https://')
-      const upgradeResp = await fetch(upgradeUrl, {
-        headers: {
-          ...baseHeaders,
-          Upgrade: 'websocket',
-        },
-      })
-
-      if (upgradeResp.status !== 101 || !upgradeResp.webSocket) {
-        return new Response(JSON.stringify({ error: `WebSocket upgrade failed with status ${upgradeResp.status}` }), {
-          status: 502,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        })
-      }
-
-      const ws = upgradeResp.webSocket
-      ws.accept()
+      const ws = new WebSocket(targetWsUrl)
+      ws.binaryType = 'arraybuffer'
 
       const now = new Date().toUTCString()
       const configMsg = `X-Timestamp:${now}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":false},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`
-
       const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='de-DE'><voice name='${voice}'>${escapeXml(text)}</voice></speak>`
       const ssmlMsg = `X-RequestId:${connectId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${now}\r\nPath:ssml\r\n\r\n${ssml}`
 
@@ -221,6 +189,11 @@ export default {
             },
           }))
         }
+
+        ws.addEventListener('open', () => {
+          ws.send(configMsg)
+          ws.send(ssmlMsg)
+        })
 
         ws.addEventListener('message', async (event) => {
           if (settled) return
@@ -259,17 +232,14 @@ export default {
         })
 
         ws.addEventListener('close', () => finalize())
-        ws.addEventListener('error', () => {
+        ws.addEventListener('error', (err) => {
           if (settled) return
           settled = true
-          resolve(new Response(JSON.stringify({ error: 'Upstream WebSocket error' }), {
+          resolve(new Response(JSON.stringify({ error: 'WebSocket connection failed: ' + (err?.message || 'handshake error') }), {
             status: 502,
             headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
           }))
         })
-
-        ws.send(configMsg)
-        ws.send(ssmlMsg)
 
         setTimeout(() => finalize(), 15000)
       })
