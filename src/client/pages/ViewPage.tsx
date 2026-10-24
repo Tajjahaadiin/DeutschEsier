@@ -636,66 +636,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
             )}
           </div>
         </div>
-      ) : assetsLoading ? (
-        /* SKELETON LOADER STATE: SAAT MODEL NEURAL AUDIO SEDANG DIMUAT */
-        <div className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-6 my-4 animate-pulse">
-          {/* Banner status pemuatan */}
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-5 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <Loader2 size={24} className="animate-spin text-primary shrink-0" />
-              <div>
-                <p className="text-body font-bold text-text">Sedang memuat model audio Jerman...</p>
-                <p className="text-xs text-text-muted mt-0.5">{assetsProgress}</p>
-              </div>
-            </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/15 text-primary shrink-0">
-              Menyiapkan Suara Asli
-            </span>
-          </div>
-
-          {/* Skeleton Tab Bar */}
-          <div className="h-10 bg-slate-200 rounded-md w-3/4 max-w-md" />
-
-          {/* Skeleton Dialog Bubble Turn 1 */}
-          <div className="flex justify-start">
-            <div className="w-[80%] bg-surface border border-border rounded-lg p-5 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-slate-200 rounded-sm w-24" />
-                <div className="h-4 bg-slate-200 rounded-sm w-16" />
-              </div>
-              <div className="h-5 bg-slate-200 rounded-sm w-full" />
-              <div className="h-4 bg-slate-200 rounded-sm w-4/5" />
-              <div className="h-7 bg-slate-200 rounded-md w-20 pt-2" />
-            </div>
-          </div>
-
-          {/* Skeleton Dialog Bubble Turn 2 */}
-          <div className="flex justify-end">
-            <div className="w-[80%] bg-primary/20 border border-primary/30 rounded-lg p-5 space-y-3">
-              <div className="flex items-center justify-end gap-2">
-                <div className="h-4 bg-primary/30 rounded-sm w-16" />
-                <div className="h-4 bg-primary/30 rounded-sm w-24" />
-              </div>
-              <div className="h-5 bg-primary/30 rounded-sm w-full" />
-              <div className="h-4 bg-primary/30 rounded-sm w-3/4" />
-              <div className="h-7 bg-primary/30 rounded-md w-20 pt-2" />
-            </div>
-          </div>
-
-          {/* Skeleton Dialog Bubble Turn 3 */}
-          <div className="flex justify-start">
-            <div className="w-[80%] bg-surface border border-border rounded-lg p-5 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="h-4 bg-slate-200 rounded-sm w-20" />
-                <div className="h-4 bg-slate-200 rounded-sm w-16" />
-              </div>
-              <div className="h-5 bg-slate-200 rounded-sm w-5/6" />
-              <div className="h-4 bg-slate-200 rounded-sm w-2/3" />
-            </div>
-          </div>
-        </div>
       ) : (
-        /* KONTEN UTAMA DENGAN 3 TAB KETIKA AKSES TERBUKA & MODEL SIAP */
+        /* KONTEN UTAMA DENGAN 3 TAB KETIKA AKSES TERBUKA */
         <>
           {/* TAB BAR HEADER */}
           <div className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-2xs">
@@ -781,6 +723,24 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
             </div>
           </div>
 
+          {/* BANNER PROGRES SINTESIS AUDIO DI LATAR BELAKANG (NON-BLOCKING) */}
+          {assetsLoading && (
+            <div className="max-w-2xl w-full mx-auto px-4 mt-3">
+              <div className="p-3.5 bg-primary/10 border border-primary/25 rounded-lg flex items-center justify-between gap-3 text-xs shadow-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Loader2 size={18} className="animate-spin text-primary shrink-0" />
+                  <div>
+                    <span className="font-bold text-text">Menyiapkan Audio Percakapan: </span>
+                    <span className="text-text-muted">{assetsProgress}</span>
+                  </div>
+                </div>
+                <span className="shrink-0 px-2 py-0.5 rounded-full bg-primary/15 text-primary font-semibold text-[11px]">
+                  Latar Belakang
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* TAB 1: DIALOG & VOCAB CLUES */}
           {activeTab === 'dialog' && (
             <>
@@ -829,11 +789,16 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <button
                         type="button"
                         onClick={handlePlayAll}
-                        disabled={session.dialogue.length === 0}
+                        disabled={session.dialogue.length === 0 || assetsLoading}
                         className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer disabled:opacity-50"
+                        title={assetsLoading ? 'Sedang menyiapkan audio percakapan...' : 'Putar Seluruh Dialog'}
                       >
-                        <Play size={13} className="fill-white" />
-                        <span>Putar Seluruh Dialog</span>
+                        {assetsLoading ? (
+                          <Loader2 size={13} className="animate-spin text-white" />
+                        ) : (
+                          <Play size={13} className="fill-white" />
+                        )}
+                        <span>{assetsLoading ? 'Menyiapkan Audio...' : 'Putar Seluruh Dialog'}</span>
                       </button>
                     )}
                   </div>
@@ -912,7 +877,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                               ? 'bg-surface-muted hover:bg-border text-text'
                               : 'bg-white/20 hover:bg-white/30 text-white')
                           }
-                          disabled={playingIndex === i}
+                          disabled={playingIndex === i || assetsLoading}
                         >
                           <Volume2
                             size={13}
