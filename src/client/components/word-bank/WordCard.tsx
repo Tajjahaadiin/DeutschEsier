@@ -45,7 +45,7 @@ export function WordCard({
         <button 
           onClick={(e) => { 
             e.stopPropagation(); 
-            playWordAudio(word.germanWord, { personaId }) 
+            playWordAudio(word.germanWord, { personaId }, word.article) 
           }} 
           className="text-gray-400 hover:text-blue-500 transition-colors"
           aria-label={`Putar pengucapan ${word.germanWord}`}
