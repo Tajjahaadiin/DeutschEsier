@@ -46,7 +46,10 @@ const PRONUNCIATION: Record<number, string> = {
   70: 'ZIIP-tsikh',
   80: 'AKHT-tsikh',
   90: 'NOIN-tsikh',
-  100: 'HUN-dert',
+  100: 'EIN-hun-dert',
+  1000: 'EIN-tau-zent',
+  10000: 'TSEEN-tau-zent',
+  1000000: 'AI-ne mil-YOON',
 }
 
 const MEANING: Record<number, string> = {
@@ -79,11 +82,14 @@ const MEANING: Record<number, string> = {
   80: 'delapan puluh',
   90: 'sembilan puluh',
   100: 'seratus',
+  1000: 'seribu',
+  10000: 'sepuluh ribu',
+  1000000: 'satu juta',
 }
 
 const VALUES = [
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 30, 40, 50, 60, 70, 80,
-  90, 100,
+  90, 100, 1000, 10000, 1000000,
 ]
 
 /** Daftar kartu angka, urut menaik. */

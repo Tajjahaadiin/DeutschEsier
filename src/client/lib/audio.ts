@@ -297,6 +297,77 @@ export function playAlphabetAudio(
   audio.play().catch(() => runFallback())
 }
 
+// Memutar audio angka pada die Nummer.
+// Memprioritaskan file statis Martin (/audio/numbers/{value}.wav), jika tidak ada fallback ke speakGerman.
+export function playNumberAudio(
+  value: number,
+  fallbackText: string,
+  optionsOrOnEnd?: SpeakOptions | (() => void)
+) {
+  stopSpeech()
+  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
+
+  const staticUrl = `/audio/numbers/${value}.wav`
+  const audio = new Audio(staticUrl)
+  if (options.rate !== undefined) {
+    audio.playbackRate = options.rate
+    audio.defaultPlaybackRate = options.rate
+  }
+  currentHtmlAudio = audio
+
+  let staticFailed = false
+  const runFallback = () => {
+    if (staticFailed) return
+    staticFailed = true
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    speakGerman(fallbackText, options)
+  }
+
+  audio.onended = () => {
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    if (options.onEnd) options.onEnd()
+  }
+
+  audio.onerror = () => runFallback()
+  audio.play().catch(() => runFallback())
+}
+
+// Memutar audio kombinasi game hitung (angka + benda).
+// Memprioritaskan file statis Martin (/audio/number-game/{n}-{noun}.wav), jika tidak ada fallback ke speakGerman.
+export function playNumberGameAudio(
+  n: number,
+  noun: string,
+  fallbackText: string,
+  optionsOrOnEnd?: SpeakOptions | (() => void)
+) {
+  stopSpeech()
+  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
+
+  const staticUrl = `/audio/number-game/${n}-${noun.toLowerCase().trim()}.wav`
+  const audio = new Audio(staticUrl)
+  if (options.rate !== undefined) {
+    audio.playbackRate = options.rate
+    audio.defaultPlaybackRate = options.rate
+  }
+  currentHtmlAudio = audio
+
+  let staticFailed = false
+  const runFallback = () => {
+    if (staticFailed) return
+    staticFailed = true
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    speakGerman(fallbackText, options)
+  }
+
+  audio.onended = () => {
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    if (options.onEnd) options.onEnd()
+  }
+
+  audio.onerror = () => runFallback()
+  audio.play().catch(() => runFallback())
+}
+
 export function getStoredPersonaId(): TtsPersonaId {
   if (typeof window === 'undefined') return DEFAULT_FEMALE_PERSONA
   try {

@@ -73,7 +73,10 @@ const TENS: Record<number, string> = {
 export function numberWord(n: number): string {
   if (!Number.isFinite(n) || n < 0) return ''
   const value = Math.floor(n)
-  if (value > 100) return String(value)
+  if (value === 1_000_000) return 'eine Million'
+  if (value === 10_000) return 'zehntausend'
+  if (value === 1_000) return 'eintausend'
+  if (value > 100 && value < 1000) return String(value)
   if (value === 100) return 'hundert'
   if (value <= 12) return UNITS[value]
   if (value < 20) return TEENS[value]

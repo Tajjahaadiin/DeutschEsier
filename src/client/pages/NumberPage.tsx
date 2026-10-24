@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, Volume2, RotateCcw, Sparkles, Hash, Gamepad2 } from 'lucide-react'
-import { speakGerman } from '../lib/audio'
+import { playNumberAudio, playNumberGameAudio } from '../lib/audio'
 import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 import { combineNumberAndNoun } from '../lib/numberGame'
 import { NUMBER_ITEMS } from '../data/numberData'
@@ -14,7 +14,7 @@ interface NumberPageProps {
 type Tab = 'cards' | 'game'
 
 /** Kartu angka yang dipakai di game (biar tidak terlalu banyak). */
-const GAME_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+export const GAME_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 export default function NumberPage({ navigate, embedded = false }: NumberPageProps) {
   const [activeTab, setActiveTab] = useState<Tab>('cards')
@@ -29,9 +29,23 @@ export default function NumberPage({ navigate, embedded = false }: NumberPagePro
   const [category, setCategory] = useState<string>('Semua')
 
 
-  const handlePlay = (text: string) => {
+  const handlePlayNumber = (value: number, text: string) => {
     setPlaying(text)
-    speakGerman(text, { personaId: currentPersonaId, rate: speechRate, onEnd: () => setPlaying(null) })
+    playNumberAudio(value, text, {
+      personaId: currentPersonaId,
+      rate: speechRate,
+      onEnd: () => setPlaying(null),
+    })
+  }
+
+  const handlePlayGamePhrase = () => {
+    if (!generated || numberSlot === null || !objectSlot) return
+    setPlaying(generated)
+    playNumberGameAudio(numberSlot, objectSlot.noun, generated, {
+      personaId: currentPersonaId,
+      rate: speechRate,
+      onEnd: () => setPlaying(null),
+    })
   }
 
   const gameObjects = useMemo(
@@ -115,25 +129,36 @@ export default function NumberPage({ navigate, embedded = false }: NumberPagePro
         {/* ============ TAB: KARTU ANGKA ============ */}
         {activeTab === 'cards' && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {NUMBER_ITEMS.map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                onClick={() => handlePlay(item.german)}
-                className="bg-white rounded-md border border-slate-200 p-4 text-left hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
-              >
-                <div className="flex items-start justify-between">
-                  <span className="text-3xl font-extrabold text-slate-800">{item.value}</span>
-                  <Volume2
-                    size={16}
-                    className={playing === item.german ? 'animate-pulse text-blue-600' : 'text-slate-300'}
-                  />
-                </div>
-                <p className="text-sm font-bold text-blue-700 mt-1">{item.german}</p>
-                <p className="text-label text-slate-400">{item.pronunciation}</p>
-                <p className="text-label text-slate-500 mt-0.5">{item.meaningId}</p>
-              </button>
-            ))}
+            {NUMBER_ITEMS.map((item) => {
+              const displayLabel =
+                item.value === 1000000
+                  ? '1M'
+                  : item.value === 10000
+                  ? '10k'
+                  : item.value === 1000
+                  ? '1k'
+                  : item.value
+
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => handlePlayNumber(item.value, item.german)}
+                  className="bg-white rounded-md border border-slate-200 p-4 text-left hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+                >
+                  <div className="flex items-start justify-between">
+                    <span className="text-3xl font-extrabold text-slate-800">{displayLabel}</span>
+                    <Volume2
+                      size={16}
+                      className={playing === item.german ? 'animate-pulse text-blue-600' : 'text-slate-300'}
+                    />
+                  </div>
+                  <p className="text-sm font-bold text-blue-700 mt-1">{item.german}</p>
+                  <p className="text-label text-slate-400">{item.pronunciation}</p>
+                  <p className="text-label text-slate-500 mt-0.5">{item.meaningId}</p>
+                </button>
+              )
+            })}
           </div>
         )}
 
@@ -221,7 +246,7 @@ export default function NumberPage({ navigate, embedded = false }: NumberPagePro
                   <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">{generated}</p>
                   <button
                     type="button"
-                    onClick={() => handlePlay(generated)}
+                    onClick={handlePlayGamePhrase}
                     className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white border border-blue-300 text-blue-700 text-xs font-bold hover:bg-blue-50 transition-colors cursor-pointer"
                   >
                     <Volume2 size={14} className={playing === generated ? 'animate-pulse' : ''} />
