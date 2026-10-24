@@ -10,7 +10,6 @@ import {
   Clock,
   AlertCircle,
   Layers,
-  Volume2,
 } from 'lucide-react'
 import { isTeacherAuthenticated } from '../lib/auth'
 import KeyManagerModal from '../components/access/KeyManagerModal'
@@ -19,11 +18,6 @@ import { SelectionBasket } from '../components/word-bank/SelectionBasket'
 import AlphabetPage from './AlphabetPage'
 import NumberPage from './NumberPage'
 import DayPage from './DayPage'
-import {
-  getStoredPersonaId,
-  setStoredPersonaId,
-  type TtsPersonaId,
-} from '../lib/audio'
 import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 
 export type GrundlagenTab = 'words' | 'alphabet' | 'nummer' | 'tage'

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   ArrowLeft,
   Search,
@@ -12,7 +12,7 @@ import { GERMAN_ALPHABET, GermanAlphabetItem } from '../data/alphabetData'
 import { AlphabetCard } from '../components/alphabet/AlphabetCard'
 import { AlphabetDetailModal } from '../components/alphabet/AlphabetDetailModal'
 import { SpellingTrainer } from '../components/alphabet/SpellingTrainer'
-import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
+import { GRUNDLAGEN_PERSONA_ID, getTtsPersona } from '../../shared/ttsPersonas'
 
 interface AlphabetPageProps {
   navigate: (path: string) => void
