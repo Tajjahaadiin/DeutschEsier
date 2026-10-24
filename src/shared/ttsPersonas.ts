@@ -1,9 +1,9 @@
 /**
  * Definisi terpusat persona Text-to-Speech (TTS) bahasa Jerman (Hochdeutsch).
  *
- * Menggunakan suara Microsoft Edge Neural TTS bawaan (msedge-tts) dengan
- * 6 persona vokal (3 pria + 3 wanita) untuk mendukung skenario percakapan
- * hingga 6 karakter pembicara yang berbeda usia, peran, dan gaya bicara.
+ * Menggunakan arsitektur Zero-Vendor dengan 6 persona vokal (3 pria + 3 wanita):
+ * - Backend: Gemini 2.5 Flash TTS (@google/genai) via prebuilt voice config
+ * - Fallback Client: Web Speech API (window.speechSynthesis) dengan profil akustik pitch/rate
  *
  * ATURAN IMPORT:
  * - Klien dapat mengimpor via `@/shared/ttsPersonas` atau jalur relatif.
@@ -15,6 +15,7 @@ export interface TtsPersona {
   name: string
   gender: 'male' | 'female'
   voiceId: string
+  geminiVoiceName: string
   roleId: string
   descriptionId: string
   emoji: string
@@ -26,6 +27,7 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
     name: 'Conrad',
     gender: 'male',
     voiceId: 'de-DE-ConradNeural',
+    geminiVoiceName: 'Charon',
     roleId: 'Guru Formal (Der Lehrer)',
     descriptionId: 'Dewasa matang, bariton tegas, artikulasi akademis',
     emoji: '👨‍🏫',
@@ -35,6 +37,7 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
     name: 'Killian',
     gender: 'male',
     voiceId: 'de-DE-KillianNeural',
+    geminiVoiceName: 'Puck',
     roleId: 'Mahasiswa Santai (Der Student)',
     descriptionId: 'Muda, tenor luwes, percakapan sehari-hari',
     emoji: '🧑‍🎓',
@@ -44,6 +47,7 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
     name: 'Florian',
     gender: 'male',
     voiceId: 'de-DE-FlorianMultilingualNeural',
+    geminiVoiceName: 'Fenrir',
     roleId: 'Rekan Kerja (Der Kollege)',
     descriptionId: 'Dewasa muda, modern, lugas & profesional',
     emoji: '👨‍💼',
@@ -53,6 +57,7 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
     name: 'Katja',
     gender: 'female',
     voiceId: 'de-DE-KatjaNeural',
+    geminiVoiceName: 'Kore',
     roleId: 'Tutor Utama (Die Lehrerin)',
     descriptionId: 'Dewasa, vokal jernih, hangat & artikulatif',
     emoji: '👩‍🏫',
@@ -62,6 +67,7 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
     name: 'Amala',
     gender: 'female',
     voiceId: 'de-DE-AmalaNeural',
+    geminiVoiceName: 'Zephyr',
     roleId: 'Rekan Belajar (Die Studentin)',
     descriptionId: 'Muda, ceria, energik & dinamis',
     emoji: '👧',
@@ -71,6 +77,7 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
     name: 'Seraphina',
     gender: 'female',
     voiceId: 'de-DE-SeraphinaMultilingualNeural',
+    geminiVoiceName: 'Aoede',
     roleId: 'Konsultan Ramah (Die Beraterin)',
     descriptionId: 'Dewasa muda, nada ramah, empatik & halus',
     emoji: '👩‍💼',
@@ -127,4 +134,27 @@ export function resolveEdgeVoiceId(
 
   // Default aman
   return 'de-DE-KatjaNeural'
+}
+
+/**
+ * Resolusi nama suara Gemini TTS berdasarkan personaId atau nama suara langsung.
+ */
+export function resolveGeminiVoiceName(
+  voiceOrPersona: string | undefined | null,
+  fallbackGender: 'male' | 'female' = 'female'
+): string {
+  if (!voiceOrPersona) {
+    return fallbackGender === 'male' ? 'Charon' : 'Kore'
+  }
+
+  const byId = PERSONA_BY_ID.get(voiceOrPersona)
+  if (byId) return byId.geminiVoiceName
+
+  const byVoice = PERSONA_BY_VOICE.get(voiceOrPersona.toLowerCase())
+  if (byVoice) return byVoice.geminiVoiceName
+
+  if (voiceOrPersona.toLowerCase() === 'male') return 'Charon'
+  if (voiceOrPersona.toLowerCase() === 'female') return 'Kore'
+
+  return 'Kore'
 }

@@ -113,28 +113,28 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
 
     expect(spoken).toHaveLength(0)
     expect(FakeAudio.instances).toHaveLength(1)
-    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&voice=de-DE-KatjaNeural')
+    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&persona=female-1')
     expect(FakeAudio.instances[0].played).toBe(true)
   })
 
-  it('gender pria memakai suara pria neural, bukan pitch-shift browser', () => {
+  it('gender pria memakai persona pria default', () => {
     speakGerman('Guten Tag', { gender: 'male' })
 
     expect(spoken).toHaveLength(0)
-    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Guten%20Tag&voice=de-DE-ConradNeural')
+    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Guten%20Tag&persona=male-1')
   })
 
   it('personaId eksplisit memilih suara persona tersebut', () => {
     speakGerman('Hallo', { personaId: 'male-3', gender: 'male' })
 
-    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&voice=de-DE-FlorianMultilingualNeural')
+    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&persona=male-3')
   })
 
   it('persona tersimpan dipakai bila tidak ada opsi persona/gender', () => {
     localStorage.setItem('preferredPersonaId', 'female-2')
     speakGerman('Hallo')
 
-    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&voice=de-DE-AmalaNeural')
+    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&persona=female-2')
     localStorage.clear()
   })
 

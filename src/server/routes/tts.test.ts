@@ -1,19 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const ttsPromiseMock = vi.fn().mockImplementation(async (_text, filePath) => {
-  const fs = await import('fs/promises')
-  await fs.writeFile(filePath, Buffer.from('dummy-mp3-binary-data'))
+const synthesizeMock = vi.fn().mockImplementation(async (text: string, personaOrVoice?: string) => {
+  return Buffer.from(`RIFF...WAVE...fake-audio-for-${personaOrVoice || 'default'}-${text}`)
 })
 
-let lastConfig: any = null
+let lastRequestedVoice: string | undefined = undefined
 
-vi.mock('node-edge-tts', () => {
+vi.mock('../lib/geminiTts', () => {
   return {
-    EdgeTTS: class {
-      constructor(config: any) {
-        lastConfig = config
-      }
-      ttsPromise = ttsPromiseMock
+    synthesizeGeminiSpeech: (text: string, personaOrVoice?: string) => {
+      lastRequestedVoice = personaOrVoice
+      return synthesizeMock(text, personaOrVoice)
     },
   }
 })
@@ -21,8 +18,8 @@ vi.mock('node-edge-tts', () => {
 const { default: app } = await import('../app')
 
 beforeEach(() => {
-  ttsPromiseMock.mockClear()
-  lastConfig = null
+  synthesizeMock.mockClear()
+  lastRequestedVoice = undefined
 })
 
 describe('GET /api/tts', () => {
@@ -32,30 +29,30 @@ describe('GET /api/tts', () => {
     expect(((await res.json()) as any).error).toContain('Text parameter is required')
   })
 
-  it('menggunakan voice default de-DE-KatjaNeural bila gender/voice tidak diberikan', async () => {
+  it('mengembalikan audio/wav dan memanggil synthesizeGeminiSpeech', async () => {
     const res = await app.request('/api/tts?text=Hallo')
     expect(res.status).toBe(200)
-    expect(res.headers.get('content-type')).toBe('audio/mpeg')
-    expect(lastConfig?.voice).toBe('de-DE-KatjaNeural')
-    expect(ttsPromiseMock).toHaveBeenCalled()
+    expect(res.headers.get('content-type')).toBe('audio/wav')
+    expect(res.headers.get('cache-control')).toContain('immutable')
+    expect(synthesizeMock).toHaveBeenCalledWith('Hallo', undefined)
   })
 
-  it('menerima parameter ?persona=male-2 dan memetakan ke de-DE-KillianNeural', async () => {
+  it('menerima parameter ?persona=male-2', async () => {
     const res = await app.request('/api/tts?text=Hallo&persona=male-2')
     expect(res.status).toBe(200)
-    expect(lastConfig?.voice).toBe('de-DE-KillianNeural')
+    expect(lastRequestedVoice).toBe('male-2')
   })
 
   it('menerima parameter ?voice=de-DE-AmalaNeural secara langsung', async () => {
     const res = await app.request('/api/tts?text=Hallo&voice=de-DE-AmalaNeural')
     expect(res.status).toBe(200)
-    expect(lastConfig?.voice).toBe('de-DE-AmalaNeural')
+    expect(lastRequestedVoice).toBe('de-DE-AmalaNeural')
   })
 
-  it('mendukung fallback gender lama ?gender=male', async () => {
+  it('mendukung parameter gender ?gender=male', async () => {
     const res = await app.request('/api/tts?text=Hallo&gender=male')
     expect(res.status).toBe(200)
-    expect(lastConfig?.voice).toBe('de-DE-ConradNeural')
+    expect(lastRequestedVoice).toBe('male')
   })
 
   it('menolak teks yang melebihi batas 1000 karakter (400)', async () => {
@@ -63,29 +60,23 @@ describe('GET /api/tts', () => {
     const res = await app.request(`/api/tts?text=${encodeURIComponent(longText)}`)
     expect(res.status).toBe(400)
     expect(((await res.json()) as any).error).toContain('exceeds maximum allowed length')
-    expect(ttsPromiseMock).not.toHaveBeenCalled()
+    expect(synthesizeMock).not.toHaveBeenCalled()
   })
 
-  it('menggunakan CLOUDFLARE_TTS_PROXY bila env tersedia dan respons sukses', async () => {
-    process.env.CLOUDFLARE_TTS_PROXY = 'https://tts-proxy.example.workers.dev'
+  it('melakukan fallback ke Google HTTP TTS bila Gemini mengalami error', async () => {
+    synthesizeMock.mockRejectedValueOnce(new Error('Gemini API quota exceeded'))
+
     const origFetch = globalThis.fetch
-    globalThis.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
-      status: 200,
-      arrayBuffer: async () => Buffer.from('mock-cloudflare-mp3'),
-    }) as any
+      arrayBuffer: () => Promise.resolve(Buffer.from('google-mp3-fallback').buffer),
+    } as any)
 
     try {
-      const res = await app.request('/api/tts?text=Hallo&voice=de-DE-KillianNeural')
+      const res = await app.request('/api/tts?text=Hallo')
       expect(res.status).toBe(200)
       expect(res.headers.get('content-type')).toBe('audio/mpeg')
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        'https://tts-proxy.example.workers.dev/tts?text=Hallo&voice=de-DE-KillianNeural'
-      )
-      // Tidak sampai memanggil ttsPromise lokal
-      expect(ttsPromiseMock).not.toHaveBeenCalled()
     } finally {
-      delete process.env.CLOUDFLARE_TTS_PROXY
       globalThis.fetch = origFetch
     }
   })

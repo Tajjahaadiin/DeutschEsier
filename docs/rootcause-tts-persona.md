@@ -96,15 +96,23 @@ npm run tts:smoke     # 6/6 OK -> endpoint sehat
 npx vitest run        # 286 test, termasuk 17 test audio
 ```
 
-## 5. Risiko yang masih ada & Fakta Lapangan Cloud (2026-10-24)
+## 5. Resolusi Arsitektur TTS: Zero-Vendor Gemini 2.5 Flash TTS
 
-1. **Pemblokiran IP Datacenter Cloud (Vercel & Cloudflare Edge):**
-   Microsoft Edge TTS secara aktif mencegat request WebSocket dari ASN cloud publik (AWS Lambda/Vercel dan Cloudflare Workers) dengan mengembalikan HTTP `200` (halaman tantangan CAPTCHA) alih-alih `101 Switching Protocols`. Oleh karena itu, proxy backend serverless ke Microsoft Edge TTS tidak berfungsi tanpa egress IP residensial.
-2. **Solusi Jangka Menengah/Sementara:**
-   Fallback Web Speech di klien dikonfigurasi dengan profil akustik diferensiasi nada (`pitch: 0.75` - `1.20`, `rate: 0.92` - `1.05`) untuk ke-6 persona agar murid tetap mendengar karakter vokal yang terpisah saat berada di lingkungan produksi Vercel.
-3. **Solusi Permanen (Target Berikutnya):**
-   - **Materi Statis (Grundlagen):** Pre-generate seluruh audio 6 persona ke aset statis lokal/CDN (`scripts/pregenerate-tts.ts`) menggunakan mesin lokal.
-   - **Materi Dinamis (Generator AI):** Integrasi API TTS resmi (misal: Azure Speech API Free Tier dengan 500k karakter/bulan) untuk menghasilkan suara HD Neural resmi tanpa risiko pemblokiran IP.
+1. **Eliminasi Masalah Blokir IP Datacenter:**
+   Ketergantungan pada WebSocket Microsoft Edge TTS (`node-edge-tts` dan Cloudflare Worker proxy) telah dihapus dari jalur produksi. Sistem kini menggunakan SDK `@google/genai` (`gemini-2.5-flash-preview-tts`) via REST API HTTPS resmi Google AI Studio (`GEMINI_API_KEY`).
+2. **Pemetaan Suara 6 Persona (Gemini Prebuilt Voices):**
+   - `male-1` (Conrad) -> `Charon`
+   - `male-2` (Killian) -> `Puck`
+   - `male-3` (Florian) -> `Fenrir`
+   - `female-1` (Katja) -> `Kore`
+   - `female-2` (Amala) -> `Zephyr`
+   - `female-3` (Seraphina) -> `Aoede`
+3. **Format Kontainer Audio:**
+   Output Raw PCM (24kHz, 16-bit, mono) dari Gemini dibungkus dengan header standar RIFF WAV 44-byte (`src/server/lib/wavHeader.ts`) sehingga dapat diputar secara native oleh semua browser (termasuk Safari/iOS).
+4. **Caching & Jaring Pengaman (Multi-Layer):**
+   - **Layer 1 (CDN Cache):** Respons `GET /api/tts` dilengkapi header `Cache-Control: public, max-age=31536000, immutable` dan `Vercel-CDN-Cache-Control` sehingga permintaan berulang dilayani langsung oleh Vercel Edge Network tanpa menghabiskan kuota API.
+   - **Layer 2 (Emergency HTTP Stream):** Jika kuota/koneksi Gemini bermasalah, server melakukan fallback otomatis ke stream HTTP audio publik.
+   - **Layer 3 (Client Acoustic Fallback):** Klien Web Speech API (`window.speechSynthesis`) tetap aktif dengan modulasi `pitch` (0.75 - 1.20) dan `rate` (0.92 - 1.05) per persona jika server offline.
 
 ## 6. Opsi self-hosting: fakta terverifikasi
 

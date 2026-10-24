@@ -177,7 +177,7 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
     storedPersonaId: getStoredPersonaId(),
   })
 
-  const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(request.voiceId)}`
+  const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&persona=${encodeURIComponent(request.personaId)}`
   const audio = new Audio(audioUrl)
   if (options.rate !== undefined) {
     audio.playbackRate = options.rate

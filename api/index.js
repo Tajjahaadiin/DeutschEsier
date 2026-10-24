@@ -3206,7 +3206,7 @@ function sql(strings, ...params) {
     return new SQL([new StringChunk(str)]);
   }
   sql22.raw = raw2;
-  function join4(chunks, separator) {
+  function join3(chunks, separator) {
     const result = [];
     for (const [i, chunk3] of chunks.entries()) {
       if (i > 0 && separator !== void 0) {
@@ -3216,7 +3216,7 @@ function sql(strings, ...params) {
     }
     return new SQL(result);
   }
-  sql22.join = join4;
+  sql22.join = join3;
   function identifier2(value3) {
     return new Name(value3);
   }
@@ -6714,7 +6714,7 @@ var PgSelectQueryBuilderBase = class extends TypedQueryBuilder {
     return (table, on) => {
       const baseTableName = this.tableName;
       const tableName = getTableLikeName(table);
-      if (typeof tableName === "string" && this.config.joins?.some((join4) => join4.alias === tableName)) {
+      if (typeof tableName === "string" && this.config.joins?.some((join3) => join3.alias === tableName)) {
         throw new Error(`Alias "${tableName}" is already used in this query`);
       }
       if (!this.isPartialSelect) {
@@ -7741,7 +7741,7 @@ var PgUpdateBase = class extends QueryPromise {
   createJoin(joinType) {
     return (table, on) => {
       const tableName = getTableLikeName(table);
-      if (typeof tableName === "string" && this.config.joins.some((join4) => join4.alias === tableName)) {
+      if (typeof tableName === "string" && this.config.joins.some((join3) => join3.alias === tableName)) {
         throw new Error(`Alias "${tableName}" is already used in this query`);
       }
       if (typeof on === "function") {
@@ -7837,10 +7837,10 @@ var PgUpdateBase = class extends QueryPromise {
           const fromFields = this.getTableLikeFields(this.config.from);
           fields[tableName] = fromFields;
         }
-        for (const join4 of this.config.joins) {
-          const tableName2 = getTableLikeName(join4.table);
-          if (typeof tableName2 === "string" && !is(join4.table, SQL)) {
-            const fromFields = this.getTableLikeFields(join4.table);
+        for (const join3 of this.config.joins) {
+          const tableName2 = getTableLikeName(join3.table);
+          if (typeof tableName2 === "string" && !is(join3.table, SQL)) {
+            const fromFields = this.getTableLikeFields(join3.table);
             fields[tableName2] = fromFields;
           }
         }
@@ -38281,8 +38281,30 @@ sessionsRouter.delete("/:id", requireTeacherAuth, async (c) => {
 });
 var sessions_default = sessionsRouter;
 
-// src/server/routes/tts.ts
-import { EdgeTTS } from "node-edge-tts";
+// src/server/lib/geminiTts.ts
+import { GoogleGenAI as GoogleGenAI2 } from "@google/genai";
+
+// src/server/lib/wavHeader.ts
+function wrapPcmInWav(pcmBuffer, sampleRate = 24e3, numChannels = 1, bitsPerSample = 16) {
+  const byteRate = sampleRate * numChannels * bitsPerSample / 8;
+  const blockAlign = numChannels * bitsPerSample / 8;
+  const dataSize = pcmBuffer.length;
+  const header = Buffer.alloc(44);
+  header.write("RIFF", 0);
+  header.writeUInt32LE(36 + dataSize, 4);
+  header.write("WAVE", 8);
+  header.write("fmt ", 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20);
+  header.writeUInt16LE(numChannels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bitsPerSample, 34);
+  header.write("data", 36);
+  header.writeUInt32LE(dataSize, 40);
+  return Buffer.concat([header, pcmBuffer]);
+}
 
 // src/shared/ttsPersonas.ts
 var TTS_PERSONAS = [
@@ -38291,6 +38313,7 @@ var TTS_PERSONAS = [
     name: "Conrad",
     gender: "male",
     voiceId: "de-DE-ConradNeural",
+    geminiVoiceName: "Charon",
     roleId: "Guru Formal (Der Lehrer)",
     descriptionId: "Dewasa matang, bariton tegas, artikulasi akademis",
     emoji: "\u{1F468}\u200D\u{1F3EB}"
@@ -38300,6 +38323,7 @@ var TTS_PERSONAS = [
     name: "Killian",
     gender: "male",
     voiceId: "de-DE-KillianNeural",
+    geminiVoiceName: "Puck",
     roleId: "Mahasiswa Santai (Der Student)",
     descriptionId: "Muda, tenor luwes, percakapan sehari-hari",
     emoji: "\u{1F9D1}\u200D\u{1F393}"
@@ -38309,6 +38333,7 @@ var TTS_PERSONAS = [
     name: "Florian",
     gender: "male",
     voiceId: "de-DE-FlorianMultilingualNeural",
+    geminiVoiceName: "Fenrir",
     roleId: "Rekan Kerja (Der Kollege)",
     descriptionId: "Dewasa muda, modern, lugas & profesional",
     emoji: "\u{1F468}\u200D\u{1F4BC}"
@@ -38318,6 +38343,7 @@ var TTS_PERSONAS = [
     name: "Katja",
     gender: "female",
     voiceId: "de-DE-KatjaNeural",
+    geminiVoiceName: "Kore",
     roleId: "Tutor Utama (Die Lehrerin)",
     descriptionId: "Dewasa, vokal jernih, hangat & artikulatif",
     emoji: "\u{1F469}\u200D\u{1F3EB}"
@@ -38327,6 +38353,7 @@ var TTS_PERSONAS = [
     name: "Amala",
     gender: "female",
     voiceId: "de-DE-AmalaNeural",
+    geminiVoiceName: "Zephyr",
     roleId: "Rekan Belajar (Die Studentin)",
     descriptionId: "Muda, ceria, energik & dinamis",
     emoji: "\u{1F467}"
@@ -38336,6 +38363,7 @@ var TTS_PERSONAS = [
     name: "Seraphina",
     gender: "female",
     voiceId: "de-DE-SeraphinaMultilingualNeural",
+    geminiVoiceName: "Aoede",
     roleId: "Konsultan Ramah (Die Beraterin)",
     descriptionId: "Dewasa muda, nada ramah, empatik & halus",
     emoji: "\u{1F469}\u200D\u{1F4BC}"
@@ -38347,58 +38375,56 @@ var PERSONA_BY_ID = new Map(
 var PERSONA_BY_VOICE = new Map(
   TTS_PERSONAS.map((p) => [p.voiceId.toLowerCase(), p])
 );
-function resolveEdgeVoiceId(voiceOrPersona, fallbackGender = "female") {
+function resolveGeminiVoiceName(voiceOrPersona, fallbackGender = "female") {
   if (!voiceOrPersona) {
-    return fallbackGender === "male" ? "de-DE-ConradNeural" : "de-DE-KatjaNeural";
+    return fallbackGender === "male" ? "Charon" : "Kore";
   }
   const byId = PERSONA_BY_ID.get(voiceOrPersona);
-  if (byId) return byId.voiceId;
+  if (byId) return byId.geminiVoiceName;
   const byVoice = PERSONA_BY_VOICE.get(voiceOrPersona.toLowerCase());
-  if (byVoice) return byVoice.voiceId;
-  if (voiceOrPersona.toLowerCase() === "male") return "de-DE-ConradNeural";
-  if (voiceOrPersona.toLowerCase() === "female") return "de-DE-KatjaNeural";
-  return "de-DE-KatjaNeural";
+  if (byVoice) return byVoice.geminiVoiceName;
+  if (voiceOrPersona.toLowerCase() === "male") return "Charon";
+  if (voiceOrPersona.toLowerCase() === "female") return "Kore";
+  return "Kore";
 }
 
-// src/server/routes/tts.ts
-import { promises as fs } from "fs";
-import { join as join3 } from "path";
-import { tmpdir } from "os";
-
-// node_modules/nanoid/index.js
-import { webcrypto as crypto3 } from "node:crypto";
-
-// node_modules/nanoid/url-alphabet/index.js
-var urlAlphabet = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
-
-// node_modules/nanoid/index.js
-var POOL_SIZE_MULTIPLIER = 128;
-var pool;
-var poolOffset;
-function fillPool(bytes) {
-  if (bytes < 0) throw new RangeError("Wrong ID size");
-  try {
-    if (!pool || pool.length < bytes) {
-      pool = Buffer.allocUnsafe(bytes * POOL_SIZE_MULTIPLIER);
-      crypto3.getRandomValues(pool);
-      poolOffset = 0;
-    } else if (poolOffset + bytes > pool.length) {
-      crypto3.getRandomValues(pool);
-      poolOffset = 0;
+// src/server/lib/geminiTts.ts
+function getAiClient2() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
+  }
+  return new GoogleGenAI2({ apiKey });
+}
+async function synthesizeGeminiSpeech(text2, personaOrVoice) {
+  const voiceName = resolveGeminiVoiceName(personaOrVoice);
+  const ai = getAiClient2();
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-preview-tts",
+    contents: [
+      {
+        parts: [
+          {
+            text: `Say in standard German (Hochdeutsch): ${text2}`
+          }
+        ]
+      }
+    ],
+    config: {
+      responseModalities: ["AUDIO"],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName }
+        }
+      }
     }
-  } catch (e) {
-    pool = void 0;
-    throw e;
+  });
+  const base64Pcm = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  if (!base64Pcm) {
+    throw new Error("Gemini TTS returned empty audio payload");
   }
-  poolOffset += bytes;
-}
-function nanoid(size10 = 21) {
-  fillPool(size10 |= 0);
-  let id = "";
-  for (let i = poolOffset - size10; i < poolOffset; i++) {
-    id += urlAlphabet[pool[i] & 63];
-  }
-  return id;
+  const pcmBuffer = Buffer.from(base64Pcm, "base64");
+  return wrapPcmInWav(pcmBuffer, 24e3, 1, 16);
 }
 
 // src/server/routes/tts.ts
@@ -38408,56 +38434,28 @@ ttsRouter.get("/", async (c) => {
   const text2 = c.req.query("text");
   const voiceParam = c.req.query("voice") || c.req.query("persona");
   const genderParam = (c.req.query("gender") || "").toLowerCase();
-  const fallbackGender = genderParam === "male" ? "male" : "female";
+  const personaIdentifier = voiceParam || (genderParam ? genderParam : void 0);
   if (!text2 || text2.trim() === "") {
     return c.json({ error: "Text parameter is required" }, 400);
   }
   if (text2.length > MAX_TTS_TEXT_LENGTH) {
     return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400);
   }
-  const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : void 0), fallbackGender);
-  const proxyBase = process.env.CLOUDFLARE_TTS_PROXY;
-  if (proxyBase) {
-    try {
-      const cleanProxy = proxyBase.replace(/\/+$/, "");
-      const proxyUrl = `${cleanProxy}/tts?text=${encodeURIComponent(text2)}&voice=${encodeURIComponent(voiceName)}`;
-      const resp = await fetch(proxyUrl);
-      if (resp.ok) {
-        const audioBuffer = Buffer.from(await resp.arrayBuffer());
-        c.header("Content-Type", "audio/mpeg");
-        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-        return c.body(audioBuffer);
-      }
-      console.warn(`[tts] Cloudflare proxy returned ${resp.status}, falling back to direct EdgeTTS...`);
-    } catch (proxyErr) {
-      console.warn("[tts] Cloudflare proxy unreachable, falling back to direct EdgeTTS:", proxyErr);
-    }
-  }
-  const tempPath = join3(tmpdir(), `tts-${nanoid()}.mp3`);
   try {
-    const tts = new EdgeTTS({
-      voice: voiceName,
-      lang: "de-DE",
-      outputFormat: "audio-24khz-48kbitrate-mono-mp3",
-      timeout: 1e4
-    });
-    await tts.ttsPromise(text2, tempPath);
-    const audioBuffer = await fs.readFile(tempPath);
-    c.header("Content-Type", "audio/mpeg");
+    const wavBuffer = await synthesizeGeminiSpeech(text2.trim(), personaIdentifier);
+    c.header("Content-Type", "audio/wav");
     c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
     c.header("CDN-Cache-Control", "public, s-maxage=31536000");
     c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-    return c.body(audioBuffer);
+    return c.body(wavBuffer);
   } catch (error) {
-    console.error("Edge TTS generation failed, falling back to HTTP audio stream:", error?.message || error);
+    console.error("[Gemini TTS] Synthesis failed:", error?.message || error);
     try {
       const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text2)}&tl=de&client=tw-ob`;
       const fallbackResp = await fetch(googleTtsUrl, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Referer": "https://translate.google.com/"
+          Referer: "https://translate.google.com/"
         }
       });
       if (fallbackResp.ok) {
@@ -38469,12 +38467,9 @@ ttsRouter.get("/", async (c) => {
         return c.body(audioBuffer);
       }
     } catch (fbErr) {
-      console.error("HTTP audio fallback also failed:", fbErr);
+      console.error("[TTS Emergency Fallback] Failed:", fbErr);
     }
     return c.json({ error: error?.message || "TTS generation failed" }, 500);
-  } finally {
-    fs.unlink(tempPath).catch(() => {
-    });
   }
 });
 var tts_default = ttsRouter;
@@ -38570,6 +38565,42 @@ accessKeysRouter.get("/:id/verify-access", async (c) => {
   }
 });
 var access_keys_default = accessKeysRouter;
+
+// node_modules/nanoid/index.js
+import { webcrypto as crypto3 } from "node:crypto";
+
+// node_modules/nanoid/url-alphabet/index.js
+var urlAlphabet = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
+
+// node_modules/nanoid/index.js
+var POOL_SIZE_MULTIPLIER = 128;
+var pool;
+var poolOffset;
+function fillPool(bytes) {
+  if (bytes < 0) throw new RangeError("Wrong ID size");
+  try {
+    if (!pool || pool.length < bytes) {
+      pool = Buffer.allocUnsafe(bytes * POOL_SIZE_MULTIPLIER);
+      crypto3.getRandomValues(pool);
+      poolOffset = 0;
+    } else if (poolOffset + bytes > pool.length) {
+      crypto3.getRandomValues(pool);
+      poolOffset = 0;
+    }
+  } catch (e) {
+    pool = void 0;
+    throw e;
+  }
+  poolOffset += bytes;
+}
+function nanoid(size10 = 21) {
+  fillPool(size10 |= 0);
+  let id = "";
+  for (let i = poolOffset - size10; i < poolOffset; i++) {
+    id += urlAlphabet[pool[i] & 63];
+  }
+  return id;
+}
 
 // src/server/routes/submissions.ts
 var submissionsRouter = new Hono2();
