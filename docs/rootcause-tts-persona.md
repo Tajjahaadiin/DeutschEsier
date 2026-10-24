@@ -96,23 +96,22 @@ npm run tts:smoke     # 6/6 OK -> endpoint sehat
 npx vitest run        # 286 test, termasuk 17 test audio
 ```
 
-## 5. Resolusi Arsitektur TTS: Zero-Vendor Gemini 2.5 Flash TTS
+## 5. Resolusi Arsitektur TTS Final: Pre-generation Kokoro Martin + Client-Side Piper WASM
 
-1. **Eliminasi Masalah Blokir IP Datacenter:**
-   Ketergantungan pada WebSocket Microsoft Edge TTS (`node-edge-tts` dan Cloudflare Worker proxy) telah dihapus dari jalur produksi. Sistem kini menggunakan SDK `@google/genai` (`gemini-2.5-flash-preview-tts`) via REST API HTTPS resmi Google AI Studio (`GEMINI_API_KEY`).
-2. **Pemetaan Suara 6 Persona (Gemini Prebuilt Voices):**
-   - `male-1` (Conrad) -> `Charon`
-   - `male-2` (Killian) -> `Puck`
-   - `male-3` (Florian) -> `Fenrir`
-   - `female-1` (Katja) -> `Kore`
-   - `female-2` (Amala) -> `Zephyr`
-   - `female-3` (Seraphina) -> `Aoede`
-3. **Format Kontainer Audio:**
-   Output Raw PCM (24kHz, 16-bit, mono) dari Gemini dibungkus dengan header standar RIFF WAV 44-byte (`src/server/lib/wavHeader.ts`) sehingga dapat diputar secara native oleh semua browser (termasuk Safari/iOS).
-4. **Caching & Jaring Pengaman (Multi-Layer):**
-   - **Layer 1 (CDN Cache):** Respons `GET /api/tts` dilengkapi header `Cache-Control: public, max-age=31536000, immutable` dan `Vercel-CDN-Cache-Control` sehingga permintaan berulang dilayani langsung oleh Vercel Edge Network tanpa menghabiskan kuota API.
-   - **Layer 2 (Emergency HTTP Stream):** Jika kuota/koneksi Gemini bermasalah, server melakukan fallback otomatis ke stream HTTP audio publik.
-   - **Layer 3 (Client Acoustic Fallback):** Klien Web Speech API (`window.speechSynthesis`) tetap aktif dengan modulasi `pitch` (0.75 - 1.20) dan `rate` (0.92 - 1.05) per persona jika server offline.
+1. **Pre-generation Aset Statis Die Grundlagen (100% Kokoro Martin):**
+   - Seluruh modul dasar (Bank Kata, Kartu Alfabet, Kartu Angka 0–1M, Game Hitung, dan Die Tage) di-generate secara offline menggunakan model neural murni **Kokoro German Martin** (`kikiri-german-martin` ONNX + `voices-martin.npz`).
+   - Sebanyak 470 file audio WAV 24kHz disimpan langsung ke `public/audio/` (dan disalin ke `dist/audio/` saat build) sehingga diputar dengan latensi 0 ms secara instan dari disk/CDN statis tanpa membebani server backend atau kuota AI.
+   - Server Node (`src/server/index.ts`) dilengkapi route `/audio/*` dengan MIME type eksplisit `audio/wav` dan cache `immutable`.
+2. **Scenario Generator AI (Kurasi 3 Persona):**
+   - Pemilihan persona skenario difokuskan menjadi 3 karakter kontras: Katja (`female-1`), Conrad (`male-1`), dan Killian (`male-2`).
+   - Komposisi generator AI deterministik: Jika 3 pembicara dipilih, wajib tepat 1 Wanita (A = Katja) dan 2 Pria (B = Conrad, C = Killian).
+3. **Pensiun Total Gemini TTS:**
+   - Ketergantungan pada `gemini-2.5-flash-preview-tts` telah dipensiunkan seluruhnya dari backend untuk menghindari batas ketat Rate Limit (3-5 RPM). Kuota Gemini kini 100% dikhususkan untuk generasi teks dialog JSON skenario.
+4. **Hierarki Eksekusi Audio Klien (Multi-Tier Resilient Pipeline):**
+   - **Tier 1 (Statis):** File lokal Kokoro Martin di `/audio/...` (Grundlagen).
+   - **Tier 2 (Dinamis Lokal):** Client-Side VITS/Piper WASM (`@diffusionstudio/vits-web`) di browser murid dengan penyimpanan model OPFS.
+   - **Tier 3 (Cadangan Server):** `/api/tts` (Google HTTP audio stream ber-cache CDN global).
+   - **Tier 4 (Jaring Pengaman Terakhir):** Native Web Speech API browser dengan profil akustik pitch/rate persona.
 
 ## 6. Opsi self-hosting: fakta terverifikasi
 
