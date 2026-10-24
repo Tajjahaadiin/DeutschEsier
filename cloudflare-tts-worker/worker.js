@@ -99,7 +99,7 @@ export default {
     const secMsGec = await generateSecMsGec()
     const targetWsUrl = `${EDGE_SPEECH_URL}?ConnectionId=${connectId}&Ocp-Apim-Subscription-Key=${EDGE_API_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-${CHROMIUM_FULL_VERSION}`
 
-    const baseHeaders: any = {
+    const baseHeaders = {
       'User-Agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROMIUM_MAJOR_VERSION}.0.0.0 Safari/537.36 Edg/${CHROMIUM_MAJOR_VERSION}.0.0.0`,
       'Accept-Encoding': 'gzip, deflate, br, zstd',
       'Accept-Language': 'en-US,en;q=0.9',
