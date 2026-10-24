@@ -208,18 +208,20 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
   audio.play().catch(() => runFallback())
 }
 
-// Memutar audio kata benda Bank Kata.
-// Memprioritaskan file statis Martin (/audio/words/{slug}.wav), jika tidak ada fallback ke speakGerman.
-export function playWordAudio(germanText: string, optionsOrOnEnd?: SpeakOptions | (() => void), article?: string) {
+// Helper internal: Memutar audio file statis dengan fallback mulus ke speakGerman bila file tidak ditemukan.
+function playStaticAudioWithFallback(
+  staticUrl: string,
+  fallbackText: string,
+  optionsOrOnEnd?: SpeakOptions | (() => void)
+) {
   stopSpeech()
   const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
 
-  const wordSlug = article
-    ? `${article.toLowerCase().trim()}-${germanText.toLowerCase().trim().replace(/\s+/g, '-')}`
-    : germanText.toLowerCase().trim().replace(/\s+/g, '-')
-
-  const staticUrl = `/audio/words/${wordSlug}.wav`
   const audio = new Audio(staticUrl)
+  if (options.rate !== undefined) {
+    audio.playbackRate = options.rate
+    audio.defaultPlaybackRate = options.rate
+  }
   currentHtmlAudio = audio
 
   let staticFailed = false
@@ -227,8 +229,7 @@ export function playWordAudio(germanText: string, optionsOrOnEnd?: SpeakOptions 
     if (staticFailed) return
     staticFailed = true
     if (currentHtmlAudio === audio) currentHtmlAudio = null
-    const fullText = article ? `${article} ${germanText}` : germanText
-    speakGerman(fullText, options)
+    speakGerman(fallbackText, options)
   }
 
   audio.onended = () => {
@@ -238,6 +239,16 @@ export function playWordAudio(germanText: string, optionsOrOnEnd?: SpeakOptions 
 
   audio.onerror = () => runFallback()
   audio.play().catch(() => runFallback())
+}
+
+// Memutar audio kata benda Bank Kata.
+// Memprioritaskan file statis Martin (/audio/words/{slug}.wav), jika tidak ada fallback ke speakGerman.
+export function playWordAudio(germanText: string, optionsOrOnEnd?: SpeakOptions | (() => void), article?: string) {
+  const wordSlug = article
+    ? `${article.toLowerCase().trim()}-${germanText.toLowerCase().trim().replace(/\s+/g, '-')}`
+    : germanText.toLowerCase().trim().replace(/\s+/g, '-')
+  const fullText = article ? `${article} ${germanText}` : germanText
+  playStaticAudioWithFallback(`/audio/words/${wordSlug}.wav`, fullText, optionsOrOnEnd)
 }
 
 // Memutar audio huruf atau contoh kata pada Das Alphabet.
@@ -248,32 +259,7 @@ export function playAlphabetAudio(
   fallbackText: string,
   optionsOrOnEnd?: SpeakOptions | (() => void)
 ) {
-  stopSpeech()
-  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
-
-  const staticUrl = `/audio/alphabet/${letterId.toLowerCase().trim()}-${type}.wav`
-  const audio = new Audio(staticUrl)
-  if (options.rate !== undefined) {
-    audio.playbackRate = options.rate
-    audio.defaultPlaybackRate = options.rate
-  }
-  currentHtmlAudio = audio
-
-  let staticFailed = false
-  const runFallback = () => {
-    if (staticFailed) return
-    staticFailed = true
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    speakGerman(fallbackText, options)
-  }
-
-  audio.onended = () => {
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (options.onEnd) options.onEnd()
-  }
-
-  audio.onerror = () => runFallback()
-  audio.play().catch(() => runFallback())
+  playStaticAudioWithFallback(`/audio/alphabet/${letterId.toLowerCase().trim()}-${type}.wav`, fallbackText, optionsOrOnEnd)
 }
 
 // Memutar audio angka pada die Nummer.
@@ -283,32 +269,7 @@ export function playNumberAudio(
   fallbackText: string,
   optionsOrOnEnd?: SpeakOptions | (() => void)
 ) {
-  stopSpeech()
-  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
-
-  const staticUrl = `/audio/numbers/${value}.wav`
-  const audio = new Audio(staticUrl)
-  if (options.rate !== undefined) {
-    audio.playbackRate = options.rate
-    audio.defaultPlaybackRate = options.rate
-  }
-  currentHtmlAudio = audio
-
-  let staticFailed = false
-  const runFallback = () => {
-    if (staticFailed) return
-    staticFailed = true
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    speakGerman(fallbackText, options)
-  }
-
-  audio.onended = () => {
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (options.onEnd) options.onEnd()
-  }
-
-  audio.onerror = () => runFallback()
-  audio.play().catch(() => runFallback())
+  playStaticAudioWithFallback(`/audio/numbers/${value}.wav`, fallbackText, optionsOrOnEnd)
 }
 
 // Memutar audio kombinasi game hitung (angka + benda).
@@ -319,32 +280,7 @@ export function playNumberGameAudio(
   fallbackText: string,
   optionsOrOnEnd?: SpeakOptions | (() => void)
 ) {
-  stopSpeech()
-  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
-
-  const staticUrl = `/audio/number-game/${n}-${noun.toLowerCase().trim()}.wav`
-  const audio = new Audio(staticUrl)
-  if (options.rate !== undefined) {
-    audio.playbackRate = options.rate
-    audio.defaultPlaybackRate = options.rate
-  }
-  currentHtmlAudio = audio
-
-  let staticFailed = false
-  const runFallback = () => {
-    if (staticFailed) return
-    staticFailed = true
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    speakGerman(fallbackText, options)
-  }
-
-  audio.onended = () => {
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (options.onEnd) options.onEnd()
-  }
-
-  audio.onerror = () => runFallback()
-  audio.play().catch(() => runFallback())
+  playStaticAudioWithFallback(`/audio/number-game/${n}-${noun.toLowerCase().trim()}.wav`, fallbackText, optionsOrOnEnd)
 }
 
 // Memutar audio konteks kalender pada die Tage (hari, bulan, waktu, hari libur).
@@ -353,9 +289,6 @@ export function playCalendarAudio(
   text: string,
   optionsOrOnEnd?: SpeakOptions | (() => void)
 ) {
-  stopSpeech()
-  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
-
   const slug = text
     .toLowerCase()
     .trim()
@@ -366,29 +299,7 @@ export function playCalendarAudio(
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 
-  const staticUrl = `/audio/days/${slug}.wav`
-  const audio = new Audio(staticUrl)
-  if (options.rate !== undefined) {
-    audio.playbackRate = options.rate
-    audio.defaultPlaybackRate = options.rate
-  }
-  currentHtmlAudio = audio
-
-  let staticFailed = false
-  const runFallback = () => {
-    if (staticFailed) return
-    staticFailed = true
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    speakGerman(text, options)
-  }
-
-  audio.onended = () => {
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (options.onEnd) options.onEnd()
-  }
-
-  audio.onerror = () => runFallback()
-  audio.play().catch(() => runFallback())
+  playStaticAudioWithFallback(`/audio/days/${slug}.wav`, text, optionsOrOnEnd)
 }
 
 export function getStoredPersonaId(): TtsPersonaId {
