@@ -53,8 +53,8 @@ export default function App() {
     return <ViewPage id={id} navigate={navigate} />
   }
 
-  // Rute Prototype Audio: /prototype-audio
-  if (currentPath === '/prototype-audio') {
+  // Rute Prototype Audio: /prototype-audio atau /audio-prototype
+  if (currentPath === '/prototype-audio' || currentPath === '/audio-prototype') {
     return <AudioPrototypePage navigate={navigate} />
   }
 
