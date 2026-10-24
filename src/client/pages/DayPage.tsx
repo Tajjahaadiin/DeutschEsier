@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Volume2, CalendarDays, PartyPopper, Clock } from 'lucide-react'
-import { playCalendarAudio } from '../lib/audio'
+import { playCalendarAudio, playAudioSequence } from '../lib/audio'
 import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 import {
   WEEKDAYS,
@@ -32,6 +32,26 @@ export default function DayPage({ navigate, embedded = false }: DayPageProps) {
   const handlePlay = (text: string) => {
     setPlaying(text)
     playCalendarAudio(text, {
+      personaId: currentPersonaId,
+      rate: speechRate,
+      onEnd: () => setPlaying(null),
+    })
+  }
+
+  const handlePlayDate = (weekdayGerman: string, dayNumber: number, monthGerman: string) => {
+    const fullText = `${weekdayGerman}, der ${dayNumber}. ${monthGerman}`
+    setPlaying(fullText)
+
+    // Bersihkan slug hari dan bulan
+    const weekdaySlug = weekdayGerman.toLowerCase().trim().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
+    const monthSlug = monthGerman.toLowerCase().trim().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue')
+
+    // Rangkaian audio statis Martin: Hari -> Angka Tanggal -> Nama Bulan
+    playAudioSequence([
+      { url: `/audio/days/${weekdaySlug}.mp3`, fallbackText: weekdayGerman },
+      { url: `/audio/numbers/${dayNumber}.mp3`, fallbackText: dayNumber.toString() },
+      { url: `/audio/days/${monthSlug}.mp3`, fallbackText: monthGerman },
+    ], {
       personaId: currentPersonaId,
       rate: speechRate,
       onEnd: () => setPlaying(null),
@@ -149,7 +169,7 @@ export default function DayPage({ navigate, embedded = false }: DayPageProps) {
                 <button
                   key={day}
                   type="button"
-                  onClick={() => handlePlay(`${info.german}, der ${day}. ${month.german}`)}
+                  onClick={() => handlePlayDate(info.german, day, month.german)}
                   className={`aspect-square border-b border-r border-slate-50 p-1 flex flex-col items-center justify-center transition-colors cursor-pointer ${
                     holiday ? 'bg-rose-50 hover:bg-rose-100' : 'hover:bg-slate-50'
                   }`}

@@ -208,7 +208,24 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
   audio.play().catch(() => runFallback())
 }
 
-// Helper internal: Memutar audio file statis dengan fallback mulus ke speakGerman bila file tidak ditemukan.
+// Cache elemen HTMLAudioElement per URL agar tidak re-instantiasi berulang saat kartu diklik berkali-kali
+const staticAudioCache = new Map<string, HTMLAudioElement>()
+
+function getOrCreateAudio(url: string): HTMLAudioElement {
+  let audio = staticAudioCache.get(url)
+  if (!audio) {
+    audio = new Audio(url)
+    // Batasi cache maksimal 30 instance agar hemat memori peramban
+    if (staticAudioCache.size >= 30) {
+      const firstKey = staticAudioCache.keys().next().value
+      if (firstKey) staticAudioCache.delete(firstKey)
+    }
+    staticAudioCache.set(url, audio)
+  }
+  return audio
+}
+
+// Helper internal: Memutar audio file statis MP3 dengan fallback mulus ke speakGerman bila file tidak ditemukan.
 function playStaticAudioWithFallback(
   staticUrl: string,
   fallbackText: string,
@@ -217,10 +234,14 @@ function playStaticAudioWithFallback(
   stopSpeech()
   const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
 
-  const audio = new Audio(staticUrl)
+  const audio = getOrCreateAudio(staticUrl)
+  audio.currentTime = 0
   if (options.rate !== undefined) {
     audio.playbackRate = options.rate
     audio.defaultPlaybackRate = options.rate
+  } else {
+    audio.playbackRate = 1.0
+    audio.defaultPlaybackRate = 1.0
   }
   currentHtmlAudio = audio
 
@@ -241,50 +262,90 @@ function playStaticAudioWithFallback(
   audio.play().catch(() => runFallback())
 }
 
+/**
+ * Memutar rangkaian audio secara berurutan (Sequential Stitching).
+ * Berguna untuk merangkai audio statis: Hari -> Tanggal -> Bulan di kalender.
+ */
+export function playAudioSequence(
+  items: Array<{ url: string; fallbackText: string }>,
+  optionsOrOnEnd?: SpeakOptions | (() => void)
+) {
+  stopSpeech()
+  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
+
+  if (!items || items.length === 0) {
+    options.onEnd?.()
+    return
+  }
+
+  let currentIndex = 0
+  let isCancelled = false
+
+  const playNext = () => {
+    if (isCancelled || currentIndex >= items.length) {
+      if (options.onEnd) options.onEnd()
+      return
+    }
+
+    const currentItem = items[currentIndex]
+    currentIndex++
+
+    playStaticAudioWithFallback(currentItem.url, currentItem.fallbackText, {
+      ...options,
+      onEnd: () => {
+        // Beri jeda sangat singkat (120ms) antar kata agar terdengar natural
+        setTimeout(playNext, 120)
+      },
+    })
+  }
+
+  playNext()
+}
+
 // Memutar audio kata benda Bank Kata.
-// Memprioritaskan file statis Martin (/audio/words/{slug}.wav), jika tidak ada fallback ke speakGerman.
+// Memprioritaskan file statis Martin (/audio/words/{slug}.mp3), jika tidak ada fallback ke speakGerman.
 export function playWordAudio(germanText: string, optionsOrOnEnd?: SpeakOptions | (() => void), article?: string) {
   const wordSlug = article
     ? `${article.toLowerCase().trim()}-${germanText.toLowerCase().trim().replace(/\s+/g, '-')}`
     : germanText.toLowerCase().trim().replace(/\s+/g, '-')
   const fullText = article ? `${article} ${germanText}` : germanText
-  playStaticAudioWithFallback(`/audio/words/${wordSlug}.wav`, fullText, optionsOrOnEnd)
+  playStaticAudioWithFallback(`/audio/words/${wordSlug}.mp3`, fullText, optionsOrOnEnd)
 }
 
 // Memutar audio huruf atau contoh kata pada Das Alphabet.
-// Memprioritaskan file statis Martin (/audio/alphabet/{letterId}-{type}.wav), jika tidak ada fallback ke speakGerman.
+// Memprioritaskan file statis Martin (/audio/alphabet/{letterId}-{type}.mp3), jika tidak ada fallback ke speakGerman.
 export function playAlphabetAudio(
   letterId: string,
   type: 'letter' | 'word',
   fallbackText: string,
   optionsOrOnEnd?: SpeakOptions | (() => void)
 ) {
-  playStaticAudioWithFallback(`/audio/alphabet/${letterId.toLowerCase().trim()}-${type}.wav`, fallbackText, optionsOrOnEnd)
+  playStaticAudioWithFallback(`/audio/alphabet/${letterId.toLowerCase().trim()}-${type}.mp3`, fallbackText, optionsOrOnEnd)
 }
 
 // Memutar audio angka pada die Nummer.
-// Memprioritaskan file statis Martin (/audio/numbers/{value}.wav), jika tidak ada fallback ke speakGerman.
+// Memprioritaskan file statis Martin (/audio/numbers/{value}.mp3), jika tidak ada fallback ke speakGerman.
 export function playNumberAudio(
   value: number,
   fallbackText: string,
   optionsOrOnEnd?: SpeakOptions | (() => void)
 ) {
-  playStaticAudioWithFallback(`/audio/numbers/${value}.wav`, fallbackText, optionsOrOnEnd)
+  playStaticAudioWithFallback(`/audio/numbers/${value}.mp3`, fallbackText, optionsOrOnEnd)
 }
 
 // Memutar audio kombinasi game hitung (angka + benda).
-// Memprioritaskan file statis Martin (/audio/number-game/{n}-{noun}.wav), jika tidak ada fallback ke speakGerman.
+// Memprioritaskan file statis Martin (/audio/number-game/{n}-{noun}.mp3), jika tidak ada fallback ke speakGerman.
 export function playNumberGameAudio(
   n: number,
   noun: string,
   fallbackText: string,
   optionsOrOnEnd?: SpeakOptions | (() => void)
 ) {
-  playStaticAudioWithFallback(`/audio/number-game/${n}-${noun.toLowerCase().trim()}.wav`, fallbackText, optionsOrOnEnd)
+  playStaticAudioWithFallback(`/audio/number-game/${n}-${noun.toLowerCase().trim()}.mp3`, fallbackText, optionsOrOnEnd)
 }
 
 // Memutar audio konteks kalender pada die Tage (hari, bulan, waktu, hari libur).
-// Memprioritaskan file statis Martin (/audio/days/{slug}.wav), jika tidak ada fallback ke speakGerman.
+// Memprioritaskan file statis Martin (/audio/days/{slug}.mp3), jika tidak ada fallback ke speakGerman.
 export function playCalendarAudio(
   text: string,
   optionsOrOnEnd?: SpeakOptions | (() => void)
@@ -299,7 +360,7 @@ export function playCalendarAudio(
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 
-  playStaticAudioWithFallback(`/audio/days/${slug}.wav`, text, optionsOrOnEnd)
+  playStaticAudioWithFallback(`/audio/days/${slug}.mp3`, text, optionsOrOnEnd)
 }
 
 export function getStoredPersonaId(): TtsPersonaId {
