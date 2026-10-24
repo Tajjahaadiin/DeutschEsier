@@ -38282,163 +38282,11 @@ sessionsRouter.delete("/:id", requireTeacherAuth, async (c) => {
 });
 var sessions_default = sessionsRouter;
 
-// src/server/lib/geminiTts.ts
-import { GoogleGenAI as GoogleGenAI2 } from "@google/genai";
-
-// src/server/lib/wavHeader.ts
-function wrapPcmInWav(pcmBuffer, sampleRate = 24e3, numChannels = 1, bitsPerSample = 16) {
-  const byteRate = sampleRate * numChannels * bitsPerSample / 8;
-  const blockAlign = numChannels * bitsPerSample / 8;
-  const dataSize = pcmBuffer.length;
-  const header = Buffer.alloc(44);
-  header.write("RIFF", 0);
-  header.writeUInt32LE(36 + dataSize, 4);
-  header.write("WAVE", 8);
-  header.write("fmt ", 12);
-  header.writeUInt32LE(16, 16);
-  header.writeUInt16LE(1, 20);
-  header.writeUInt16LE(numChannels, 22);
-  header.writeUInt32LE(sampleRate, 24);
-  header.writeUInt32LE(byteRate, 28);
-  header.writeUInt16LE(blockAlign, 32);
-  header.writeUInt16LE(bitsPerSample, 34);
-  header.write("data", 36);
-  header.writeUInt32LE(dataSize, 40);
-  return Buffer.concat([header, pcmBuffer]);
-}
-
-// src/shared/ttsPersonas.ts
-var TTS_PERSONAS = [
-  {
-    id: "male-1",
-    name: "Conrad",
-    gender: "male",
-    voiceId: "de-DE-ConradNeural",
-    geminiVoiceName: "Charon",
-    roleId: "Guru Formal (Der Lehrer)",
-    descriptionId: "Dewasa matang, bariton tegas, artikulasi akademis",
-    emoji: "\u{1F468}\u200D\u{1F3EB}"
-  },
-  {
-    id: "male-2",
-    name: "Killian",
-    gender: "male",
-    voiceId: "de-DE-KillianNeural",
-    geminiVoiceName: "Puck",
-    roleId: "Mahasiswa Santai (Der Student)",
-    descriptionId: "Muda, tenor luwes, percakapan sehari-hari",
-    emoji: "\u{1F9D1}\u200D\u{1F393}"
-  },
-  {
-    id: "male-3",
-    name: "Florian",
-    gender: "male",
-    voiceId: "de-DE-FlorianMultilingualNeural",
-    geminiVoiceName: "Fenrir",
-    roleId: "Rekan Kerja (Der Kollege)",
-    descriptionId: "Dewasa muda, modern, lugas & profesional",
-    emoji: "\u{1F468}\u200D\u{1F4BC}"
-  },
-  {
-    id: "female-1",
-    name: "Katja",
-    gender: "female",
-    voiceId: "de-DE-KatjaNeural",
-    geminiVoiceName: "Kore",
-    roleId: "Tutor Utama (Die Lehrerin)",
-    descriptionId: "Dewasa, vokal jernih, hangat & artikulatif",
-    emoji: "\u{1F469}\u200D\u{1F3EB}"
-  },
-  {
-    id: "female-2",
-    name: "Amala",
-    gender: "female",
-    voiceId: "de-DE-AmalaNeural",
-    geminiVoiceName: "Zephyr",
-    roleId: "Rekan Belajar (Die Studentin)",
-    descriptionId: "Muda, ceria, energik & dinamis",
-    emoji: "\u{1F467}"
-  },
-  {
-    id: "female-3",
-    name: "Seraphina",
-    gender: "female",
-    voiceId: "de-DE-SeraphinaMultilingualNeural",
-    geminiVoiceName: "Aoede",
-    roleId: "Konsultan Ramah (Die Beraterin)",
-    descriptionId: "Dewasa muda, nada ramah, empatik & halus",
-    emoji: "\u{1F469}\u200D\u{1F4BC}"
-  }
-];
-var SCENARIO_PERSONAS = TTS_PERSONAS.filter(
-  (p) => ["female-1", "male-1", "male-2"].includes(p.id)
-);
-var PERSONA_BY_ID = new Map(
-  TTS_PERSONAS.map((p) => [p.id, p])
-);
-var PERSONA_BY_VOICE = new Map(
-  TTS_PERSONAS.map((p) => [p.voiceId.toLowerCase(), p])
-);
-function resolveGeminiVoiceName(voiceOrPersona, fallbackGender = "female") {
-  if (!voiceOrPersona) {
-    return fallbackGender === "male" ? "Charon" : "Kore";
-  }
-  const byId = PERSONA_BY_ID.get(voiceOrPersona);
-  if (byId) return byId.geminiVoiceName;
-  const byVoice = PERSONA_BY_VOICE.get(voiceOrPersona.toLowerCase());
-  if (byVoice) return byVoice.geminiVoiceName;
-  if (voiceOrPersona.toLowerCase() === "male") return "Charon";
-  if (voiceOrPersona.toLowerCase() === "female") return "Kore";
-  return "Kore";
-}
-
-// src/server/lib/geminiTts.ts
-function getAiClient2() {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set");
-  }
-  return new GoogleGenAI2({ apiKey });
-}
-async function synthesizeGeminiSpeech(text2, personaOrVoice) {
-  const voiceName = resolveGeminiVoiceName(personaOrVoice);
-  const ai = getAiClient2();
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-tts",
-    contents: [
-      {
-        parts: [
-          {
-            text: `Say in standard German (Hochdeutsch): ${text2}`
-          }
-        ]
-      }
-    ],
-    config: {
-      responseModalities: ["AUDIO"],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: { voiceName }
-        }
-      }
-    }
-  });
-  const base64Pcm = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  if (!base64Pcm) {
-    throw new Error("Gemini TTS returned empty audio payload");
-  }
-  const pcmBuffer = Buffer.from(base64Pcm, "base64");
-  return wrapPcmInWav(pcmBuffer, 24e3, 1, 16);
-}
-
 // src/server/routes/tts.ts
 var ttsRouter = new Hono2();
 var MAX_TTS_TEXT_LENGTH = 1e3;
 ttsRouter.get("/", async (c) => {
   const text2 = c.req.query("text");
-  const voiceParam = c.req.query("voice") || c.req.query("persona");
-  const genderParam = (c.req.query("gender") || "").toLowerCase();
-  const personaIdentifier = voiceParam || (genderParam ? genderParam : void 0);
   if (!text2 || text2.trim() === "") {
     return c.json({ error: "Text parameter is required" }, 400);
   }
@@ -38446,33 +38294,26 @@ ttsRouter.get("/", async (c) => {
     return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400);
   }
   try {
-    const wavBuffer = await synthesizeGeminiSpeech(text2.trim(), personaIdentifier);
-    c.header("Content-Type", "audio/wav");
-    c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-    c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-    c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-    return c.body(wavBuffer);
-  } catch (error) {
-    console.error("[Gemini TTS] Synthesis failed:", error?.message || error);
-    try {
-      const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text2)}&tl=de&client=tw-ob`;
-      const fallbackResp = await fetch(googleTtsUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          Referer: "https://translate.google.com/"
-        }
-      });
-      if (fallbackResp.ok) {
-        const audioBuffer = Buffer.from(await fallbackResp.arrayBuffer());
-        c.header("Content-Type", "audio/mpeg");
-        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-        return c.body(audioBuffer);
+    const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(
+      text2.trim()
+    )}&tl=de&client=tw-ob`;
+    const fallbackResp = await fetch(googleTtsUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Referer: "https://translate.google.com/"
       }
-    } catch (fbErr) {
-      console.error("[TTS Emergency Fallback] Failed:", fbErr);
+    });
+    if (fallbackResp.ok) {
+      const audioBuffer = Buffer.from(await fallbackResp.arrayBuffer());
+      c.header("Content-Type", "audio/mpeg");
+      c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
+      c.header("CDN-Cache-Control", "public, s-maxage=31536000");
+      c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+      return c.body(audioBuffer);
     }
+    return c.json({ error: "TTS upstream response not ok" }, 502);
+  } catch (error) {
+    console.error("[TTS Remote Fallback Error]:", error?.message || error);
     return c.json({ error: error?.message || "TTS generation failed" }, 500);
   }
 });

@@ -6,16 +6,9 @@ import {
   LogOut,
   Menu,
   X,
-  Volume2,
   GraduationCap,
 } from 'lucide-react'
 import { logoutTeacher } from '../../lib/auth'
-import {
-  getStoredPersonaId,
-  setStoredPersonaId,
-  type TtsPersonaId,
-} from '../../lib/audio'
-import { TTS_PERSONAS } from '../../../shared/ttsPersonas'
 
 export interface DashboardLayoutProps {
   currentPath: string
@@ -38,12 +31,6 @@ export default function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
-  const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
-
-  const handlePersonaChange = (id: TtsPersonaId) => {
-    setCurrentPersonaId(id)
-    setStoredPersonaId(id)
-  }
 
   const navItems = [
     {
@@ -134,29 +121,10 @@ export default function DashboardLayout({
         })}
       </nav>
 
-      {/* Footer Area: Persona Voice & Teacher Account */}
-      <div className="p-3 border-t border-border bg-neutral space-y-3">
-        {/* Global Voice Persona */}
-        <div className="bg-surface p-2.5 rounded-md border border-border">
-          <div className="flex items-center gap-1.5 text-label font-bold text-text-muted mb-1.5">
-            <Volume2 size={13} className="text-primary" />
-            <span>Suara Pengucapan Guru</span>
-          </div>
-          <select
-            value={currentPersonaId}
-            onChange={(e) => handlePersonaChange(e.target.value as TtsPersonaId)}
-            className="w-full bg-surface-muted text-sm font-medium text-text px-2 py-1.5 rounded-md border border-border focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-          >
-            {TTS_PERSONAS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.emoji} {p.name} ({p.roleId.split(' ')[0]})
-              </option>
-            ))}
-          </select>
-        </div>
-
+      {/* Footer Area: Teacher Account */}
+      <div className="p-3 border-t border-border bg-neutral">
         {/* Teacher Profile & Logout */}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
               <GraduationCap size={14} />

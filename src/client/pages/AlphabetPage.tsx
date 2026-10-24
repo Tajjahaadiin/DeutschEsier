@@ -12,11 +12,6 @@ import { GERMAN_ALPHABET, GermanAlphabetItem } from '../data/alphabetData'
 import { AlphabetCard } from '../components/alphabet/AlphabetCard'
 import { AlphabetDetailModal } from '../components/alphabet/AlphabetDetailModal'
 import { SpellingTrainer } from '../components/alphabet/SpellingTrainer'
-import {
-  getStoredPersonaId,
-  setStoredPersonaId,
-  type TtsPersonaId
-} from '../lib/audio'
 import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 
 interface AlphabetPageProps {
@@ -34,18 +29,6 @@ export default function AlphabetPage({ navigate, embedded = false }: AlphabetPag
   const [speechRate, setSpeechRate] = useState<number>(1.0)
   const [selectedItem, setSelectedItem] = useState<GermanAlphabetItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-
-  useEffect(() => {
-    const handlePersonaChange = () => {
-      setCurrentPersonaId(getStoredPersonaId())
-    }
-    window.addEventListener('persona-change', handlePersonaChange)
-    window.addEventListener('storage', handlePersonaChange)
-    return () => {
-      window.removeEventListener('persona-change', handlePersonaChange)
-      window.removeEventListener('storage', handlePersonaChange)
-    }
-  }, [])
 
 
   const counts = {

@@ -1,6 +1,6 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { ChevronLeft, Volume2, RotateCcw, Sparkles, Hash, Gamepad2 } from 'lucide-react'
-import { speakGerman, getStoredPersonaId, setStoredPersonaId, type TtsPersonaId } from '../lib/audio'
+import { speakGerman } from '../lib/audio'
 import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 import { combineNumberAndNoun } from '../lib/numberGame'
 import { NUMBER_ITEMS } from '../data/numberData'
@@ -21,18 +21,6 @@ export default function NumberPage({ navigate, embedded = false }: NumberPagePro
   const currentPersonaId = GRUNDLAGEN_PERSONA_ID
   const [speechRate, setSpeechRate] = useState(1.0)
   const [playing, setPlaying] = useState<string | null>(null)
-
-  useEffect(() => {
-    const handlePersonaChange = () => {
-      setCurrentPersonaId(getStoredPersonaId())
-    }
-    window.addEventListener('persona-change', handlePersonaChange)
-    window.addEventListener('storage', handlePersonaChange)
-    return () => {
-      window.removeEventListener('persona-change', handlePersonaChange)
-      window.removeEventListener('storage', handlePersonaChange)
-    }
-  }, [])
 
   // --- State game ---
   const [numberSlot, setNumberSlot] = useState<number | null>(null)
