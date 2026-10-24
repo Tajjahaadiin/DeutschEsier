@@ -284,8 +284,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
         // Cari model neural yang benar-benar dibutuhkan oleh turn dialog ini
         const neededModels = new Set<string>()
         for (const turn of session.dialogue) {
-          const pId = turn.personaId || (turn.speaker === speakerA ? 'weiblich' : 'männlich-1')
-          const conf = PERSONA_WASM_MAP[pId] || PERSONA_WASM_MAP['weiblich']
+          const resolvedPersona = turn.personaId || (turn.speaker === speakerA ? 'weiblich' : 'männlich-1')
+          const conf = PERSONA_WASM_MAP[resolvedPersona] || PERSONA_WASM_MAP['weiblich']
           neededModels.add(conf.modelId)
         }
 
@@ -342,6 +342,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
       const turn = session.dialogue[i]
       const isA = turn.speaker === speakerA
       const turnGender: 'male' | 'female' = turn.gender || (isA ? 'female' : 'male')
+      const turnPersonaId = turn.personaId || (isA ? 'weiblich' : 'männlich-1')
 
       setPlayingIndex(i)
 
@@ -374,7 +375,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
         speakGerman(turn.germanText, {
           gender: turnGender,
-          personaId: turn.personaId,
+          personaId: turnPersonaId,
           rate: playbackRateRef.current,
           onEnd: done,
         })
@@ -391,10 +392,11 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     if (isPlayingAll) {
       handleStopAll()
     }
+    const resolvedPersonaId = personaId || (gender === 'female' ? 'weiblich' : 'männlich-1')
     setPlayingIndex(index)
     speakGerman(germanText, {
       gender,
-      personaId,
+      personaId: resolvedPersonaId,
       rate: playbackRateRef.current,
       onEnd: () => setPlayingIndex(null),
     })
