@@ -17,7 +17,7 @@ import {
   setStoredPersonaId,
   type TtsPersonaId
 } from '../lib/audio'
-import { TTS_PERSONAS, getTtsPersona } from '../../shared/ttsPersonas'
+import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 
 interface AlphabetPageProps {
   navigate: (path: string) => void
@@ -30,7 +30,7 @@ export default function AlphabetPage({ navigate, embedded = false }: AlphabetPag
   const [activeTab, setActiveTab] = useState<'cards' | 'trainer'>('cards')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<FilterType>('all')
-  const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
+  const currentPersonaId = GRUNDLAGEN_PERSONA_ID
   const [speechRate, setSpeechRate] = useState<number>(1.0)
   const [selectedItem, setSelectedItem] = useState<GermanAlphabetItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -111,27 +111,8 @@ export default function AlphabetPage({ navigate, embedded = false }: AlphabetPag
               </div>
             </div>
 
-            {/* Voice & Speed Controls */}
+            {/* Speed Controls */}
             <div className="flex items-center gap-2">
-              {/* Persona Selector */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
-                <select
-                  value={currentPersonaId}
-                  onChange={(e) => {
-                    const nextId = e.target.value as TtsPersonaId
-                    setCurrentPersonaId(nextId)
-                    setStoredPersonaId(nextId)
-                  }}
-                  className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
-                >
-                  {TTS_PERSONAS.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.emoji} {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               {/* Speed Toggle */}
               <div className="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
                 <button

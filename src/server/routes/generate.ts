@@ -41,8 +41,8 @@ generateRouter.post('/', requireTeacherAuth, async (c) => {
 
     let speakers = 2
     if (speakerCount !== undefined) {
-      if (typeof speakerCount !== 'number' || !Number.isInteger(speakerCount) || speakerCount < 2 || speakerCount > 6) {
-        return c.json({ error: 'Jumlah pembicara harus berupa bilangan bulat antara 2 dan 6.' }, 400)
+      if (typeof speakerCount !== 'number' || !Number.isInteger(speakerCount) || speakerCount < 2 || speakerCount > 3) {
+        return c.json({ error: 'Jumlah pembicara harus berupa bilangan bulat antara 2 dan 3.' }, 400)
       }
       speakers = speakerCount
     }

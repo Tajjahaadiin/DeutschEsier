@@ -29,8 +29,16 @@ Soal Richtig/Falsch yang disusun secara deterministik saat runtime dari vocabClu
 _Avoid_: Soal AI fallback, auto-quiz
 
 **Persona Vokal (TTS Speaker Persona)**:
-Karakter suara sintetis neural Jerman yang merepresentasikan peran sosial dan usia penutur tertentu (misal: Conrad sebagai Male 1 / Guru Formal, Killian sebagai Male 2 / Mahasiswa Kasual, Katja sebagai Female 1 / Tutor Utama, Amala sebagai Female 2 / Mahasiswi Dinamis).
-_Avoid_: Suara robot, pilihan gender biner biasa
+Karakter suara sintetis neural Jerman yang merepresentasikan peran sosial dan usia penutur tertentu dalam pembelajaran. Dalam Scenario Generator dikurasi menjadi 3 karakter inti: Katja (`female-1` / Tutor Utama), Conrad (`male-1` / Guru Formal Pria Bariton), dan Killian (`male-2` / Mahasiswa Santai Tenor Muda).
+_Avoid_: Suara robot, pilihan gender biner biasa, list persona tak terbatas
+
+**Suara Fondasi (Grundlagen Voice)**:
+Satu persona vokal tunggal yang dikunci secara konsisten untuk seluruh modul Die Grundlagen (Alfabet, Angka, Hari, dan Kata Benda), yaitu Katja (`female-1`).
+_Avoid_: Multi-persona fondasi, pemilih suara dinamis fondasi
+
+**Komposisi Deterministik Dialog (Deterministic Dialogue Composition)**:
+Aturan tetap bagi generator skenario AI saat menghasilkan percakapan 3 pembicara, yang mewajibkan tepat 1 pembicara wanita (`Sprecher A` = Katja) dan 2 pembicara pria (`Sprecher B` = Conrad, `Sprecher C` = Killian).
+_Avoid_: Komposisi acak AI, dialog monolog, 3 karakter sesama gender
 
 **Die Grundlagen (Fondasi Dasar)**:
 Kategori modul pembelajaran mandiri yang memuat materi dasar non-dialog (Bank Kata Kognat, Das Alphabet, Die Nummer, dan Die Tage), dapat dibuka langsung oleh guru di dashboard dan dapat diakses murid menggunakan kunci akses `sessionId = "grundlagen"`.

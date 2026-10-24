@@ -317,10 +317,18 @@ export function buildPrompt(
   const grammarQuestionsBlock =
     level === 'B1' ? buildGrammarQuestionsBlock(grammarTopicIds) : ''
 
-  // Format penamaan pembicara (hingga 6 pembicara: Sprecher A s/d Sprecher F)
-  const letters = ['A', 'B', 'C', 'D', 'E', 'F']
-  const count = Math.min(6, Math.max(2, speakerCount || 2))
+  // Format penamaan pembicara (didukung 2 atau 3 pembicara deterministik)
+  const letters = ['A', 'B', 'C']
+  const count = Math.min(3, Math.max(2, speakerCount || 2))
   const speakerNames = letters.slice(0, count).map((l) => `"Sprecher ${l}"`).join(', ')
+
+  // Panduan komposisi gender deterministik:
+  // 2 Pembicara: Sprecher A (Wanita), Sprecher B (Pria)
+  // 3 Pembicara: Sprecher A (Wanita), Sprecher B (Pria 1 / Dewasa), Sprecher C (Pria 2 / Muda)
+  const speakerGenderGuide =
+    count === 3
+      ? '\n   - Komposisi gender pembicara HARUS deterministik: Tepat 1 Perempuan ("Sprecher A") dan 2 Laki-laki ("Sprecher B" dan "Sprecher C"). Sesuaikan kata ganti orang (er/sie) dan sapaan (Herr/Frau) secara konsisten.'
+      : '\n   - Komposisi gender pembicara HARUS deterministik: "Sprecher A" adalah Perempuan dan "Sprecher B" adalah Laki-laki.'
 
   // Level B1: kuis pemahaman digantikan soal Richtig/Falsch (Benar/Salah).
   const comprehensionBlock =
@@ -328,5 +336,5 @@ export function buildPrompt(
       ? `\n\nTambahan untuk level B1 — soal Richtig/Falsch (Benar/Salah):\n9. Buat tepat 10 soal Richtig oder Falsch berdasarkan dialog di atas\n10. Sebagian soal harus SALAH: ubah satu fakta penting dari dialog (subjek, objek, tempat, waktu, atau angka) sehingga pernyataannya tidak sesuai dialog\n11. Sebagian soal lainnya harus BENAR: pernyataannya sesuai dialog\n12. statement diisi pernyataan bahasa Jerman yang harus dinilai Benar atau Salah\n13. indonesianText adalah terjemahan Indonesia dari statement\n14. isCorrect diisi true bila pernyataan sesuai dialog, false bila tidak\n15. explanation menjelaskan singkat mengapa jawabannya demikian berdasarkan dialog`
       : ''
 
-  return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.\n\nSkenario: ${prompt}${cognateList}\n\nPanduan:\n1. Dialog harus natural dan relevan dengan skenario\n2. Gunakan percakapan antar ${count} pembicara: ${speakerNames}\n3. Teks Jerman harus sesuai level ${level} CEFR\n4. Terjemahan Indonesia harus natural\n5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu\n6. sceneDescription menggambarkan latar tempat dan konteks dialog\n7. Sertakan tepat ${dialogueCount} baris dialog\n8. vocabClues minimal 4-6 kata${comprehensionBlock}\n\nPola kalimat untuk tab Materi grammatik — sertakan tepat 3 pola berikut:\n- name "Aussagesatz", nameId "Kalimat Berita": pola Subjekt – Prädikat – Objekt dengan kata kerja di posisi kedua\n- name "W-Frage", nameId "Kalimat Tanya W": kata tanya (wer, was, wo, wann) di awal, kata kerja di posisi kedua\n- name "Ja/Nein-Frage", nameId "Kalimat Tanya Ya/Tidak": kata kerja di posisi pertama\n\nAturan pengisian tiap pola:\n1. formula diisi rumus singkat memakai istilah Jerman, mis. "Subjekt – Prädikat – Objekt"\n2. exampleGerman: UTAMAKAN kalimat yang sudah ada di dialog di atas bila cocok dengan polanya. Bila tidak ada yang cocok, buat kalimat baru yang sederhana dan sesuai skenario\n3. exampleIndonesian diisi terjemahan Indonesia dari exampleGerman\n4. segments memecah exampleGerman menjadi potongan berurutan; setiap potongan punya "text" dan "role"\n5. role hanya boleh salah satu dari: "subjekt", "praedikat", "objekt", atau "other" (untuk kata tanya, kata bantu, negasi, dan bagian lain)\n6. Gabungan semua "text" pada segments harus sama dengan exampleGerman${grammarTopicsBlock}${grammarQuestionsBlock}`
+  return `Kamu adalah guru bahasa Jerman yang berpengalaman. Buat dialog pembelajaran bahasa Jerman untuk siswa Indonesia level ${level}.\n\nSkenario: ${prompt}${cognateList}\n\nPanduan:\n1. Dialog harus natural dan relevan dengan skenario\n2. Gunakan percakapan antar ${count} pembicara: ${speakerNames}${speakerGenderGuide}\n3. Teks Jerman harus sesuai level ${level} CEFR\n4. Terjemahan Indonesia harus natural\n5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu\n6. sceneDescription menggambarkan latar tempat dan konteks dialog\n7. Sertakan tepat ${dialogueCount} baris dialog\n8. vocabClues minimal 4-6 kata${comprehensionBlock}\n\nPola kalimat untuk tab Materi grammatik — sertakan tepat 3 pola berikut:\n- name "Aussagesatz", nameId "Kalimat Berita": pola Subjekt – Prädikat – Objekt dengan kata kerja di posisi kedua\n- name "W-Frage", nameId "Kalimat Tanya W": kata tanya (wer, was, wo, wann) di awal, kata kerja di posisi kedua\n- name "Ja/Nein-Frage", nameId "Kalimat Tanya Ya/Tidak": kata kerja di posisi pertama\n\nAturan pengisian tiap pola:\n1. formula diisi rumus singkat memakai istilah Jerman, mis. "Subjekt – Prädikat – Objekt"\n2. exampleGerman: UTAMAKAN kalimat yang sudah ada di dialog di atas bila cocok dengan polanya. Bila tidak ada yang cocok, buat kalimat baru yang sederhana dan sesuai skenario\n3. exampleIndonesian diisi terjemahan Indonesia dari exampleGerman\n4. segments memecah exampleGerman menjadi potongan berurutan; setiap potongan punya "text" dan "role"\n5. role hanya boleh salah satu dari: "subjekt", "praedikat", "objekt", atau "other" (untuk kata tanya, kata bantu, negasi, dan bagian lain)\n6. Gabungan semua "text" pada segments harus sama dengan exampleGerman${grammarTopicsBlock}${grammarQuestionsBlock}`
 }

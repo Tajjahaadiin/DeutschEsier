@@ -95,6 +95,20 @@ export type TtsPersonaId =
 export const DEFAULT_MALE_PERSONA: TtsPersonaId = 'male-1'
 export const DEFAULT_FEMALE_PERSONA: TtsPersonaId = 'female-1'
 
+/**
+ * Suara tunggal permanen untuk seluruh materi dasar (Die Grundlagen).
+ * Katja: Vokal jernih, hangat & artikulatif untuk drill fonetik dan kosakata.
+ */
+export const GRUNDLAGEN_PERSONA_ID: TtsPersonaId = 'female-1'
+
+/**
+ * 3 Persona terkurasi untuk Scenario Generator (1 Wanita + 2 Pria).
+ * Memudahkan guru/murid dalam dinamika dialog kelas tanpa distraksi vokal berlebih.
+ */
+export const SCENARIO_PERSONAS: readonly TtsPersona[] = TTS_PERSONAS.filter((p) =>
+  ['female-1', 'male-1', 'male-2'].includes(p.id)
+)
+
 const PERSONA_BY_ID = new Map<string, TtsPersona>(
   TTS_PERSONAS.map((p) => [p.id, p])
 )

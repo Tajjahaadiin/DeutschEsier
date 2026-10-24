@@ -14,7 +14,7 @@ import {
 } from '../lib/grammarTopicsParser'
 import { parseGrammarQuestions, type AiGrammarQuestion } from '../lib/grammarQuestions'
 import GrammarTopicPicker from '../components/generator/GrammarTopicPicker'
-import { TTS_PERSONAS, type TtsPersonaId } from '../../shared/ttsPersonas'
+import { SCENARIO_PERSONAS, type TtsPersonaId } from '../../shared/ttsPersonas'
 
 interface DialogTurn {
   speaker: string
@@ -60,12 +60,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [editedTitle, setEditedTitle] = useState('')
   const [editedSceneDesc, setEditedSceneDesc] = useState('')
   const [speakerPersonas, setSpeakerPersonas] = useState<Record<string, TtsPersonaId>>({
-    'Sprecher A': 'female-1',
-    'Sprecher B': 'male-1',
-    'Sprecher C': 'female-2',
-    'Sprecher D': 'male-2',
-    'Sprecher E': 'female-3',
-    'Sprecher F': 'male-3',
+    'Sprecher A': 'female-1', // Katja
+    'Sprecher B': 'male-1',   // Conrad
+    'Sprecher C': 'male-2',   // Killian
   })
   const [isPlayingAll, setIsPlayingAll] = useState(false)
   const [playingIndex, setPlayingIndex] = useState<number | null>(null)
@@ -457,11 +454,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               onChange={e => setSpeakerCount(parseInt(e.target.value, 10))}
               className="w-full p-2 border border-border rounded-md text-base bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
             >
-              {[2, 3, 4, 5, 6].map(n => (
+              {[2, 3].map(n => (
                 <option key={n} value={n}>{n} Orang</option>
               ))}
             </select>
-            <p className="text-label text-text-muted mt-1">2 - 6 pembicara</p>
+            <p className="text-label text-text-muted mt-1">2 atau 3 pembicara (1 Wanita + 2 Pria)</p>
           </div>
           <div className="text-body-sm text-text-muted mt-4">
             <span className="font-bold text-primary">{selectedWords.length}</span> kata Bank
@@ -573,9 +570,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
             <div className="flex flex-col gap-2 p-3 bg-surface-muted rounded-md border border-border mb-4">
               <span className="text-label font-bold text-text">Konfigurasi Persona Karakter ({speakerCount} Orang):</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                {['A', 'B', 'C', 'D', 'E', 'F'].slice(0, speakerCount).map(letter => {
+                {['A', 'B', 'C'].slice(0, speakerCount).map(letter => {
                   const speaker = `Sprecher ${letter}`
-                  const currentPersona = speakerPersonas[speaker] || 'female-1'
+                  const currentPersona = speakerPersonas[speaker] || (letter === 'A' ? 'female-1' : letter === 'B' ? 'male-1' : 'male-2')
                   return (
                     <div key={speaker} className="flex items-center justify-between gap-1.5 bg-surface p-2 rounded-md border border-border">
                       <span className="font-semibold text-text shrink-0">{speaker}:</span>
@@ -584,7 +581,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         onChange={e => handleSpeakerPersonaChange(speaker, e.target.value as TtsPersonaId)}
                         className="p-1 border border-border rounded-md text-base bg-surface text-text focus:outline-none focus:ring-1 focus:ring-primary max-w-[150px] truncate cursor-pointer"
                       >
-                        {TTS_PERSONAS.map(p => (
+                        {SCENARIO_PERSONAS.map(p => (
                           <option key={p.id} value={p.id}>
                             {p.emoji} {p.name} ({p.roleId.split(' ')[0]})
                           </option>
@@ -617,7 +614,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         }}
                         className="w-32 p-1.5 border border-border rounded-md text-base bg-surface text-text focus:ring-1 focus:ring-primary focus:outline-none font-semibold cursor-pointer"
                       >
-                        {['A', 'B', 'C', 'D', 'E', 'F'].slice(0, speakerCount).map(l => (
+                        {['A', 'B', 'C'].slice(0, speakerCount).map(l => (
                           <option key={l} value={`Sprecher ${l}`}>Sprecher {l}</option>
                         ))}
                       </select>
@@ -630,7 +627,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         }}
                         className="p-1.5 border border-border rounded-md text-base bg-surface text-text focus:ring-1 focus:ring-primary focus:outline-none cursor-pointer"
                       >
-                        {TTS_PERSONAS.map(p => (
+                        {SCENARIO_PERSONAS.map(p => (
                           <option key={p.id} value={p.id}>
                             {p.emoji} {p.name}
                           </option>

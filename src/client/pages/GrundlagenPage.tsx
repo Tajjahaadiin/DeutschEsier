@@ -24,7 +24,7 @@ import {
   setStoredPersonaId,
   type TtsPersonaId,
 } from '../lib/audio'
-import { TTS_PERSONAS } from '../../shared/ttsPersonas'
+import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 
 export type GrundlagenTab = 'words' | 'alphabet' | 'nummer' | 'tage'
 
@@ -88,20 +88,8 @@ export default function GrundlagenPage({
     }
   })
 
-  // Voice Persona State: selaras dengan event 'persona-change' dan localStorage
-  const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
-
-  useEffect(() => {
-    const handlePersonaChange = () => {
-      setCurrentPersonaId(getStoredPersonaId())
-    }
-    window.addEventListener('persona-change', handlePersonaChange)
-    window.addEventListener('storage', handlePersonaChange)
-    return () => {
-      window.removeEventListener('persona-change', handlePersonaChange)
-      window.removeEventListener('storage', handlePersonaChange)
-    }
-  }, [])
+  // Voice Persona: dikunci ke suara tunggal Grundlagen (Katja / female-1)
+  const currentPersonaId = GRUNDLAGEN_PERSONA_ID
 
   // Sinkronisasi Tab ke URL Query (mempertahankan query key siswa)
   const handleTabChange = (tab: GrundlagenTab) => {
@@ -333,32 +321,8 @@ export default function GrundlagenPage({
           </p>
         </div>
 
-        {/* Action: Voice Persona Selector & Guru Kelola Kunci Akses Murid */}
+        {/* Action: Guru Kelola Kunci Akses Murid */}
         <div className="shrink-0 flex items-center gap-2.5 flex-wrap">
-          {/* Global Voice Persona Picker untuk Seluruh Modul Grundlagen */}
-          <div className="flex items-center gap-1.5 bg-surface-muted border border-border px-3 py-1.5 rounded-md shadow-xs">
-            <Volume2 size={15} className="text-primary shrink-0" />
-            <label htmlFor="grundlagen-persona-select" className="text-xs font-semibold text-text-muted shrink-0">
-              Suara:
-            </label>
-            <select
-              id="grundlagen-persona-select"
-              value={currentPersonaId}
-              onChange={(e) => {
-                const nextId = e.target.value as TtsPersonaId
-                setCurrentPersonaId(nextId)
-                setStoredPersonaId(nextId)
-              }}
-              className="bg-transparent font-semibold text-text text-sm focus:outline-none cursor-pointer"
-            >
-              {TTS_PERSONAS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.emoji} {p.name} ({p.roleId.split(' ')[0]})
-                </option>
-              ))}
-            </select>
-          </div>
-
           {isTeacher && (
             <button
               type="button"

@@ -38033,9 +38033,10 @@ function buildPrompt(prompt, level, cognates, dialogueCount, grammarTopicIds = [
 Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
   const grammarTopicsBlock = level === "B1" ? buildGrammarTopicsBlock(grammarTopicIds) : "";
   const grammarQuestionsBlock = level === "B1" ? buildGrammarQuestionsBlock(grammarTopicIds) : "";
-  const letters = ["A", "B", "C", "D", "E", "F"];
-  const count3 = Math.min(6, Math.max(2, speakerCount || 2));
+  const letters = ["A", "B", "C"];
+  const count3 = Math.min(3, Math.max(2, speakerCount || 2));
   const speakerNames = letters.slice(0, count3).map((l) => `"Sprecher ${l}"`).join(", ");
+  const speakerGenderGuide = count3 === 3 ? '\n   - Komposisi gender pembicara HARUS deterministik: Tepat 1 Perempuan ("Sprecher A") dan 2 Laki-laki ("Sprecher B" dan "Sprecher C"). Sesuaikan kata ganti orang (er/sie) dan sapaan (Herr/Frau) secara konsisten.' : '\n   - Komposisi gender pembicara HARUS deterministik: "Sprecher A" adalah Perempuan dan "Sprecher B" adalah Laki-laki.';
   const comprehensionBlock = level === "B1" ? `
 
 Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):
@@ -38052,7 +38053,7 @@ Skenario: ${prompt}${cognateList}
 
 Panduan:
 1. Dialog harus natural dan relevan dengan skenario
-2. Gunakan percakapan antar ${count3} pembicara: ${speakerNames}
+2. Gunakan percakapan antar ${count3} pembicara: ${speakerNames}${speakerGenderGuide}
 3. Teks Jerman harus sesuai level ${level} CEFR
 4. Terjemahan Indonesia harus natural
 5. vocabClues berisi kata-kata kunci dengan tip grammar yang membantu
@@ -38100,8 +38101,8 @@ generateRouter.post("/", requireTeacherAuth, async (c) => {
     }
     let speakers = 2;
     if (speakerCount !== void 0) {
-      if (typeof speakerCount !== "number" || !Number.isInteger(speakerCount) || speakerCount < 2 || speakerCount > 6) {
-        return c.json({ error: "Jumlah pembicara harus berupa bilangan bulat antara 2 dan 6." }, 400);
+      if (typeof speakerCount !== "number" || !Number.isInteger(speakerCount) || speakerCount < 2 || speakerCount > 3) {
+        return c.json({ error: "Jumlah pembicara harus berupa bilangan bulat antara 2 dan 3." }, 400);
       }
       speakers = speakerCount;
     }
@@ -38369,6 +38370,9 @@ var TTS_PERSONAS = [
     emoji: "\u{1F469}\u200D\u{1F4BC}"
   }
 ];
+var SCENARIO_PERSONAS = TTS_PERSONAS.filter(
+  (p) => ["female-1", "male-1", "male-2"].includes(p.id)
+);
 var PERSONA_BY_ID = new Map(
   TTS_PERSONAS.map((p) => [p.id, p])
 );

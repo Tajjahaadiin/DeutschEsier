@@ -612,4 +612,12 @@ describe('buildPrompt — guard level untuk topik grammar', () => {
 
     expect(prompt).toContain('Materi tata bahasa untuk topik berikut')
   })
+
+  it('menyertakan aturan deterministik gender 1F + 2M saat speakerCount = 3', async () => {
+    const { buildPrompt } = await import('../effect/ai-service')
+    const prompt = buildPrompt('Di kafe', 'A1', [], 8, [], 3)
+
+    expect(prompt).toContain('3 pembicara: "Sprecher A", "Sprecher B", "Sprecher C"')
+    expect(prompt).toContain('Tepat 1 Perempuan ("Sprecher A") dan 2 Laki-laki ("Sprecher B" dan "Sprecher C")')
+  })
 })

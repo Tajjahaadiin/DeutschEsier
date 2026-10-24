@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Volume2, CalendarDays, PartyPopper, Clock } from 'lucide-react'
 import { speakGerman, getStoredPersonaId, setStoredPersonaId, type TtsPersonaId } from '../lib/audio'
-import { TTS_PERSONAS } from '../../shared/ttsPersonas'
+import { GRUNDLAGEN_PERSONA_ID } from '../../shared/ttsPersonas'
 import {
   WEEKDAYS,
   MONTHS,
@@ -23,7 +23,7 @@ export default function DayPage({ navigate, embedded = false }: DayPageProps) {
     const now = new Date()
     return { year: now.getFullYear(), month: now.getMonth() }
   })
-  const [currentPersonaId, setCurrentPersonaId] = useState<TtsPersonaId>(() => getStoredPersonaId())
+  const currentPersonaId = GRUNDLAGEN_PERSONA_ID
   const [speechRate, setSpeechRate] = useState(1.0)
   const [playing, setPlaying] = useState<string | null>(null)
 
@@ -73,23 +73,6 @@ export default function DayPage({ navigate, embedded = false }: DayPageProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex items-center bg-slate-100 p-1 rounded-lg text-base">
-                <select
-                  value={currentPersonaId}
-                  onChange={(e) => {
-                    const nextId = e.target.value as TtsPersonaId
-                    setCurrentPersonaId(nextId)
-                    setStoredPersonaId(nextId)
-                  }}
-                  className="bg-transparent font-semibold text-slate-700 text-base focus:outline-none cursor-pointer px-1 py-0.5"
-                >
-                  {TTS_PERSONAS.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.emoji} {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-lg text-xs">
                 {[1.0, 0.75].map((rate) => (
                   <button
