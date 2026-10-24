@@ -16,7 +16,6 @@ import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPattern
 import { buildSessionRequest, accessDenialFrom } from '../lib/sessionRequest'
 import { parseGrammarTopics, type GrammarTopicContent } from '../lib/grammarTopicsParser'
 import { getTtsPersona } from '../../shared/ttsPersonas'
-import { isModelStored, prefetchGermanModel, warmUpSpeechCache, PERSONA_WASM_MAP } from '../lib/vitsEngine'
 import {
   Volume2,
   Share2,
@@ -35,7 +34,6 @@ import {
   Layers,
   FileCheck2,
   GraduationCap,
-  Loader2,
 } from 'lucide-react'
 
 interface DialogTurn {
@@ -96,10 +94,6 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
   // Tab state: 'dialog' | 'flashcard' | 'quiz' | 'grammar'
   const [activeTab, setActiveTab] = useState<'dialog' | 'flashcard' | 'quiz' | 'grammar'>('dialog')
-
-  // Asset Readiness states (VITS WASM model preload)
-  const [assetsLoading, setAssetsLoading] = useState<boolean>(true)
-  const [assetsProgress, setAssetsProgress] = useState<string>('Memeriksa kesiapan audio...')
 
   // Access Gate states
   const [accessGranted, setAccessGranted] = useState<boolean>(isTeacher)
@@ -272,63 +266,6 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
   const speakers = session ? [...new Set(session.dialogue.map((d) => d.speaker))] : []
   const speakerA = speakers[0] || 'Sprecher A'
-
-  // Preload model WASM dan sintesis seluruh baris dialog ke RAM sebelum card dibuka
-  useEffect(() => {
-    if (!accessGranted || !session || session.dialogue.length === 0) return
-
-    let cancelled = false
-    const checkAndPreload = async () => {
-      setAssetsLoading(true)
-      try {
-        // 1. Unduh model neural yang dibutuhkan skenario ke OPFS jika belum ada
-        const neededModels = new Set<string>()
-        for (const turn of session.dialogue) {
-          const resolvedPersona = turn.personaId || (turn.speaker === speakerA ? 'weiblich' : 'männlich-1')
-          const conf = PERSONA_WASM_MAP[resolvedPersona] || PERSONA_WASM_MAP['weiblich']
-          neededModels.add(conf.modelId)
-        }
-
-        const modelsList = Array.from(neededModels)
-        for (let i = 0; i < modelsList.length; i++) {
-          if (cancelled) return
-          const modelId = modelsList[i] as any
-          const already = await isModelStored(modelId)
-          if (!already) {
-            setAssetsProgress(`Mengunduh model audio Jerman (${i + 1}/${modelsList.length})...`)
-            await prefetchGermanModel(modelId, (loaded, total) => {
-              if (cancelled) return
-              const pct = total > 0 ? Math.round((loaded / total) * 100) : 0
-              setAssetsProgress(`Mengunduh model audio Jerman (${pct}%)...`)
-            })
-          }
-        }
-
-        // 2. Pre-generate/sintesis seluruh kalimat dialog ke RAM agar saat tombol play ditekan: latensi 0ms!
-        const totalTurns = session.dialogue.length
-        for (let i = 0; i < totalTurns; i++) {
-          if (cancelled) return
-          const turn = session.dialogue[i]
-          if (!turn.germanText?.trim()) continue
-          const turnPersona = turn.personaId || (turn.speaker === speakerA ? 'weiblich' : 'männlich-1')
-          setAssetsProgress(`Menyiapkan audio percakapan (${i + 1}/${totalTurns})...`)
-          await warmUpSpeechCache(turn.germanText, turnPersona)
-        }
-      } catch (err) {
-        console.warn('[Asset readiness check warning]:', err)
-      } finally {
-        if (!cancelled) {
-          setAssetsLoading(false)
-        }
-      }
-    }
-
-    checkAndPreload()
-
-    return () => {
-      cancelled = true
-    }
-  }, [accessGranted, session])
 
   const handleStopAll = () => {
     cancelledRef.current = true
@@ -723,24 +660,6 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
             </div>
           </div>
 
-          {/* BANNER PROGRES SINTESIS AUDIO DI LATAR BELAKANG (NON-BLOCKING) */}
-          {assetsLoading && (
-            <div className="max-w-2xl w-full mx-auto px-4 mt-3">
-              <div className="p-3.5 bg-primary/10 border border-primary/25 rounded-lg flex items-center justify-between gap-3 text-xs shadow-xs">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Loader2 size={18} className="animate-spin text-primary shrink-0" />
-                  <div>
-                    <span className="font-bold text-text">Menyiapkan Audio Percakapan: </span>
-                    <span className="text-text-muted">{assetsProgress}</span>
-                  </div>
-                </div>
-                <span className="shrink-0 px-2 py-0.5 rounded-full bg-primary/15 text-primary font-semibold text-[11px]">
-                  Latar Belakang
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* TAB 1: DIALOG & VOCAB CLUES */}
           {activeTab === 'dialog' && (
             <>
@@ -789,16 +708,11 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <button
                         type="button"
                         onClick={handlePlayAll}
-                        disabled={session.dialogue.length === 0 || assetsLoading}
+                        disabled={session.dialogue.length === 0}
                         className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer disabled:opacity-50"
-                        title={assetsLoading ? 'Sedang menyiapkan audio percakapan...' : 'Putar Seluruh Dialog'}
                       >
-                        {assetsLoading ? (
-                          <Loader2 size={13} className="animate-spin text-white" />
-                        ) : (
-                          <Play size={13} className="fill-white" />
-                        )}
-                        <span>{assetsLoading ? 'Menyiapkan Audio...' : 'Putar Seluruh Dialog'}</span>
+                        <Play size={13} className="fill-white" />
+                        <span>Putar Seluruh Dialog</span>
                       </button>
                     )}
                   </div>
@@ -877,7 +791,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                               ? 'bg-surface-muted hover:bg-border text-text'
                               : 'bg-white/20 hover:bg-white/30 text-white')
                           }
-                          disabled={playingIndex === i || assetsLoading}
+                          disabled={playingIndex === i}
                         >
                           <Volume2
                             size={13}

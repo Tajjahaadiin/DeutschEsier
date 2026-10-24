@@ -1,4 +1,4 @@
-import { stopWasmAudio, synthesizeAndPlayWasm } from './vitsEngine'
+import { stopWasmAudio } from './vitsEngine'
 import {
   type TtsPersona,
   type TtsPersonaId,
@@ -180,56 +180,34 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
     storedPersonaId: getStoredPersonaId(),
   })
 
-  // JALUR UTAMA 1: Client-Side VITS/Piper WASM (0 Server Quota & 0 Network Blocking)
-  let wasmFallbackTriggered = false
-  const runFallbackPipeline = () => {
-    if (wasmFallbackTriggered) return
-    wasmFallbackTriggered = true
+  // JALUR UTAMA: Remote /api/tts HTTP Audio Stream (CDN-Cached, Ringan, 0ms WASM Lag)
+  const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&persona=${encodeURIComponent(request.personaId)}`
+  const audio = new Audio(audioUrl)
+  
+  // Modulasi playbackRate jika diminta atau ikuti profil persona
+  const targetRate = options.rate !== undefined ? options.rate : (PERSONA_ACOUSTICS[request.personaId]?.rate || 1.0)
+  audio.playbackRate = targetRate
+  audio.defaultPlaybackRate = targetRate
 
-    // JALUR CADANGAN 2: Remote /api/tts (Gemini CDN)
-    const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&persona=${encodeURIComponent(request.personaId)}`
-    const audio = new Audio(audioUrl)
-    if (options.rate !== undefined) {
-      audio.playbackRate = options.rate
-      audio.defaultPlaybackRate = options.rate
-    }
-    currentHtmlAudio = audio
-    let serverFallbackExecuted = false
-    const safeServerFallback = () => {
-      if (serverFallbackExecuted) return
-      if (currentHtmlAudio !== audio) return
-      serverFallbackExecuted = true
-      currentHtmlAudio = null
-      // JALUR CADANGAN 3: Client Web Speech API (Pitch/Rate Modulated)
-      fallbackSpeechSynthesis(text, { ...options, gender: request.gender, personaId: request.personaId })
-    }
-    audio.onended = () => {
-      if (currentHtmlAudio === audio) currentHtmlAudio = null
-      if (options.onEnd) options.onEnd()
-    }
-    audio.onerror = () => safeServerFallback()
-    audio.play().catch(() => safeServerFallback())
+  currentHtmlAudio = audio
+  let fallbackExecuted = false
+
+  const runFallback = () => {
+    if (fallbackExecuted) return
+    fallbackExecuted = true
+    if (currentHtmlAudio !== audio) return
+    currentHtmlAudio = null
+    // Fallback cadangan ke Web Speech API jika jaringan terputus
+    fallbackSpeechSynthesis(text, { ...options, gender: request.gender, personaId: request.personaId })
   }
 
-  // Coba sintesis client-side VITS WASM terlebih dahulu
-  try {
-    const promise = synthesizeAndPlayWasm(text, request.personaId, options.rate)
-    if (promise && typeof promise.then === 'function') {
-      promise
-        .then(() => {
-          if (options.onEnd) options.onEnd()
-        })
-        .catch((err) => {
-          console.warn('[VITS-WASM error, falling back to server / native]:', err)
-          runFallbackPipeline()
-        })
-    } else {
-      runFallbackPipeline()
-    }
-  } catch (err) {
-    console.warn('[VITS-WASM sync error, falling back to server / native]:', err)
-    runFallbackPipeline()
+  audio.onended = () => {
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    if (options.onEnd) options.onEnd()
   }
+
+  audio.onerror = () => runFallback()
+  audio.play().catch(() => runFallback())
 }
 
 // Memutar audio kata benda Bank Kata.
