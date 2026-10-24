@@ -29,8 +29,8 @@ Soal Richtig/Falsch yang disusun secara deterministik saat runtime dari vocabClu
 _Avoid_: Soal AI fallback, auto-quiz
 
 **Persona Vokal (TTS Speaker Persona)**:
-Karakter suara sintetis neural Jerman yang merepresentasikan peran sosial dan usia penutur tertentu dalam pembelajaran. Dalam Scenario Generator dikurasi menjadi 3 karakter inti: Katja (`female-1` / Tutor Utama), Conrad (`male-1` / Guru Formal Pria Bariton), dan Killian (`male-2` / Mahasiswa Santai Tenor Muda). Disintesis secara lokal di browser murid menggunakan VITS/Piper WebAssembly.
-_Avoid_: Suara robot, pilihan gender biner biasa, list persona tak terbatas
+Karakter suara sintetis neural Jerman dalam Scenario Generator yang dikurasi ketat menjadi 3 karakter baku: `weiblich` (Wanita ceria, base Kerstin +180 cents, 1.04x), `männlich-1` (Pria tegas/dewasa, base Kerstin -250 cents, 1.06x), dan `männlich-2` (Pria energik, base Thorsten +160 cents, 1.05x). Disintesis secara lokal di browser murid menggunakan VITS/Piper WebAssembly.
+_Avoid_: Suara robot, pilihan gender biner biasa, list persona tak terbatas, nama persona fiktif lama
 
 **Client-Side VITS WASM**:
 Mesin Text-to-Speech saraf berbasis WebAssembly dan ONNX Runtime Web yang berjalan langsung di peramban murid (`@diffusionstudio/vits-web`), menyimpan model neural (`de_DE-kerstin` dan `de_DE-thorsten`) secara permanen di Origin Private File System (OPFS) untuk sintesis tanpa batas kuota server.
@@ -41,8 +41,12 @@ Satu persona vokal tunggal yang dikunci secara konsisten untuk seluruh modul Die
 _Avoid_: Multi-persona fondasi, pemilih suara dinamis fondasi
 
 **Komposisi Deterministik Dialog (Deterministic Dialogue Composition)**:
-Aturan tetap bagi generator skenario AI saat menghasilkan percakapan 3 pembicara, yang mewajibkan tepat 1 pembicara wanita (`Sprecher A` = Katja) dan 2 pembicara pria (`Sprecher B` = Conrad, `Sprecher C` = Killian).
+Aturan mutlak bagi generator skenario AI saat menghasilkan percakapan: jika 2 pembicara, wajib `weiblich` dan `männlich-1`; jika lebih dari 2 orang (3 pembicara), wajib tepat 1 wanita dan 2 pria (`Sprecher A` = `weiblich`, `Sprecher B` = `männlich-1`, `Sprecher C` = `männlich-2`).
 _Avoid_: Komposisi acak AI, dialog monolog, 3 karakter sesama gender
+
+**Pemuat Kesiapan Aset (Asset Readiness Loader)**:
+Status pemblokiran visual (skeleton / loader spinner) dengan redaksi *"Sedang memuat model audio Jerman..."* di halaman skenario (`ViewPage.tsx`) saat browser mengunduh model neural WASM ke memori lokal (OPFS), yang menahan tampilan card dialog dan kuis hingga seluruh aset vokal yang dibutuhkan skenario siap 100%.
+_Avoid_: Lazy load tanpa indikator, pemutaran audio sebelum model selesai diunduh
 
 **Die Grundlagen (Fondasi Dasar)**:
 Kategori modul pembelajaran mandiri yang memuat materi dasar non-dialog (Bank Kata Kognat, Das Alphabet, Die Nummer, dan Die Tage), dapat dibuka langsung oleh guru di dashboard dan dapat diakses murid menggunakan kunci akses `sessionId = "grundlagen"`.

@@ -16,6 +16,7 @@ import { parseGrammarPatterns, type GrammarPattern } from '../lib/grammarPattern
 import { buildSessionRequest, accessDenialFrom } from '../lib/sessionRequest'
 import { parseGrammarTopics, type GrammarTopicContent } from '../lib/grammarTopicsParser'
 import { getTtsPersona } from '../../shared/ttsPersonas'
+import { isModelStored, prefetchGermanModel, PERSONA_WASM_MAP } from '../lib/vitsEngine'
 import {
   Volume2,
   Share2,
@@ -34,6 +35,7 @@ import {
   Layers,
   FileCheck2,
   GraduationCap,
+  Loader2,
 } from 'lucide-react'
 
 interface DialogTurn {
@@ -94,6 +96,10 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
   // Tab state: 'dialog' | 'flashcard' | 'quiz' | 'grammar'
   const [activeTab, setActiveTab] = useState<'dialog' | 'flashcard' | 'quiz' | 'grammar'>('dialog')
+
+  // Asset Readiness states (VITS WASM model preload)
+  const [assetsLoading, setAssetsLoading] = useState<boolean>(true)
+  const [assetsProgress, setAssetsProgress] = useState<string>('Memeriksa kesiapan audio...')
 
   // Access Gate states
   const [accessGranted, setAccessGranted] = useState<boolean>(isTeacher)
@@ -266,6 +272,52 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
 
   const speakers = session ? [...new Set(session.dialogue.map((d) => d.speaker))] : []
   const speakerA = speakers[0] || 'Sprecher A'
+
+  // Preload model WASM yang dibutuhkan skenario ini begitu akses terbuka & data session tersedia
+  useEffect(() => {
+    if (!accessGranted || !session || session.dialogue.length === 0) return
+
+    let cancelled = false
+    const checkAndPreload = async () => {
+      setAssetsLoading(true)
+      try {
+        // Cari model neural yang benar-benar dibutuhkan oleh turn dialog ini
+        const neededModels = new Set<string>()
+        for (const turn of session.dialogue) {
+          const pId = turn.personaId || (turn.speaker === speakerA ? 'weiblich' : 'männlich-1')
+          const conf = PERSONA_WASM_MAP[pId] || PERSONA_WASM_MAP['weiblich']
+          neededModels.add(conf.modelId)
+        }
+
+        const modelsList = Array.from(neededModels)
+        for (let i = 0; i < modelsList.length; i++) {
+          if (cancelled) return
+          const modelId = modelsList[i] as any
+          const already = await isModelStored(modelId)
+          if (!already) {
+            setAssetsProgress(`Sedang memuat model audio Jerman (${i + 1}/${modelsList.length})...`)
+            await prefetchGermanModel(modelId, (loaded, total) => {
+              if (cancelled) return
+              const pct = total > 0 ? Math.round((loaded / total) * 100) : 0
+              setAssetsProgress(`Sedang memuat model audio Jerman (${pct}%)...`)
+            })
+          }
+        }
+      } catch (err) {
+        console.warn('[Asset readiness check warning]:', err)
+      } finally {
+        if (!cancelled) {
+          setAssetsLoading(false)
+        }
+      }
+    }
+
+    checkAndPreload()
+
+    return () => {
+      cancelled = true
+    }
+  }, [accessGranted, session])
 
   const handleStopAll = () => {
     cancelledRef.current = true
@@ -571,8 +623,66 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
             )}
           </div>
         </div>
+      ) : assetsLoading ? (
+        /* SKELETON LOADER STATE: SAAT MODEL NEURAL AUDIO SEDANG DIMUAT */
+        <div className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-6 my-4 animate-pulse">
+          {/* Banner status pemuatan */}
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Loader2 size={24} className="animate-spin text-primary shrink-0" />
+              <div>
+                <p className="text-body font-bold text-text">Sedang memuat model audio Jerman...</p>
+                <p className="text-xs text-text-muted mt-0.5">{assetsProgress}</p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/15 text-primary shrink-0">
+              Menyiapkan Suara Asli
+            </span>
+          </div>
+
+          {/* Skeleton Tab Bar */}
+          <div className="h-10 bg-slate-200 rounded-md w-3/4 max-w-md" />
+
+          {/* Skeleton Dialog Bubble Turn 1 */}
+          <div className="flex justify-start">
+            <div className="w-[80%] bg-surface border border-border rounded-lg p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-slate-200 rounded-sm w-24" />
+                <div className="h-4 bg-slate-200 rounded-sm w-16" />
+              </div>
+              <div className="h-5 bg-slate-200 rounded-sm w-full" />
+              <div className="h-4 bg-slate-200 rounded-sm w-4/5" />
+              <div className="h-7 bg-slate-200 rounded-md w-20 pt-2" />
+            </div>
+          </div>
+
+          {/* Skeleton Dialog Bubble Turn 2 */}
+          <div className="flex justify-end">
+            <div className="w-[80%] bg-primary/20 border border-primary/30 rounded-lg p-5 space-y-3">
+              <div className="flex items-center justify-end gap-2">
+                <div className="h-4 bg-primary/30 rounded-sm w-16" />
+                <div className="h-4 bg-primary/30 rounded-sm w-24" />
+              </div>
+              <div className="h-5 bg-primary/30 rounded-sm w-full" />
+              <div className="h-4 bg-primary/30 rounded-sm w-3/4" />
+              <div className="h-7 bg-primary/30 rounded-md w-20 pt-2" />
+            </div>
+          </div>
+
+          {/* Skeleton Dialog Bubble Turn 3 */}
+          <div className="flex justify-start">
+            <div className="w-[80%] bg-surface border border-border rounded-lg p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="h-4 bg-slate-200 rounded-sm w-20" />
+                <div className="h-4 bg-slate-200 rounded-sm w-16" />
+              </div>
+              <div className="h-5 bg-slate-200 rounded-sm w-5/6" />
+              <div className="h-4 bg-slate-200 rounded-sm w-2/3" />
+            </div>
+          </div>
+        </div>
       ) : (
-        /* KONTEN UTAMA DENGAN 3 TAB KETIKA AKSES TERBUKA */
+        /* KONTEN UTAMA DENGAN 3 TAB KETIKA AKSES TERBUKA & MODEL SIAP */
         <>
           {/* TAB BAR HEADER */}
           <div className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-2xs">

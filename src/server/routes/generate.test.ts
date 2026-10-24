@@ -618,6 +618,6 @@ describe('buildPrompt — guard level untuk topik grammar', () => {
     const prompt = buildPrompt('Di kafe', 'A1', [], 8, [], 3)
 
     expect(prompt).toContain('3 pembicara: "Sprecher A", "Sprecher B", "Sprecher C"')
-    expect(prompt).toContain('Tepat 1 Perempuan ("Sprecher A") dan 2 Laki-laki ("Sprecher B" dan "Sprecher C")')
+    expect(prompt).toContain('Tepat 1 Perempuan ("Sprecher A" - weiblich) dan 2 Laki-laki ("Sprecher B" - männlich-1 dan "Sprecher C" - männlich-2)')
   })
 })

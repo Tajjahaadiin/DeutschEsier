@@ -59,7 +59,7 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
     voiceId: 'de-DE-KatjaNeural',
     geminiVoiceName: 'Kore',
     roleId: 'Tutor Utama (Die Lehrerin)',
-    descriptionId: 'Dewasa, vokal jernih, hangat & artikulatif',
+    descriptionId: 'Dewasa, vokal jernih, hangat & artikulatif (Grundlagen)',
     emoji: '👩‍🏫',
   },
   {
@@ -84,7 +84,43 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
   },
 ] as const
 
+export const CANONICAL_SCENARIO_PERSONAS: readonly TtsPersona[] = [
+  {
+    id: 'weiblich',
+    name: 'Weiblich',
+    gender: 'female',
+    voiceId: 'de-DE-AmalaNeural',
+    geminiVoiceName: 'Zephyr',
+    roleId: 'Karakter Wanita (Die Sprecherin)',
+    descriptionId: 'Suara wanita ceria, artikulatif, nada ramah',
+    emoji: '👩',
+  },
+  {
+    id: 'männlich-1',
+    name: 'Männlich 1',
+    gender: 'male',
+    voiceId: 'de-DE-ConradNeural',
+    geminiVoiceName: 'Charon',
+    roleId: 'Karakter Pria 1 (Der Sprecher 1)',
+    descriptionId: 'Suara pria dewasa, tegas & berwibawa (timbre kontras)',
+    emoji: '👨',
+  },
+  {
+    id: 'männlich-2',
+    name: 'Männlich 2',
+    gender: 'male',
+    voiceId: 'de-DE-KillianNeural',
+    geminiVoiceName: 'Puck',
+    roleId: 'Karakter Pria 2 (Der Sprecher 2)',
+    descriptionId: 'Suara pria muda, energik & luwes',
+    emoji: '🧑',
+  },
+] as const
+
 export type TtsPersonaId =
+  | 'weiblich'
+  | 'männlich-1'
+  | 'männlich-2'
   | 'male-1'
   | 'male-2'
   | 'male-3'
@@ -103,18 +139,18 @@ export const GRUNDLAGEN_PERSONA_ID: TtsPersonaId = 'female-1'
 
 /**
  * 3 Persona terkurasi untuk Scenario Generator (1 Wanita + 2 Pria).
- * Memudahkan guru/murid dalam dinamika dialog kelas tanpa distraksi vokal berlebih.
+ * Format kanonikal: weiblich, männlich-1, männlich-2.
  */
-export const SCENARIO_PERSONAS: readonly TtsPersona[] = TTS_PERSONAS.filter((p) =>
-  ['female-1', 'male-1', 'male-2'].includes(p.id)
-)
+export const SCENARIO_PERSONAS: readonly TtsPersona[] = CANONICAL_SCENARIO_PERSONAS
+
+const ALL_LOOKUP_PERSONAS = [...TTS_PERSONAS, ...CANONICAL_SCENARIO_PERSONAS]
 
 const PERSONA_BY_ID = new Map<string, TtsPersona>(
-  TTS_PERSONAS.map((p) => [p.id, p])
+  ALL_LOOKUP_PERSONAS.map((p) => [p.id, p])
 )
 
 const PERSONA_BY_VOICE = new Map<string, TtsPersona>(
-  TTS_PERSONAS.map((p) => [p.voiceId.toLowerCase(), p])
+  ALL_LOOKUP_PERSONAS.map((p) => [p.voiceId.toLowerCase(), p])
 )
 
 export function getTtsPersona(id: unknown): TtsPersona | undefined {

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import HomePage from './pages/HomePage'
 import GrundlagenPage from './pages/GrundlagenPage'
-import AudioPrototypePage from './pages/AudioPrototypePage'
 import GeneratorPage from './pages/GeneratorPage'
 import ViewPage from './pages/ViewPage'
 import LoginPage from './pages/LoginPage'
@@ -51,11 +50,6 @@ export default function App() {
   if (currentPath.startsWith('/view/')) {
     const id = currentPath.split('/view/')[1].split('?')[0]
     return <ViewPage id={id} navigate={navigate} />
-  }
-
-  // Rute Prototype Audio: /prototype-audio atau /audio-prototype
-  if (currentPath === '/prototype-audio' || currentPath === '/audio-prototype') {
-    return <AudioPrototypePage navigate={navigate} />
   }
 
   // 3. Rute Terbuka Guru & Murid: /grundlagen (Portal Modul Fondasi Dasar)

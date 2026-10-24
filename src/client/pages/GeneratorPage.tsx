@@ -60,9 +60,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [editedTitle, setEditedTitle] = useState('')
   const [editedSceneDesc, setEditedSceneDesc] = useState('')
   const [speakerPersonas, setSpeakerPersonas] = useState<Record<string, TtsPersonaId>>({
-    'Sprecher A': 'female-1', // Katja
-    'Sprecher B': 'male-1',   // Conrad
-    'Sprecher C': 'male-2',   // Killian
+    'Sprecher A': 'weiblich',
+    'Sprecher B': 'männlich-1',
+    'Sprecher C': 'männlich-2',
   })
   const [isPlayingAll, setIsPlayingAll] = useState(false)
   const [playingIndex, setPlayingIndex] = useState<number | null>(null)
@@ -253,7 +253,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
   const handleSpeakerPersonaChange = (speaker: string, personaId: TtsPersonaId) => {
     setSpeakerPersonas(prev => ({ ...prev, [speaker]: personaId }))
-    const isMale = personaId.startsWith('male')
+    const isMale = personaId.startsWith('male') || personaId.startsWith('männlich')
     setEditedDialogue(prev => prev.map(t => t.speaker === speaker ? {
       ...t,
       personaId,
@@ -283,8 +283,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       if (cancelledRef.current) break
       const turn = editedDialogue[i]
       if (!turn.germanText.trim()) continue
-      const turnPersonaId = turn.personaId || speakerPersonas[turn.speaker] || 'female-1'
-      const turnGender: 'male' | 'female' = turnPersonaId.startsWith('male') ? 'male' : 'female'
+      const turnPersonaId = turn.personaId || speakerPersonas[turn.speaker] || 'weiblich'
+      const turnGender: 'male' | 'female' = (turnPersonaId.startsWith('male') || turnPersonaId.startsWith('männlich')) ? 'male' : 'female'
 
       setPlayingIndex(i)
 
@@ -572,7 +572,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                 {['A', 'B', 'C'].slice(0, speakerCount).map(letter => {
                   const speaker = `Sprecher ${letter}`
-                  const currentPersona = speakerPersonas[speaker] || (letter === 'A' ? 'female-1' : letter === 'B' ? 'male-1' : 'male-2')
+                  const currentPersona = speakerPersonas[speaker] || (letter === 'A' ? 'weiblich' : letter === 'B' ? 'männlich-1' : 'männlich-2')
                   return (
                     <div key={speaker} className="flex items-center justify-between gap-1.5 bg-surface p-2 rounded-md border border-border">
                       <span className="font-semibold text-text shrink-0">{speaker}:</span>
@@ -583,7 +583,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                       >
                         {SCENARIO_PERSONAS.map(p => (
                           <option key={p.id} value={p.id}>
-                            {p.emoji} {p.name} ({p.roleId.split(' ')[0]})
+                            {p.emoji} {p.name}
                           </option>
                         ))}
                       </select>
@@ -607,10 +607,10 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         value={turn.speaker}
                         onChange={e => {
                           const newSpeaker = e.target.value
-                          const targetPersona = speakerPersonas[newSpeaker] || 'female-1'
+                          const targetPersona = speakerPersonas[newSpeaker] || 'weiblich'
                           updateTurn(i, 'speaker', newSpeaker)
                           updateTurn(i, 'personaId', targetPersona)
-                          updateTurn(i, 'gender', targetPersona.startsWith('male') ? 'male' : 'female')
+                          updateTurn(i, 'gender', (targetPersona.startsWith('male') || targetPersona.startsWith('männlich')) ? 'male' : 'female')
                         }}
                         className="w-32 p-1.5 border border-border rounded-md text-base bg-surface text-text focus:ring-1 focus:ring-primary focus:outline-none font-semibold cursor-pointer"
                       >
@@ -619,11 +619,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                         ))}
                       </select>
                       <select
-                        value={turn.personaId || speakerPersonas[turn.speaker] || 'female-1'}
+                        value={turn.personaId || speakerPersonas[turn.speaker] || 'weiblich'}
                         onChange={e => {
                           const pId = e.target.value as TtsPersonaId
                           updateTurn(i, 'personaId', pId)
-                          updateTurn(i, 'gender', pId.startsWith('male') ? 'male' : 'female')
+                          updateTurn(i, 'gender', (pId.startsWith('male') || pId.startsWith('männlich')) ? 'male' : 'female')
                         }}
                         className="p-1.5 border border-border rounded-md text-base bg-surface text-text focus:ring-1 focus:ring-primary focus:outline-none cursor-pointer"
                       >

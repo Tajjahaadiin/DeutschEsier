@@ -323,12 +323,12 @@ export function buildPrompt(
   const speakerNames = letters.slice(0, count).map((l) => `"Sprecher ${l}"`).join(', ')
 
   // Panduan komposisi gender deterministik:
-  // 2 Pembicara: Sprecher A (Wanita), Sprecher B (Pria)
-  // 3 Pembicara: Sprecher A (Wanita), Sprecher B (Pria 1 / Dewasa), Sprecher C (Pria 2 / Muda)
+  // 2 Pembicara: Sprecher A (weiblich / Perempuan), Sprecher B (männlich-1 / Laki-laki 1)
+  // 3 Pembicara: Sprecher A (weiblich / Perempuan), Sprecher B (männlich-1 / Laki-laki 1), Sprecher C (männlich-2 / Laki-laki 2)
   const speakerGenderGuide =
     count === 3
-      ? '\n   - Komposisi gender pembicara HARUS deterministik: Tepat 1 Perempuan ("Sprecher A") dan 2 Laki-laki ("Sprecher B" dan "Sprecher C"). Sesuaikan kata ganti orang (er/sie) dan sapaan (Herr/Frau) secara konsisten.'
-      : '\n   - Komposisi gender pembicara HARUS deterministik: "Sprecher A" adalah Perempuan dan "Sprecher B" adalah Laki-laki.'
+      ? '\n   - Komposisi gender pembicara WAJIB deterministik: Tepat 1 Perempuan ("Sprecher A" - weiblich) dan 2 Laki-laki ("Sprecher B" - männlich-1 dan "Sprecher C" - männlich-2). Sesuaikan kata ganti orang (er/sie) dan sapaan (Herr/Frau) secara konsisten.'
+      : '\n   - Komposisi gender pembicara WAJIB deterministik: "Sprecher A" adalah Perempuan (weiblich) dan "Sprecher B" adalah Laki-laki (männlich-1).';
 
   // Level B1: kuis pemahaman digantikan soal Richtig/Falsch (Benar/Salah).
   const comprehensionBlock =

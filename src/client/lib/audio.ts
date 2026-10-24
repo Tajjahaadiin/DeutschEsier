@@ -20,11 +20,14 @@ interface ResolvedVoiceConfig {
 // ponytail: fallback akustik 6 persona untuk browser speechSynthesis saat backend/cloud TTS offline.
 // Ceiling: variasi nada per persona; upgrade path: REST API resmi Azure Speech atau pre-generated audio files.
 const PERSONA_ACOUSTICS: Record<TtsPersonaId, { pitch: number; rate: number }> = {
-  'male-1': { pitch: 0.75, rate: 0.92 }, // Conrad: Bariton berat & tegas
-  'male-2': { pitch: 0.90, rate: 1.05 }, // Killian: Tenor santai & cepat
+  'weiblich': { pitch: 1.20, rate: 1.04 }, // Ceria & tinggi
+  'männlich-1': { pitch: 0.75, rate: 1.06 }, // Tegas & berat
+  'männlich-2': { pitch: 0.90, rate: 1.05 }, // Energik & santai
+  'male-1': { pitch: 0.75, rate: 1.06 }, // Alias legacy untuk männlich-1
+  'male-2': { pitch: 0.90, rate: 1.05 }, // Alias legacy untuk männlich-2
   'male-3': { pitch: 1.00, rate: 1.00 }, // Florian: Pria netral
   'female-1': { pitch: 1.05, rate: 0.95 }, // Katja: Tutor hangat & artikulatif
-  'female-2': { pitch: 1.20, rate: 1.05 }, // Amala: Ceria & tinggi
+  'female-2': { pitch: 1.20, rate: 1.04 }, // Alias legacy untuk weiblich
   'female-3': { pitch: 0.95, rate: 0.95 }, // Seraphina: Tenang & lembut
 }
 

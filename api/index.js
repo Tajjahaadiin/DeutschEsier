@@ -38036,7 +38036,7 @@ Kata kognate yang WAJIB digunakan: ${cognates.join(", ")}` : "";
   const letters = ["A", "B", "C"];
   const count3 = Math.min(3, Math.max(2, speakerCount || 2));
   const speakerNames = letters.slice(0, count3).map((l) => `"Sprecher ${l}"`).join(", ");
-  const speakerGenderGuide = count3 === 3 ? '\n   - Komposisi gender pembicara HARUS deterministik: Tepat 1 Perempuan ("Sprecher A") dan 2 Laki-laki ("Sprecher B" dan "Sprecher C"). Sesuaikan kata ganti orang (er/sie) dan sapaan (Herr/Frau) secara konsisten.' : '\n   - Komposisi gender pembicara HARUS deterministik: "Sprecher A" adalah Perempuan dan "Sprecher B" adalah Laki-laki.';
+  const speakerGenderGuide = count3 === 3 ? '\n   - Komposisi gender pembicara WAJIB deterministik: Tepat 1 Perempuan ("Sprecher A" - weiblich) dan 2 Laki-laki ("Sprecher B" - m\xE4nnlich-1 dan "Sprecher C" - m\xE4nnlich-2). Sesuaikan kata ganti orang (er/sie) dan sapaan (Herr/Frau) secara konsisten.' : '\n   - Komposisi gender pembicara WAJIB deterministik: "Sprecher A" adalah Perempuan (weiblich) dan "Sprecher B" adalah Laki-laki (m\xE4nnlich-1).';
   const comprehensionBlock = level === "B1" ? `
 
 Tambahan untuk level B1 \u2014 soal Richtig/Falsch (Benar/Salah):

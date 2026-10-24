@@ -7,17 +7,24 @@ export type PersonaWasmConfig = {
   fallbackPitch: number
 }
 
-// 2 Model Dasar Neural Jerman (~16 MB & ~18 MB) membedakan 6 karakter persona di sisi klien
+// Pemetaan DSP Trio Persona Baru (weiblich, männlich-1, männlich-2) + alias backwards-compat
 export const PERSONA_WASM_MAP: Record<string, PersonaWasmConfig> = {
-  // WANITA (Base Model: de_DE-kerstin-low)
-  'female-1': { modelId: 'de_DE-kerstin-low', detuneCents: 0, playbackRate: 0.96, fallbackPitch: 1.05 }, // Katja
-  'female-2': { modelId: 'de_DE-kerstin-low', detuneCents: 180, playbackRate: 1.04, fallbackPitch: 1.2 }, // Amala
-  'female-3': { modelId: 'de_DE-kerstin-low', detuneCents: -120, playbackRate: 0.94, fallbackPitch: 0.95 }, // Seraphina
+  // 1. WEIBLICH (Base Model: de_DE-kerstin-low, ceria/muda)
+  'weiblich': { modelId: 'de_DE-kerstin-low', detuneCents: 180, playbackRate: 1.04, fallbackPitch: 1.2 },
+  'female-2': { modelId: 'de_DE-kerstin-low', detuneCents: 180, playbackRate: 1.04, fallbackPitch: 1.2 }, // alias
+  'female-1': { modelId: 'de_DE-kerstin-low', detuneCents: 0, playbackRate: 0.96, fallbackPitch: 1.05 }, // Katja Grundlagen
 
-  // PRIA (Base Model: de_DE-thorsten-medium)
-  'male-1': { modelId: 'de_DE-thorsten-medium', detuneCents: -150, playbackRate: 0.94, fallbackPitch: 0.75 }, // Conrad
-  'male-2': { modelId: 'de_DE-thorsten-medium', detuneCents: 160, playbackRate: 1.05, fallbackPitch: 0.9 }, // Killian
-  'male-3': { modelId: 'de_DE-thorsten-medium', detuneCents: 0, playbackRate: 1.0, fallbackPitch: 1.0 }, // Florian
+  // 2. MÄNNLICH 1 (Base Model: de_DE-kerstin-low dengan detune -250c, timbre unik tegas/dewasa)
+  'männlich-1': { modelId: 'de_DE-kerstin-low', detuneCents: -250, playbackRate: 1.06, fallbackPitch: 0.75 },
+  'male-1': { modelId: 'de_DE-kerstin-low', detuneCents: -250, playbackRate: 1.06, fallbackPitch: 0.75 }, // alias
+
+  // 3. MÄNNLICH 2 (Base Model: de_DE-thorsten-medium dengan detune +160c, energik/muda)
+  'männlich-2': { modelId: 'de_DE-thorsten-medium', detuneCents: 160, playbackRate: 1.05, fallbackPitch: 0.9 },
+  'male-2': { modelId: 'de_DE-thorsten-medium', detuneCents: 160, playbackRate: 1.05, fallbackPitch: 0.9 }, // alias
+
+  // Fallback cadangan
+  'male-3': { modelId: 'de_DE-thorsten-medium', detuneCents: 0, playbackRate: 1.0, fallbackPitch: 1.0 },
+  'female-3': { modelId: 'de_DE-kerstin-low', detuneCents: -120, playbackRate: 0.94, fallbackPitch: 0.95 },
 }
 
 const memoryWavCache = new Map<string, ArrayBuffer>()
