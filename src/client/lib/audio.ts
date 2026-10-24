@@ -16,6 +16,17 @@ interface ResolvedVoiceConfig {
   rate: number
 }
 
+// ponytail: fallback akustik 6 persona untuk browser speechSynthesis saat backend/cloud TTS offline.
+// Ceiling: variasi nada per persona; upgrade path: REST API resmi Azure Speech atau pre-generated audio files.
+const PERSONA_ACOUSTICS: Record<TtsPersonaId, { pitch: number; rate: number }> = {
+  'male-1': { pitch: 0.75, rate: 0.92 }, // Conrad: Bariton berat & tegas
+  'male-2': { pitch: 0.90, rate: 1.05 }, // Killian: Tenor santai & cepat
+  'male-3': { pitch: 1.00, rate: 1.00 }, // Florian: Pria netral
+  'female-1': { pitch: 1.05, rate: 0.95 }, // Katja: Tutor hangat & artikulatif
+  'female-2': { pitch: 1.20, rate: 1.05 }, // Amala: Ceria & tinggi
+  'female-3': { pitch: 0.95, rate: 0.95 }, // Seraphina: Tenang & lembut
+}
+
 // Regex deteksi gender suara bahasa Jerman (de-*)
 const MALE_VOICE_REGEX = /\b(conrad|kilian|killian|florian|stefan|markus|yannick|viktor|martin|jonas|jan|bernd|christoph|ralf|michael|karsten)\b|#male|\bmale\b/i
 const FEMALE_VOICE_REGEX = /\b(katja|hedda|amala|seraphina|anna|petra|helena|marlene|ingrid|leni|maja|lou|gisela)\b|#female|\bfemale\b|google deutsch/i
@@ -36,28 +47,29 @@ export async function initGermanVoice() {
   }
 }
 
-export function resolveVoice(gender: VoiceGender): ResolvedVoiceConfig {
+export function resolveVoice(gender: VoiceGender, personaId?: TtsPersonaId): ResolvedVoiceConfig {
   if (germanVoices.length === 0 && typeof window !== 'undefined' && window.speechSynthesis) {
     germanVoices = window.speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith('de'))
   }
 
   const defaultVoice = germanVoices[0] || null
+  const acoustic = personaId ? PERSONA_ACOUSTICS[personaId] : undefined
+  const pitch = acoustic ? acoustic.pitch : 1.0
+  const rate = acoustic ? acoustic.rate : 1.0
 
   if (gender === 'male') {
     const nativeMale = germanVoices.find(v => MALE_VOICE_REGEX.test(v.name) || MALE_VOICE_REGEX.test(v.voiceURI))
     if (nativeMale) {
-      return { voice: nativeMale, pitch: 1.0, rate: 1.0 }
+      return { voice: nativeMale, pitch, rate }
     }
   } else {
     const nativeFemale = germanVoices.find(v => FEMALE_VOICE_REGEX.test(v.name) || FEMALE_VOICE_REGEX.test(v.voiceURI))
     if (nativeFemale) {
-      return { voice: nativeFemale, pitch: 1.0, rate: 1.0 }
+      return { voice: nativeFemale, pitch, rate }
     }
   }
 
-  // Jaring keselamatan terakhir saja. Pitch TIDAK digeser: mengubah nada suara
-  // yang sama bukan pengganti persona, dan justru menyamarkan kegagalan jaringan.
-  return { voice: defaultVoice, pitch: 1.0, rate: 1.0 }
+  return { voice: defaultVoice, pitch, rate }
 }
 
 /**
@@ -134,7 +146,7 @@ function fallbackSpeechSynthesis(text: string, options: SpeakOptions) {
   window.speechSynthesis.cancel()
 
   const gender = options.gender || 'female'
-  const config = resolveVoice(gender)
+  const config = resolveVoice(gender, options.personaId as TtsPersonaId | undefined)
 
   const utterance = new SpeechSynthesisUtterance(text)
   utterance.lang = 'de-DE'
@@ -179,10 +191,8 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
     if (currentHtmlAudio !== audio) return
     fallbackExecuted = true
     currentHtmlAudio = null
-    // Sadar-diri: suara lokal biasa, tanpa manipulasi nada. Tidak berpura-pura
-    // menjadi persona yang dipilih pengguna.
-    console.warn('[tts] /api/tts gagal, memakai suara browser tanpa perubahan nada')
-    fallbackSpeechSynthesis(text, { ...options, gender: request.gender })
+    // Sadar-diri: fallback akustik persona berbasis pitch & rate saat endpoint /api/tts terkendala
+    fallbackSpeechSynthesis(text, { ...options, gender: request.gender, personaId: request.personaId })
   }
   audio.onended = () => {
     if (currentHtmlAudio === audio) currentHtmlAudio = null

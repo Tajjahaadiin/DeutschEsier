@@ -1,7 +1,16 @@
+/**
+ * Cloudflare Worker: Edge TTS Proxy untuk DeutschEasier (JavaScript murni)
+ * 
+ * Menggunakan protokol resmi Microsoft Edge TTS v2 DRM:
+ * - Sec-MS-GEC v2 (CS64 + SHA-256)
+ * - Cloudflare Workers fetch-upgrade pattern dengan async pendingBinary drain
+ * - Mendukung 6 persona German Neural Edge TTS
+ */
 
 const EDGE_SPEECH_URL = 'wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1'
 const EDGE_API_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4'
 const CHROMIUM_FULL_VERSION = '143.0.3650.75'
+const CHROMIUM_MAJOR_VERSION = CHROMIUM_FULL_VERSION.split('.')[0]
 const WIN_EPOCH_OFFSET = 11644473600
 const S_TO_NS = 1000000000
 const GEC_PREFIX_LENGTH = 57
@@ -154,18 +163,72 @@ export default {
     const secMsGec = await generateSecMsGecV2()
     const targetWsUrl = `${EDGE_SPEECH_URL}?ConnectionId=${connectId}&Ocp-Apim-Subscription-Key=${EDGE_API_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=2-${CHROMIUM_FULL_VERSION}`
 
+    const baseHeaders = {
+      'User-Agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROMIUM_MAJOR_VERSION}.0.0.0 Safari/537.36 Edg/${CHROMIUM_MAJOR_VERSION}.0.0.0`,
+      'Accept-Encoding': 'gzip, deflate, br, zstd',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Pragma': 'no-cache',
+      'Cache-Control': 'no-cache',
+      'Origin': 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
+      'Sec-WebSocket-Version': '13',
+      'Cookie': `muid=${randomMd5().toUpperCase()};`,
+    }
+
     try {
-      const ws = new WebSocket(targetWsUrl)
-      ws.binaryType = 'arraybuffer'
+      // Pola resmi WebSocket upgrade di Cloudflare Workers:
+      // fetch() ke URL HTTPS dengan header Upgrade: 'websocket'
+      const upgradeUrl = targetWsUrl.replace(/^wss:\/\//i, 'https://')
+      const upgradeResp = await fetch(upgradeUrl, {
+        headers: {
+          ...baseHeaders,
+          Upgrade: 'websocket',
+        },
+      })
+
+      if (upgradeResp.status !== 101 || !upgradeResp.webSocket) {
+        return new Response(JSON.stringify({ error: `WebSocket upgrade failed with status ${upgradeResp.status}` }), {
+          status: 502,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        })
+      }
+
+      const ws = upgradeResp.webSocket
+      ws.accept()
 
       const now = new Date().toUTCString()
       const configMsg = `X-Timestamp:${now}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":false},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`
+
       const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='de-DE'><voice name='${voice}'>${escapeXml(text)}</voice></speak>`
       const ssmlMsg = `X-RequestId:${connectId}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${now}\r\nPath:ssml\r\n\r\n${ssml}`
 
       return await new Promise((resolve) => {
         let audioData = new Uint8Array(0)
         let settled = false
+        // Cloudflare Workers mengirim binary WebSocket frame sebagai Blob yang async.
+        // Kita serialize decode melalui pendingBinary promise chain agar data audio
+        // tidak terpotong saat Path: turn.end diterima.
+        let pendingBinary = Promise.resolve()
+
+        const appendBinary = (buffer) => {
+          const view = new DataView(buffer)
+          const headerLength = view.getInt16(0)
+          if (buffer.byteLength > 2 + headerLength) {
+            const chunk = new Uint8Array(buffer, 2 + headerLength)
+            const nextAudio = new Uint8Array(audioData.length + chunk.length)
+            nextAudio.set(audioData, 0)
+            nextAudio.set(chunk, audioData.length)
+            audioData = nextAudio
+          }
+        }
+
+        const enqueueBinary = (getBuffer) => {
+          pendingBinary = pendingBinary.then(async () => {
+            if (settled) return
+            const buffer = await getBuffer()
+            if (settled) return
+            appendBinary(buffer)
+          })
+        }
 
         const finalize = () => {
           if (settled) return
@@ -190,58 +253,53 @@ export default {
           }))
         }
 
-        ws.addEventListener('open', () => {
-          ws.send(configMsg)
-          ws.send(ssmlMsg)
-        })
-
-        ws.addEventListener('message', async (event) => {
+        ws.addEventListener('message', (event) => {
           if (settled) return
           const data = event.data
 
           if (typeof data === 'string') {
             const { headers } = getHeadersAndData(data)
             if (headers['Path'] === 'turn.end') {
-              finalize()
+              pendingBinary
+                .then(() => finalize())
+                .catch(() => finalize())
             }
             return
           }
 
-          let buf
           if (data instanceof ArrayBuffer) {
-            buf = data
-          } else if (data instanceof Uint8Array) {
-            buf = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
-          } else if (data && typeof data.arrayBuffer === 'function') {
-            buf = await data.arrayBuffer()
-          } else {
+            enqueueBinary(() => data)
             return
           }
-
-          const view = new DataView(buf)
-          if (view.byteLength > 2) {
-            const headerLength = view.getInt16(0)
-            if (view.byteLength > 2 + headerLength) {
-              const chunk = new Uint8Array(buf, 2 + headerLength)
-              const nextAudio = new Uint8Array(audioData.length + chunk.length)
-              nextAudio.set(audioData, 0)
-              nextAudio.set(chunk, audioData.length)
-              audioData = nextAudio
-            }
+          if (data instanceof Uint8Array) {
+            enqueueBinary(() => data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength))
+            return
+          }
+          if (typeof Blob !== 'undefined' && data instanceof Blob) {
+            enqueueBinary(() => data.arrayBuffer())
+            return
           }
         })
 
-        ws.addEventListener('close', () => finalize())
-        ws.addEventListener('error', (err) => {
+        ws.addEventListener('close', () => {
+          pendingBinary.then(() => finalize()).catch(() => finalize())
+        })
+
+        ws.addEventListener('error', () => {
           if (settled) return
           settled = true
-          resolve(new Response(JSON.stringify({ error: 'WebSocket connection failed: ' + (err?.message || 'handshake error') }), {
+          resolve(new Response(JSON.stringify({ error: 'Upstream WebSocket error' }), {
             status: 502,
             headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
           }))
         })
 
-        setTimeout(() => finalize(), 15000)
+        ws.send(configMsg)
+        ws.send(ssmlMsg)
+
+        setTimeout(() => {
+          pendingBinary.then(() => finalize()).catch(() => finalize())
+        }, 15000)
       })
     } catch (e) {
       return new Response(JSON.stringify({ error: e?.message || 'Proxy error' }), {

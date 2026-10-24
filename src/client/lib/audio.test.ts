@@ -144,7 +144,7 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
     expect(FakeAudio.instances[0].playbackRate).toBe(0.75)
   })
 
-  it('fallback tetap ada saat jaringan gagal, tetapi tanpa menyamar sebagai persona', () => {
+  it('fallback memetakan personaId ke profil akustik pitch & rate saat jaringan gagal', () => {
     speakGerman('Hallo', { personaId: 'male-2' })
 
     const audio = FakeAudio.instances[0]
@@ -152,8 +152,9 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
 
     expect(spoken).toHaveLength(1)
     expect(spoken[0].text).toBe('Hallo')
-    // pitch 1.0 = tidak ada manipulasi nada untuk meniru persona lain
-    expect(spoken[0].pitch).toBe(1)
+    // male-2 (Killian): pitch 0.90, rate 1.05
+    expect(spoken[0].pitch).toBe(0.9)
+    expect(spoken[0].rate).toBe(1.05)
   })
 
   it('safeFallback tidak dijalankan jika audio sudah di-stop via stopSpeech', () => {
@@ -196,9 +197,11 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
     }
   })
 
-  it('resolveVoice tidak lagi menggeser pitch per gender', () => {
+  it('resolveVoice mengembalikan pitch & rate 1.0 tanpa personaId, atau profil akustik jika personaId ada', () => {
     expect(resolveVoice('male').pitch).toBe(1)
     expect(resolveVoice('female').pitch).toBe(1)
+    expect(resolveVoice('male', 'male-1').pitch).toBe(0.75)
+    expect(resolveVoice('female', 'female-2').pitch).toBe(1.20)
   })
 
   it('stopSpeech menghentikan audio yang sedang diputar', () => {

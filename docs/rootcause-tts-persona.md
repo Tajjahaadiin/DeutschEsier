@@ -96,16 +96,15 @@ npm run tts:smoke     # 6/6 OK -> endpoint sehat
 npx vitest run        # 286 test, termasuk 17 test audio
 ```
 
-## 5. Risiko yang masih ada
+## 5. Risiko yang masih ada & Fakta Lapangan Cloud (2026-10-24)
 
-1. **Endpoint Microsoft bisa berubah lagi.** Token `Sec-MS-GEC` diturunkan dari
-   `CHROMIUM_FULL_VERSION` (`143.0.3650.75` pada `node-edge-tts@1.2.11`) dan `TRUSTED_CLIENT_TOKEN`
-   yang dipatok di dalam paket. Migrasi 10 Oktober 2026 membuktikan kelas kerusakan ini berulang.
-2. **Jam server.** Token bergantung waktu; clock skew menyebabkan penolakan koneksi.
-3. **Tanpa SLA.** Layanan gratis tanpa jaminan. Cache `immutable` di `/api/tts` mengurangi beban,
-   tetapi tidak menghilangkan ketergantungan.
-4. **Fallback tetap lebih buruk dari aslinya.** Saat jaringan gagal, pengguna mendengar suara browser
-   biasa (pitch 1.0) dan `console.warn`. Itu disengaja: lebih jujur daripada meniru persona.
+1. **Pemblokiran IP Datacenter Cloud (Vercel & Cloudflare Edge):**
+   Microsoft Edge TTS secara aktif mencegat request WebSocket dari ASN cloud publik (AWS Lambda/Vercel dan Cloudflare Workers) dengan mengembalikan HTTP `200` (halaman tantangan CAPTCHA) alih-alih `101 Switching Protocols`. Oleh karena itu, proxy backend serverless ke Microsoft Edge TTS tidak berfungsi tanpa egress IP residensial.
+2. **Solusi Jangka Menengah/Sementara:**
+   Fallback Web Speech di klien dikonfigurasi dengan profil akustik diferensiasi nada (`pitch: 0.75` - `1.20`, `rate: 0.92` - `1.05`) untuk ke-6 persona agar murid tetap mendengar karakter vokal yang terpisah saat berada di lingkungan produksi Vercel.
+3. **Solusi Permanen (Target Berikutnya):**
+   - **Materi Statis (Grundlagen):** Pre-generate seluruh audio 6 persona ke aset statis lokal/CDN (`scripts/pregenerate-tts.ts`) menggunakan mesin lokal.
+   - **Materi Dinamis (Generator AI):** Integrasi API TTS resmi (misal: Azure Speech API Free Tier dengan 500k karakter/bulan) untuk menghasilkan suara HD Neural resmi tanpa risiko pemblokiran IP.
 
 ## 6. Opsi self-hosting: fakta terverifikasi
 
