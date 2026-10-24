@@ -100,12 +100,15 @@ export default function GrundlagenPage({
     }
   }, [])
 
-  // Sinkronisasi Tab ke URL Query
+  // Sinkronisasi Tab ke URL Query (mempertahankan query key siswa)
   const handleTabChange = (tab: GrundlagenTab) => {
     setActiveTab(tab)
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href)
       url.searchParams.set('tab', tab)
+      if (validKey) {
+        url.searchParams.set('key', validKey)
+      }
       window.history.replaceState({}, '', url.toString())
     }
   }
