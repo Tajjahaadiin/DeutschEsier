@@ -1,4 +1,3 @@
-import { stopWasmAudio } from './vitsEngine'
 import {
   type TtsPersona,
   type TtsPersonaId,
@@ -118,7 +117,6 @@ let currentUtterance: SpeechSynthesisUtterance | null = null
 let currentHtmlAudio: HTMLAudioElement | null = null
 
 export function stopSpeech() {
-  stopWasmAudio()
   if (typeof window !== 'undefined') {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel()
