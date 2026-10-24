@@ -120,7 +120,8 @@ export default function GrundlagenPage({
 
     const searchParams = new URLSearchParams(window.location.search)
     const rawKey = searchParams.get('key')
-    const queryKey = rawKey ? rawKey.trim().toUpperCase() : null
+    const storedKey = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('grundlagen_access_key') : null
+    const queryKey = rawKey ? rawKey.trim().toUpperCase() : (storedKey ? storedKey.trim().toUpperCase() : null)
 
     if (!queryKey) {
       setAccessGranted(false)
@@ -137,9 +138,15 @@ export default function GrundlagenPage({
           setAccessGranted(true)
           setValidKey(queryKey)
           setAccessError('')
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('grundlagen_access_key', queryKey)
+          }
         } else {
           setAccessGranted(false)
           setAccessError(data.reason === 'expired' ? 'expired' : 'not_found')
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem('grundlagen_access_key')
+          }
         }
       })
       .catch(() => {
@@ -170,10 +177,16 @@ export default function GrundlagenPage({
         setValidKey(trimmed)
         setAccessGranted(true)
         setAccessError('')
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('grundlagen_access_key', trimmed)
+        }
         const url = new URL(window.location.href)
         url.searchParams.set('key', trimmed)
         window.history.replaceState({}, '', url.toString())
       } else {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem('grundlagen_access_key')
+        }
         if (data.reason === 'expired') {
           setAccessError('expired')
           setGateErrorMsg('Kunci akses ini sudah kedaluwarsa.')

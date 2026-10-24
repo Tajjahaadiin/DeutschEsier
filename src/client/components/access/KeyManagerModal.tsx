@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { X, Key, Copy, Check, Trash2, Clock, Plus, ExternalLink, AlertCircle } from 'lucide-react'
 import { getAuthHeaders } from '../../lib/auth'
+import { buildStudentShareUrl } from '../../lib/accessKeyUtils'
 
 export interface KeyManagerModalProps {
   sessionId: string
@@ -166,7 +167,7 @@ export default function KeyManagerModal({
   }
 
   const handleCopyStudentLink = (k: AccessKeyItem) => {
-    const studentUrl = `${window.location.origin}/view/${sessionId}?key=${k.key}`
+    const studentUrl = buildStudentShareUrl(window.location.origin, sessionId, k.key)
     navigator.clipboard.writeText(studentUrl)
     setCopiedLinkId(k.id)
     setTimeout(() => setCopiedLinkId(null), 2000)
