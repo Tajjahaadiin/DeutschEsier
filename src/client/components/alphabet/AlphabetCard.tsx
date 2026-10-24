@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Volume2, BookOpen, Info, AlertTriangle, Anchor } from 'lucide-react'
 import { GermanAlphabetItem } from '../../data/alphabetData'
-import { speakGerman, type TtsPersonaId } from '../../lib/audio'
+import { playAlphabetAudio, type TtsPersonaId } from '../../lib/audio'
 
 interface AlphabetCardProps {
   item: GermanAlphabetItem
@@ -21,7 +21,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
   const handlePlayLetter = (e: React.MouseEvent) => {
     e.stopPropagation()
     setActiveAudio('letter')
-    speakGerman(item.audioText.letterOnly, {
+    playAlphabetAudio(item.id, 'letter', item.audioText.letterOnly, {
       personaId,
       rate: speechRate,
       onEnd: () => setActiveAudio(null),
@@ -31,7 +31,7 @@ export const AlphabetCard: React.FC<AlphabetCardProps> = ({
   const handlePlayWord = (e: React.MouseEvent) => {
     e.stopPropagation()
     setActiveAudio('word')
-    speakGerman(item.audioText.exampleWord, {
+    playAlphabetAudio(item.id, 'word', item.audioText.exampleWord, {
       personaId,
       rate: speechRate,
       onEnd: () => setActiveAudio(null),

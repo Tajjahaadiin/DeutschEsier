@@ -261,6 +261,42 @@ export function playWordAudio(germanText: string, optionsOrOnEnd?: SpeakOptions 
   audio.play().catch(() => runFallback())
 }
 
+// Memutar audio huruf atau contoh kata pada Das Alphabet.
+// Memprioritaskan file statis Martin (/audio/alphabet/{letterId}-{type}.wav), jika tidak ada fallback ke speakGerman.
+export function playAlphabetAudio(
+  letterId: string,
+  type: 'letter' | 'word',
+  fallbackText: string,
+  optionsOrOnEnd?: SpeakOptions | (() => void)
+) {
+  stopSpeech()
+  const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
+
+  const staticUrl = `/audio/alphabet/${letterId.toLowerCase().trim()}-${type}.wav`
+  const audio = new Audio(staticUrl)
+  if (options.rate !== undefined) {
+    audio.playbackRate = options.rate
+    audio.defaultPlaybackRate = options.rate
+  }
+  currentHtmlAudio = audio
+
+  let staticFailed = false
+  const runFallback = () => {
+    if (staticFailed) return
+    staticFailed = true
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    speakGerman(fallbackText, options)
+  }
+
+  audio.onended = () => {
+    if (currentHtmlAudio === audio) currentHtmlAudio = null
+    if (options.onEnd) options.onEnd()
+  }
+
+  audio.onerror = () => runFallback()
+  audio.play().catch(() => runFallback())
+}
+
 export function getStoredPersonaId(): TtsPersonaId {
   if (typeof window === 'undefined') return DEFAULT_FEMALE_PERSONA
   try {
