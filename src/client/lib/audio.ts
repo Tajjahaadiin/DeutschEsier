@@ -1,3 +1,4 @@
+import { stopWasmAudio, synthesizeAndPlayWasm } from './vitsEngine'
 import {
   type TtsPersona,
   type TtsPersonaId,
@@ -114,6 +115,7 @@ let currentUtterance: SpeechSynthesisUtterance | null = null
 let currentHtmlAudio: HTMLAudioElement | null = null
 
 export function stopSpeech() {
+  stopWasmAudio()
   if (typeof window !== 'undefined') {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel()
@@ -169,37 +171,62 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
   stopSpeech()
   const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
 
-  // Satu sumber audio untuk bahasa Jerman: persona neural dari /api/tts.
-  // Web Speech hanya dipakai saat permintaan gagal, bukan sebagai jalur normal.
   const request = resolveTtsRequest({
     personaId: options.personaId,
     gender: options.gender,
     storedPersonaId: getStoredPersonaId(),
   })
 
-  const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&persona=${encodeURIComponent(request.personaId)}`
-  const audio = new Audio(audioUrl)
-  if (options.rate !== undefined) {
-    audio.playbackRate = options.rate
-    audio.defaultPlaybackRate = options.rate
+  // JALUR UTAMA 1: Client-Side VITS/Piper WASM (0 Server Quota & 0 Network Blocking)
+  let wasmFallbackTriggered = false
+  const runFallbackPipeline = () => {
+    if (wasmFallbackTriggered) return
+    wasmFallbackTriggered = true
+
+    // JALUR CADANGAN 2: Remote /api/tts (Gemini CDN)
+    const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&persona=${encodeURIComponent(request.personaId)}`
+    const audio = new Audio(audioUrl)
+    if (options.rate !== undefined) {
+      audio.playbackRate = options.rate
+      audio.defaultPlaybackRate = options.rate
+    }
+    currentHtmlAudio = audio
+    let serverFallbackExecuted = false
+    const safeServerFallback = () => {
+      if (serverFallbackExecuted) return
+      if (currentHtmlAudio !== audio) return
+      serverFallbackExecuted = true
+      currentHtmlAudio = null
+      // JALUR CADANGAN 3: Client Web Speech API (Pitch/Rate Modulated)
+      fallbackSpeechSynthesis(text, { ...options, gender: request.gender, personaId: request.personaId })
+    }
+    audio.onended = () => {
+      if (currentHtmlAudio === audio) currentHtmlAudio = null
+      if (options.onEnd) options.onEnd()
+    }
+    audio.onerror = () => safeServerFallback()
+    audio.play().catch(() => safeServerFallback())
   }
-  currentHtmlAudio = audio
-  let fallbackExecuted = false
-  const safeFallback = () => {
-    if (fallbackExecuted) return
-    // Jika audio sudah di-stop atau digantikan permintaan lain, batalkan fallback
-    if (currentHtmlAudio !== audio) return
-    fallbackExecuted = true
-    currentHtmlAudio = null
-    // Sadar-diri: fallback akustik persona berbasis pitch & rate saat endpoint /api/tts terkendala
-    fallbackSpeechSynthesis(text, { ...options, gender: request.gender, personaId: request.personaId })
+
+  // Coba sintesis client-side VITS WASM terlebih dahulu
+  try {
+    const promise = synthesizeAndPlayWasm(text, request.personaId, options.rate)
+    if (promise && typeof promise.then === 'function') {
+      promise
+        .then(() => {
+          if (options.onEnd) options.onEnd()
+        })
+        .catch((err) => {
+          console.warn('[VITS-WASM error, falling back to server / native]:', err)
+          runFallbackPipeline()
+        })
+    } else {
+      runFallbackPipeline()
+    }
+  } catch (err) {
+    console.warn('[VITS-WASM sync error, falling back to server / native]:', err)
+    runFallbackPipeline()
   }
-  audio.onended = () => {
-    if (currentHtmlAudio === audio) currentHtmlAudio = null
-    if (options.onEnd) options.onEnd()
-  }
-  audio.onerror = () => safeFallback()
-  audio.play().catch(() => safeFallback())
 }
 
 // Memutar audio satu kata. Saat ini selalu melalui TTS (Web Speech API / Edge TTS),

@@ -1,5 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+vi.mock('./vitsEngine', () => ({
+  stopWasmAudio: vi.fn(),
+  synthesizeAndPlayWasm: vi.fn().mockImplementation(() => {
+    throw new Error('VITS WASM synchronous fallback in test')
+  }),
+}))
+
 import { resolveTtsRequest, speakGerman, stopSpeech, resolveVoice } from './audio'
 import { TTS_PERSONAS, getTtsPersona } from '../../shared/ttsPersonas'
 

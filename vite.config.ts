@@ -9,6 +9,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  optimizeDeps: {
+    exclude: ['@diffusionstudio/vits-web', 'onnxruntime-web'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -29,8 +29,12 @@ Soal Richtig/Falsch yang disusun secara deterministik saat runtime dari vocabClu
 _Avoid_: Soal AI fallback, auto-quiz
 
 **Persona Vokal (TTS Speaker Persona)**:
-Karakter suara sintetis neural Jerman yang merepresentasikan peran sosial dan usia penutur tertentu dalam pembelajaran. Dalam Scenario Generator dikurasi menjadi 3 karakter inti: Katja (`female-1` / Tutor Utama), Conrad (`male-1` / Guru Formal Pria Bariton), dan Killian (`male-2` / Mahasiswa Santai Tenor Muda).
+Karakter suara sintetis neural Jerman yang merepresentasikan peran sosial dan usia penutur tertentu dalam pembelajaran. Dalam Scenario Generator dikurasi menjadi 3 karakter inti: Katja (`female-1` / Tutor Utama), Conrad (`male-1` / Guru Formal Pria Bariton), dan Killian (`male-2` / Mahasiswa Santai Tenor Muda). Disintesis secara lokal di browser murid menggunakan VITS/Piper WebAssembly.
 _Avoid_: Suara robot, pilihan gender biner biasa, list persona tak terbatas
+
+**Client-Side VITS WASM**:
+Mesin Text-to-Speech saraf berbasis WebAssembly dan ONNX Runtime Web yang berjalan langsung di peramban murid (`@diffusionstudio/vits-web`), menyimpan model neural (`de_DE-kerstin` dan `de_DE-thorsten`) secara permanen di Origin Private File System (OPFS) untuk sintesis tanpa batas kuota server.
+_Avoid_: Server-side TTS rendering, external cloud TTS proxy
 
 **Suara Fondasi (Grundlagen Voice)**:
 Satu persona vokal tunggal yang dikunci secara konsisten untuk seluruh modul Die Grundlagen (Alfabet, Angka, Hari, dan Kata Benda), yaitu Katja (`female-1`).
