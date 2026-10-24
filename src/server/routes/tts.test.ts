@@ -65,4 +65,28 @@ describe('GET /api/tts', () => {
     expect(((await res.json()) as any).error).toContain('exceeds maximum allowed length')
     expect(ttsPromiseMock).not.toHaveBeenCalled()
   })
+
+  it('menggunakan CLOUDFLARE_TTS_PROXY bila env tersedia dan respons sukses', async () => {
+    process.env.CLOUDFLARE_TTS_PROXY = 'https://tts-proxy.example.workers.dev'
+    const origFetch = globalThis.fetch
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => Buffer.from('mock-cloudflare-mp3'),
+    }) as any
+
+    try {
+      const res = await app.request('/api/tts?text=Hallo&voice=de-DE-KillianNeural')
+      expect(res.status).toBe(200)
+      expect(res.headers.get('content-type')).toBe('audio/mpeg')
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        'https://tts-proxy.example.workers.dev/tts?text=Hallo&voice=de-DE-KillianNeural'
+      )
+      // Tidak sampai memanggil ttsPromise lokal
+      expect(ttsPromiseMock).not.toHaveBeenCalled()
+    } finally {
+      delete process.env.CLOUDFLARE_TTS_PROXY
+      globalThis.fetch = origFetch
+    }
+  })
 })

@@ -38416,6 +38416,25 @@ ttsRouter.get("/", async (c) => {
     return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400);
   }
   const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : void 0), fallbackGender);
+  const proxyBase = process.env.CLOUDFLARE_TTS_PROXY;
+  if (proxyBase) {
+    try {
+      const cleanProxy = proxyBase.replace(/\/+$/, "");
+      const proxyUrl = `${cleanProxy}/tts?text=${encodeURIComponent(text2)}&voice=${encodeURIComponent(voiceName)}`;
+      const resp = await fetch(proxyUrl);
+      if (resp.ok) {
+        const audioBuffer = Buffer.from(await resp.arrayBuffer());
+        c.header("Content-Type", "audio/mpeg");
+        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
+        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
+        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+        return c.body(audioBuffer);
+      }
+      console.warn(`[tts] Cloudflare proxy returned ${resp.status}, falling back to direct EdgeTTS...`);
+    } catch (proxyErr) {
+      console.warn("[tts] Cloudflare proxy unreachable, falling back to direct EdgeTTS:", proxyErr);
+    }
+  }
   const tempPath = join3(tmpdir(), `tts-${nanoid()}.mp3`);
   try {
     const tts = new EdgeTTS({

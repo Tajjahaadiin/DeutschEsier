@@ -25,6 +25,29 @@ ttsRouter.get('/', async (c) => {
   }
 
   const voiceName = resolveEdgeVoiceId(voiceParam || (genderParam ? genderParam : undefined), fallbackGender)
+
+  // 1. Jalur Utama: Jika CLOUDFLARE_TTS_PROXY dikonfigurasi, gunakan proxy Cloudflare Edge
+  const proxyBase = process.env.CLOUDFLARE_TTS_PROXY
+  if (proxyBase) {
+    try {
+      const cleanProxy = proxyBase.replace(/\/+$/, '')
+      const proxyUrl = `${cleanProxy}/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(voiceName)}`
+      const resp = await fetch(proxyUrl)
+      if (resp.ok) {
+        const audioBuffer = Buffer.from(await resp.arrayBuffer())
+        c.header('Content-Type', 'audio/mpeg')
+        c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
+        c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
+        c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
+        return c.body(audioBuffer)
+      }
+      console.warn(`[tts] Cloudflare proxy returned ${resp.status}, falling back to direct EdgeTTS...`)
+    } catch (proxyErr) {
+      console.warn('[tts] Cloudflare proxy unreachable, falling back to direct EdgeTTS:', proxyErr)
+    }
+  }
+
+  // 2. Jalur Standar: node-edge-tts lokal
   const tempPath = join(tmpdir(), `tts-${nanoid()}.mp3`)
 
   try {
