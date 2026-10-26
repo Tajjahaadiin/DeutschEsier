@@ -38449,25 +38449,40 @@ async function synthesizeKokoroMartin(text2, speed = 1) {
       console.warn("[Kokoro HF] No event_id returned");
       return null;
     }
-    const streamRes = await fetch(`${cleanBase}/gradio_api/call/synthesize/${event_id}`, {
-      headers: {
-        "Accept": "text/event-stream"
+    let audioUrl = null;
+    const startTime = Date.now();
+    while (Date.now() - startTime < 12e3 && !audioUrl) {
+      const streamRes = await fetch(`${cleanBase}/gradio_api/call/synthesize/${event_id}`, {
+        headers: {
+          "Accept": "text/event-stream"
+        }
+      });
+      if (!streamRes.ok) {
+        console.warn(`[Kokoro HF] SSE stream failed with status ${streamRes.status}`);
+        break;
       }
-    });
-    if (!streamRes.ok) {
-      console.warn(`[Kokoro HF] SSE stream failed with status ${streamRes.status}`);
-      return null;
+      const sseText = await streamRes.text();
+      const lines = sseText.split("\n");
+      for (const line2 of lines) {
+        const trimmed2 = line2.trim();
+        if (trimmed2.startsWith("data:")) {
+          const rawPayload = trimmed2.slice(5).trim();
+          try {
+            const parsed = JSON.parse(rawPayload);
+            if (Array.isArray(parsed) && parsed[0]?.url) {
+              audioUrl = parsed[0].url;
+              break;
+            }
+          } catch {
+          }
+        }
+      }
+      if (!audioUrl) {
+        await new Promise((r) => setTimeout(r, 350));
+      }
     }
-    const sseText = await streamRes.text();
-    const dataMatch = sseText.match(/data:\s*(\[[\s\S]*?\])/);
-    if (!dataMatch) {
-      console.warn("[Kokoro HF] No data match in SSE stream response");
-      return null;
-    }
-    const parsedData = JSON.parse(dataMatch[1]);
-    const audioUrl = parsedData[0]?.url;
     if (!audioUrl) {
-      console.warn("[Kokoro HF] No audio URL in parsed payload");
+      console.warn("[Kokoro HF] No audio URL received from SSE stream within timeout");
       return null;
     }
     const audioRes = await fetch(audioUrl);
