@@ -26419,6 +26419,9 @@ wordsRouter.get("/", async (c) => {
 });
 var words_default = wordsRouter;
 
+// src/server/routes/sessions.ts
+import { createHash } from "node:crypto";
+
 // src/server/routes/auth.ts
 import crypto2 from "crypto";
 var authRouter = new Hono2();
@@ -26540,6 +26543,145 @@ async function authorizeSessionAccess(headers, sessionId, rawKey) {
   if (isTeacherRequest(headers)) return { allowed: true };
   if (!accessKeyRequired()) return { allowed: true };
   return verifySessionKey(sessionId, rawKey);
+}
+
+// src/server/lib/hfEdgeTts.ts
+var DEFAULT_SPACE = "https://innoai-edge-tts-text-to-speech.hf.space";
+var CALL_PATH = "/gradio_api/call/tts_interface";
+var VOICE_LABEL_BY_ID = {
+  weiblich: "de-DE-AmalaNeural - de-DE (Female)",
+  "m\xE4nnlich-1": "de-DE-ConradNeural - de-DE (Male)",
+  "m\xE4nnlich-2": "de-DE-KillianNeural - de-DE (Male)",
+  "male-1": "de-DE-ConradNeural - de-DE (Male)",
+  "male-2": "de-DE-KillianNeural - de-DE (Male)",
+  "female-1": "de-DE-KatjaNeural - de-DE (Female)",
+  "female-2": "de-DE-AmalaNeural - de-DE (Female)",
+  "female-3": "de-DE-SeraphinaMultilingualNeural - de-DE (Female)",
+  "male-3": "de-DE-FlorianMultilingualNeural - de-DE (Male)"
+};
+var EdgeTtsSpace = class _EdgeTtsSpace {
+  base;
+  constructor(spaceUrl = process.env.HF_EDGE_TTS_SPACE || DEFAULT_SPACE) {
+    this.base = spaceUrl.replace(/\/+$/, "");
+  }
+  /** Sintesis satu potongan teks. Melempar bila upstream gagal. */
+  async synthesize(text3, voiceLabel, timeoutMs = 3e4) {
+    const clean = text3.trim();
+    if (!clean) throw new Error("text kosong");
+    const call = await fetch(`${this.base}${CALL_PATH}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: [clean, voiceLabel, 1, 0, 0] }),
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+    if (!call.ok) throw new Error(`call gagal: HTTP ${call.status}`);
+    const { event_id } = await call.json();
+    if (!event_id) throw new Error("event_id tidak ada");
+    const sse = await (await fetch(`${this.base}${CALL_PATH}/${event_id}`, { signal: AbortSignal.timeout(timeoutMs) })).text();
+    const url2 = sse.match(/"url": "([^"]+)"/)?.[1];
+    if (!url2) throw new Error("URL audio tidak ada di respons SSE");
+    const audioRes = await fetch(url2, { signal: AbortSignal.timeout(timeoutMs) });
+    if (!audioRes.ok) throw new Error(`unduh audio gagal: HTTP ${audioRes.status}`);
+    const buf = Buffer.from(await audioRes.arrayBuffer());
+    if (buf.length < 512) throw new Error("audio kosong");
+    return buf;
+  }
+  /**
+   * MP3 senyap untuk jeda antar baris.
+   *
+   * Tidak memakai ffmpeg: biner itu tidak tersedia di runtime Vercel secara
+   * default, sehingga seluruh jeda hilang di produksi (terverifikasi — dengan
+   * PATH tanpa ffmpeg, fungsi lama selalu mengembalikan null).
+   *
+   * Frame dibangun langsung dari bitstream MP3. Space mengeluarkan
+   * MPEG-2 Layer III, 48 kbps, 24 kHz, mono, tanpa CRC:
+   *   header ff f3 64 c4, frame 144 byte, 576 sampel = 24 ms per frame.
+   * Sisa 140 byte (side info + main data) dinolkan → senyap sejati
+   * (diverifikasi astats: peak/RMS = -inf dB) dan tetap ter-decode bersih
+   * saat dikonkatenasi dengan frame suara.
+   */
+  silenceCache = /* @__PURE__ */ new Map();
+  static SILENT_FRAME = Buffer.concat([
+    Buffer.from([255, 243, 100, 196]),
+    Buffer.alloc(140)
+  ]);
+  static FRAME_MS = 24;
+  /** Jeda senyap sepanjang ~`ms`, dibulatkan ke kelipatan frame (24 ms). */
+  silence(ms) {
+    const frames = Math.max(1, Math.round(ms / _EdgeTtsSpace.FRAME_MS));
+    const cached4 = this.silenceCache.get(frames);
+    if (cached4) return cached4;
+    const buf = Buffer.concat(Array.from({ length: frames }, () => _EdgeTtsSpace.SILENT_FRAME));
+    this.silenceCache.set(frames, buf);
+    return buf;
+  }
+};
+var edgeTtsSpace = new EdgeTtsSpace();
+
+// src/server/lib/scenarioTts.ts
+var TURN_GAP_MS = 450;
+var MP3_KBPS = 48;
+function mp3DurationMs(bytes) {
+  return Math.round(bytes * 8 / MP3_KBPS);
+}
+var CONCURRENCY = 4;
+async function mapLimit(items, limit, fn2) {
+  const out = new Array(items.length);
+  let next4 = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (; ; ) {
+      const i = next4++;
+      if (i >= items.length) return;
+      out[i] = await fn2(items[i], i);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
+async function synthesizeScenario(turns, space) {
+  const started = Date.now();
+  const results = await mapLimit(turns, CONCURRENCY, async (turn, i) => {
+    const persona = turn.personaId ?? (i % 2 === 0 ? "weiblich" : "m\xE4nnlich-1");
+    const voice = VOICE_LABEL_BY_ID[persona] ?? VOICE_LABEL_BY_ID["weiblich"];
+    const t0 = Date.now();
+    try {
+      const buf = await space.synthesize(turn.germanText, voice);
+      const ok = buf.length > 512;
+      return { persona, ok, buf: ok ? buf : null, bytes: buf.length, ms: Date.now() - t0 };
+    } catch (err) {
+      console.warn(`[scenario] baris ${i + 1} gagal:`, err?.message || err);
+      return { persona, ok: false, buf: null, bytes: 0, ms: Date.now() - t0 };
+    }
+  });
+  const parts2 = results.map((r) => r.buf).filter((b) => b !== null);
+  if (parts2.length === 0) throw new Error("tidak ada baris yang berhasil disintesis");
+  const silence = parts2.length > 1 ? space.silence(TURN_GAP_MS) : null;
+  const gapMs = silence ? mp3DurationMs(silence.length) : 0;
+  const merged = [];
+  const timings = results.map(() => -1);
+  let cursorMs = 0;
+  let emitted = 0;
+  results.forEach((r, i) => {
+    if (!r.buf) return;
+    timings[i] = cursorMs;
+    merged.push(r.buf);
+    cursorMs += mp3DurationMs(r.buf.length);
+    emitted++;
+    if (silence && emitted < parts2.length) {
+      merged.push(silence);
+      cursorMs += gapMs;
+    }
+  });
+  const audio = Buffer.concat(merged);
+  return {
+    audio,
+    contentType: "audio/mpeg",
+    turns: turns.length,
+    bytes: audio.length,
+    elapsedMs: Date.now() - started,
+    perTurn: results.map((r, i) => ({ index: i, persona: r.persona, ok: r.ok, bytes: r.bytes, ms: r.ms })),
+    timings
+  };
 }
 
 // node_modules/effect/dist/esm/Function.js
@@ -55888,110 +56030,51 @@ sessionsRouter.delete("/:id", requireTeacherAuth, async (c) => {
     return c.json({ error: "Failed to delete session" }, 500);
   }
 });
+sessionsRouter.get("/:id/audio", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const access = await authorizeSessionAccess(c.req.raw.headers, id, c.req.query("key"));
+    if (!access.allowed) {
+      return c.json({ error: "Access key required", reason: access.reason }, 403);
+    }
+    const [session] = await db.select().from(learningSession).where(eq(learningSession.id, id)).limit(1);
+    if (!session) return c.json({ error: "Session not found" }, 404);
+    let turns;
+    try {
+      turns = JSON.parse(session.dialogueJson);
+    } catch {
+      return c.json({ error: "dialogue_json tidak valid" }, 500);
+    }
+    if (!Array.isArray(turns) || turns.length === 0) {
+      return c.json({ error: "Sesi tidak punya dialog" }, 404);
+    }
+    const etag = '"' + createHash("sha1").update(
+      session.dialogueJson + "|" + turns.map((t) => t.personaId ?? "").join(",")
+    ).digest("hex").slice(0, 20) + '"';
+    if (c.req.header("if-none-match") === etag) {
+      return c.body(null, 304);
+    }
+    const result2 = await synthesizeScenario(turns, edgeTtsSpace);
+    c.header("Content-Type", result2.contentType);
+    c.header("ETag", etag);
+    c.header("X-Scenario-Turns", String(result2.turns));
+    c.header("X-Scenario-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
+    c.header("X-Scenario-Timings", result2.timings.join(","));
+    c.header("X-Scenario-Elapsed-Ms", String(result2.elapsedMs));
+    c.header("Cache-Control", "public, max-age=0, must-revalidate");
+    c.header("CDN-Cache-Control", "public, s-maxage=0, must-revalidate");
+    c.header("Vercel-CDN-Cache-Control", "public, s-maxage=0, must-revalidate");
+    return c.body(result2.audio);
+  } catch (error) {
+    console.warn("[sessions/audio] gagal:", error?.message || error);
+    c.header("X-Scenario-Error", "upstream_failed");
+    return c.json({ error: "scenario_tts_unavailable" }, 502);
+  }
+});
 var sessions_default = sessionsRouter;
 
-// src/server/lib/kokoroHf.ts
-var HF_SPACE_BASE = process.env.KOKORO_HF_SPACE_URL || "https://tajjz-deutscheasier-tts.hf.space";
-async function synthesizeKokoroMartin(text3, speed = 1) {
-  const cleanBase = HF_SPACE_BASE.replace(/\/+$/, "");
-  const totalTimeoutController = new AbortController();
-  const timeoutId = setTimeout(() => totalTimeoutController.abort(), 6e3);
-  try {
-    const callRes = await fetch(`${cleanBase}/gradio_api/call/synthesize`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        data: [text3.trim(), "martin", speed]
-      }),
-      signal: totalTimeoutController.signal
-    });
-    if (!callRes.ok) {
-      console.warn(`[Kokoro HF] call/synthesize failed with status ${callRes.status}`);
-      return null;
-    }
-    const { event_id } = await callRes.json();
-    if (!event_id) {
-      console.warn("[Kokoro HF] No event_id returned");
-      return null;
-    }
-    let audioUrl = null;
-    const startTime = Date.now();
-    while (Date.now() - startTime < 5e3 && !audioUrl) {
-      if (totalTimeoutController.signal.aborted) break;
-      const streamRes = await fetch(`${cleanBase}/gradio_api/call/synthesize/${event_id}`, {
-        headers: {
-          "Accept": "text/event-stream"
-        },
-        signal: totalTimeoutController.signal
-      });
-      if (!streamRes.ok) {
-        console.warn(`[Kokoro HF] SSE stream failed with status ${streamRes.status}`);
-        break;
-      }
-      const sseText = await streamRes.text();
-      const lines = sseText.split("\n");
-      for (const line2 of lines) {
-        const trimmed2 = line2.trim();
-        if (trimmed2.startsWith("data:")) {
-          const rawPayload = trimmed2.slice(5).trim();
-          try {
-            const parsed = JSON.parse(rawPayload);
-            if (Array.isArray(parsed) && parsed[0]?.url) {
-              audioUrl = parsed[0].url;
-              break;
-            }
-          } catch {
-          }
-        }
-      }
-      if (!audioUrl) {
-        await new Promise((r) => setTimeout(r, 300));
-      }
-    }
-    if (!audioUrl) {
-      console.warn("[Kokoro HF] No audio URL received from SSE stream within timeout (fallback triggered)");
-      return null;
-    }
-    const audioRes = await fetch(audioUrl, {
-      signal: totalTimeoutController.signal
-    });
-    if (!audioRes.ok) {
-      console.warn(`[Kokoro HF] Failed to download audio file: ${audioRes.status}`);
-      return null;
-    }
-    const arrayBuf = await audioRes.arrayBuffer();
-    return Buffer.from(arrayBuf);
-  } catch (err) {
-    const isTimeout = err.name === "AbortError" || totalTimeoutController.signal.aborted;
-    if (isTimeout) {
-      console.warn("[Kokoro HF Timeout 6s]: HuggingFace Space terlalu lama merespons, beralih ke fallback...");
-    } else {
-      console.warn("[Kokoro HF Error]:", err?.message || err);
-    }
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-// src/server/lib/wavDetune.ts
-function detuneWavBuffer(wavBuffer, semitones) {
-  if (semitones === 0 || wavBuffer.length < 44) return wavBuffer;
-  if (wavBuffer.subarray(0, 4).toString("ascii") !== "RIFF" || wavBuffer.subarray(8, 12).toString("ascii") !== "WAVE") {
-    return wavBuffer;
-  }
-  const modified = Buffer.from(wavBuffer);
-  const originalSampleRate = modified.readUInt32LE(24);
-  const originalByteRate = modified.readUInt32LE(28);
-  const factor = Math.pow(2, semitones / 12);
-  const newSampleRate = Math.round(originalSampleRate * factor);
-  const newByteRate = Math.round(originalByteRate * factor);
-  modified.writeUInt32LE(newSampleRate, 24);
-  modified.writeUInt32LE(newByteRate, 28);
-  return modified;
-}
+// src/server/routes/tts.ts
+import { createHash as createHash2 } from "node:crypto";
 
 // src/shared/ttsPersonas.ts
 var TTS_PERSONAS = [
@@ -56105,63 +56188,34 @@ var ttsRouter = new Hono2();
 var MAX_TTS_TEXT_LENGTH = 1e3;
 ttsRouter.get("/", async (c) => {
   const text3 = c.req.query("text");
-  const persona = c.req.query("persona");
-  const genderQuery = c.req.query("gender");
+  const personaId = c.req.query("persona");
+  const gender = c.req.query("gender");
   if (!text3 || text3.trim() === "") {
     return c.json({ error: "Text parameter is required" }, 400);
   }
   if (text3.length > MAX_TTS_TEXT_LENGTH) {
     return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400);
   }
-  const personaObj = getTtsPersona(persona);
-  const isMale = personaObj ? personaObj.gender === "male" : genderQuery === "male" || persona && (persona.includes("male") || persona.includes("m\xE4nnlich"));
-  if (isMale) {
-    try {
-      const isMale2 = persona === "m\xE4nnlich-2" || persona === "male-2";
-      const speed = isMale2 ? 1 : 0.98;
-      const semitoneShift = isMale2 ? 0 : -2;
-      const kokoroBuffer = await synthesizeKokoroMartin(text3.trim(), speed);
-      if (kokoroBuffer) {
-        const tunedBuffer = semitoneShift !== 0 ? detuneWavBuffer(kokoroBuffer, semitoneShift) : kokoroBuffer;
-        c.header("Content-Type", "audio/wav");
-        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-        return c.body(tunedBuffer);
-      }
-    } catch (err) {
-      console.warn("[Kokoro HF Fallback to Google]:", err?.message || err);
-    }
-  }
+  const persona = getTtsPersona(personaId);
+  const resolvedId = persona?.id ?? (gender === "male" ? "m\xE4nnlich-1" : "weiblich");
+  const voiceLabel = VOICE_LABEL_BY_ID[resolvedId] ?? VOICE_LABEL_BY_ID["weiblich"];
+  const etag = '"' + createHash2("sha1").update(resolvedId + "|" + text3.trim()).digest("hex").slice(0, 20) + '"';
+  if (c.req.header("if-none-match") === etag) return c.body(null, 304);
   try {
-    const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(
-      text3.trim()
-    )}&tl=de&client=tw-ob`;
-    const fallbackResp = await fetch(googleTtsUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Referer: "https://translate.google.com/"
-      }
-    });
-    if (fallbackResp.ok) {
-      const audioBuffer = Buffer.from(await fallbackResp.arrayBuffer());
-      c.header("Content-Type", "audio/mpeg");
-      if (isMale) {
-        c.header("Cache-Control", "no-cache, no-store, must-revalidate");
-        c.header("CDN-Cache-Control", "no-store");
-        c.header("Vercel-CDN-Cache-Control", "no-store");
-        c.header("x-tts-fallback", "google-male");
-      } else {
-        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-      }
-      return c.body(audioBuffer);
-    }
-    return c.json({ error: "TTS upstream response not ok" }, 502);
-  } catch (error) {
-    console.error("[TTS Remote Fallback Error]:", error?.message || error);
-    return c.json({ error: error?.message || "TTS generation failed" }, 500);
+    const audio = await edgeTtsSpace.synthesize(text3.trim(), voiceLabel);
+    c.header("Content-Type", "audio/mpeg");
+    c.header("ETag", etag);
+    c.header("X-TTS-Engine", "hf-edge-tts");
+    c.header("X-TTS-Voice", voiceLabel.split(" - ")[0]);
+    c.header("X-TTS-Gender", persona?.gender ?? (gender === "male" ? "male" : "female"));
+    c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
+    c.header("CDN-Cache-Control", "public, s-maxage=31536000");
+    c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+    return c.body(audio);
+  } catch (err) {
+    console.warn("[tts] gagal:", err?.message || err);
+    c.header("X-TTS-Error", "upstream_failed");
+    return c.json({ error: "tts_unavailable" }, 502);
   }
 });
 var tts_default = ttsRouter;
@@ -56204,6 +56258,59 @@ protoRouter.get("/", async (c) => {
   }
 });
 var ttsPrototype_default = protoRouter;
+
+// src/server/routes/ttsScenario.ts
+var scenarioRouter = new Hono2();
+var MAX_TURNS = 20;
+var MAX_TURN_CHARS = 1e3;
+scenarioRouter.post("/", async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Body harus JSON" }, 400);
+  }
+  const raw2 = body.turns;
+  if (!Array.isArray(raw2) || raw2.length === 0) {
+    return c.json({ error: "turns wajib berupa array tidak kosong" }, 400);
+  }
+  if (raw2.length > MAX_TURNS) {
+    return c.json({ error: `Maksimal ${MAX_TURNS} baris dialog` }, 400);
+  }
+  const turns = [];
+  for (let i = 0; i < raw2.length; i++) {
+    const t = raw2[i];
+    if (typeof t?.germanText !== "string" || !t.germanText.trim()) {
+      return c.json({ error: `turns[${i}].germanText wajib diisi` }, 400);
+    }
+    if (t.germanText.length > MAX_TURN_CHARS) {
+      return c.json({ error: `turns[${i}].germanText melebihi ${MAX_TURN_CHARS} karakter` }, 400);
+    }
+    turns.push({
+      speaker: String(t.speaker ?? "Sprecher"),
+      germanText: t.germanText,
+      personaId: typeof t.personaId === "string" ? t.personaId : void 0
+    });
+  }
+  try {
+    const result2 = await synthesizeScenario(turns, edgeTtsSpace);
+    c.header("Content-Type", result2.contentType);
+    c.header("X-TTS-Engine", "hf-edge-tts");
+    c.header("X-TTS-Turns", String(result2.turns));
+    c.header("X-TTS-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
+    c.header("X-TTS-Timings", result2.timings.join(","));
+    c.header("X-TTS-Bytes", String(result2.bytes));
+    c.header("X-TTS-Elapsed-Ms", String(result2.elapsedMs));
+    c.header("X-TTS-Gap-Ms", String(TURN_GAP_MS));
+    c.header("Cache-Control", "no-store");
+    return c.body(result2.audio);
+  } catch (err) {
+    console.warn("[tts-scenario] gagal:", err?.message || err);
+    c.header("X-TTS-Error", "upstream_failed");
+    return c.json({ error: "scenario_tts_unavailable", detail: err?.message }, 502);
+  }
+});
+var ttsScenario_default = scenarioRouter;
 
 // src/server/routes/access-keys.ts
 var accessKeysRouter = new Hono2();
@@ -56460,6 +56567,7 @@ app.route("/api/sessions", submissions_default);
 app.route("/api/generate", generate_default);
 app.route("/api/tts", tts_default);
 app.route("/api/tts-prototype", ttsPrototype_default);
+app.route("/api/tts-scenario", ttsScenario_default);
 var app_default = app;
 
 // src/server/vercel.ts

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Trash2, Plus, Volume2, ChevronLeft, Save, Sparkles, Play, Square, Loader2 } from 'lucide-react'
-import { speakGerman, stopSpeech, warmUpDialogueCache } from '../lib/audio'
+import { speakGerman, stopSpeech } from '../lib/audio'
 import { nanoid } from 'nanoid'
 import { getAuthHeaders } from '../lib/auth'
 import { parseComprehensionQuestions, type ComprehensionQuestion } from '../lib/comprehension'
@@ -59,8 +59,14 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [editedVocab, setEditedVocab] = useState<VocabClue[]>([])
   const [editedTitle, setEditedTitle] = useState('')
   const [editedSceneDesc, setEditedSceneDesc] = useState('')
-  const [audioPreloadReady, setAudioPreloadReady] = useState<boolean>(true)
-  const [cachedAudioCount, setCachedAudioCount] = useState<number>(0)
+  const [audioPreloadReady, setAudioPreloadReady] = useState<boolean>(false)
+  const [audioSynthesizing, setAudioSynthesizing] = useState<boolean>(false)
+  const [scenarioAudioUrl, setScenarioAudioUrl] = useState<string>('')
+  /** Milidetik mulai tiap baris, dari header X-TTS-Timings. */
+  const scenarioTimingsRef = React.useRef<number[]>([])
+  const scenarioAudioRef = React.useRef<HTMLAudioElement | null>(null)
+  /** Ref tiap kartu dialog, dipakai untuk memposisikan baris yang diputar. */
+  const turnRefs = React.useRef<(HTMLDivElement | null)[]>([])
   const [speakerPersonas, setSpeakerPersonas] = useState<Record<string, TtsPersonaId>>({
     'Sprecher A': 'weiblich',
     'Sprecher B': 'männlich-1',
@@ -105,6 +111,16 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         setSelectedTopicIds(parseGrammarTopicIds(data.grammarTopicsJson))
         setEditedDialogue(parsedDialogue)
         setEditedVocab(parsedVocab)
+
+        // Mode edit: dialog sudah ada tapi audionya belum. Tanpa ini tombol
+        // "Putar Semua Dialog" tetap kosong sampai pengguna mengklik manual.
+        const personaOf = (t: DialogTurn) =>
+          t.personaId ||
+          (t.gender === 'male' ? 'männlich-1' : t.gender === 'female' ? 'weiblich' : undefined) ||
+          'weiblich'
+        void buildScenarioAudio(
+          parsedDialogue.map((t) => ({ ...t, personaId: personaOf(t) })),
+        )
 
         const distinctSpeakers = [...new Set(parsedDialogue.map(t => t.speaker))]
         if (distinctSpeakers.length > 0) {
@@ -190,18 +206,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       setEditedTitle(generated.title)
       setEditedSceneDesc(generated.sceneDescription)
 
-      // Pre-warm antrean audio sekuensial dengan loading barrier
-      setAudioPreloadReady(false)
-      setCachedAudioCount(0)
-      warmUpDialogueCache(turnsWithPersonas, {
-        speakerA: 'Sprecher A',
-        onProgress: (done, total) => {
-          setCachedAudioCount(done)
-          if (done === total) setAudioPreloadReady(true)
-        },
-      }).then((allSuccess) => {
-        if (allSuccess) setAudioPreloadReady(true)
-      })
+      // Sintesis seluruh dialog jadi satu MP3 di latar belakang.
+      // Skenario belum tersimpan (belum punya id), jadi pakai POST /api/tts-scenario.
+      void buildScenarioAudio(turnsWithPersonas)
     } catch (err: any) {
       setError(err.message || 'Gagal menghubungi AI. Pastikan GEMINI_API_KEY sudah dikonfigurasi.')
     } finally {
@@ -281,8 +288,81 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
     cancelledRef.current = true
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     stopSpeech()
+    const el = scenarioAudioRef.current
+    if (el) {
+      el.pause()
+      el.ontimeupdate = null
+    }
     setPlayingIndex(null)
     setIsPlayingAll(false)
+  }
+
+  /** Putar seluruh dialog dari satu file. Tidak ada loop per baris atau safetyTimer. */
+  /**
+   * Sintesis seluruh dialog jadi satu MP3 lewat POST /api/tts-scenario.
+   *
+   * Skenario di layar Generator belum tersimpan (belum punya id), jadi tidak
+   * bisa memakai /api/sessions/:id/audio. Hasilnya disimpan sebagai blob URL
+   * per versi dialog; mengubah teks akan membuang blob lama agar tidak
+   * memutar audio basi.
+   */
+  const buildScenarioAudio = async (turns: DialogTurn[]): Promise<string> => {
+    setAudioSynthesizing(true)
+    setAudioPreloadReady(false)
+    try {
+      // Baris kosong dilewati, tapi indeks aslinya dicatat: server mengembalikan
+      // timings sejajar `payload`, sedangkan UI memakai indeks `editedDialogue`.
+      // Tanpa peta ini, satu baris kosong menggeser seluruh sorotan.
+      const payload: Array<{ speaker: string; germanText: string; personaId: string }> = []
+      const payloadToTurn: number[] = []
+      turns.forEach((t, i) => {
+        if (!t.germanText.trim()) return
+        payloadToTurn.push(i)
+        payload.push({
+          speaker: t.speaker,
+          germanText: t.germanText,
+          personaId:
+            t.personaId ||
+            (t.gender === 'male' ? 'männlich-1' : t.gender === 'female' ? 'weiblich' : '') ||
+            'weiblich',
+        })
+      })
+      if (payload.length === 0) return ''
+
+      const res = await fetch('/api/tts-scenario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ turns: payload }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const raw = res.headers.get('x-tts-timings')
+      const payloadTimings = raw
+        ? raw.split(',').map((n) => Number(n)).filter((n) => Number.isFinite(n))
+        : []
+      // Sebar kembali ke ruang indeks dialog; baris kosong/gagal = -1.
+      const aligned: number[] = turns.map(() => -1)
+      payloadTimings.forEach((ms, i) => {
+        const turnIdx = payloadToTurn[i]
+        if (turnIdx !== undefined) aligned[turnIdx] = ms
+      })
+      scenarioTimingsRef.current = aligned
+
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      setScenarioAudioUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return objectUrl
+      })
+      setAudioPreloadReady(true)
+      return objectUrl
+    } catch (err: any) {
+      console.warn('[generator] sintesis skenario gagal:', err?.message || err)
+      setAudioPreloadReady(false)
+      return ''
+    } finally {
+      setAudioSynthesizing(false)
+    }
   }
 
   const handlePlayAll = async () => {
@@ -291,62 +371,82 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       handleStopAll()
       return
     }
+    let src = scenarioAudioUrl
+    if (!src) {
+      // Belum ada audio: sintesis dulu, lalu putar tanpa menuntut klik kedua.
+      src = await buildScenarioAudio(editedDialogue)
+      if (!src) return
+    }
     stopSpeech()
     cancelledRef.current = false
     setIsPlayingAll(true)
 
-    for (let i = 0; i < editedDialogue.length; i++) {
-      if (cancelledRef.current) break
-      const turn = editedDialogue[i]
-      if (!turn.germanText.trim()) continue
-      const turnPersonaId = turn.personaId || speakerPersonas[turn.speaker] || 'weiblich'
-      const turnGender: 'male' | 'female' = (turnPersonaId.startsWith('male') || turnPersonaId.startsWith('männlich')) ? 'male' : 'female'
+    const el = scenarioAudioRef.current
+    if (!el) return
+    // State React belum tentu sudah ter-apply saat sintesis baru selesai,
+    // jadi src dipasang langsung agar play() tidak memutar elemen kosong.
+    if (el.src !== src) el.src = src
 
-      setPlayingIndex(i)
-
-      await new Promise<void>((resolve) => {
-        let finished = false
-        let safetyTimer: any = null
-        const done = () => {
-          if (!finished) {
-            finished = true
-            if (safetyTimer) clearTimeout(safetyTimer)
-            if (!cancelledRef.current) {
-              timeoutRef.current = setTimeout(resolve, 650)
-            } else {
-              resolve()
-            }
-          }
-        }
-
-        // Safety timeout fallback jika browser engine men-drop event onend
-        const estimatedDurationMs = Math.max(5000, Math.round((turn.germanText.length / 10) * 1000) + 4000)
-        safetyTimer = setTimeout(() => {
-          console.warn('Speech onEnd event timed out, auto-advancing turn...')
-          done()
-        }, estimatedDurationMs)
-
-        speakGerman(turn.germanText, {
-          gender: turnGender,
-          personaId: turnPersonaId,
-          rate: playbackRateRef.current,
-          onEnd: done,
-        })
-      })
+    el.onended = () => {
+      setIsPlayingAll(false)
+      setPlayingIndex(null)
+    }
+    el.onerror = () => {
+      setIsPlayingAll(false)
+      setPlayingIndex(null)
+      setAudioPreloadReady(false)
+    }
+    // Sorot + posisikan kartu dari timings nyata (bukan proporsi panjang teks).
+    let lastIdx = -1
+    el.ontimeupdate = () => {
+      const timings = scenarioTimingsRef.current
+      if (cancelledRef.current || timings.length === 0) return
+      const ms = el.currentTime * 1000
+      // timings sejajar dialog; -1 = baris yang gagal disintesis.
+      let idx = -1
+      for (let i = 0; i < timings.length; i++) {
+        const start = timings[i]
+        if (start < 0) continue
+        if (ms >= start) idx = i
+        else break
+      }
+      if (idx < 0 || idx === lastIdx) return
+      lastIdx = idx
+      setPlayingIndex(idx)
+      turnRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
 
-    if (!cancelledRef.current) {
-      setPlayingIndex(null)
+    el.currentTime = 0
+    el.playbackRate = playbackRateRef.current
+    try {
+      await el.play()
+    } catch (err: any) {
+      console.warn('[generator audio] play gagal:', err?.message || err)
       setIsPlayingAll(false)
     }
   }
 
+  /**
+   * Buang audio hasil sintesis sebelumnya begitu dialog berubah.
+   * Tanpa ini, "Putar Semua Dialog" akan memutar versi lama setelah diedit.
+   */
+  const invalidateScenarioAudio = () => {
+    setAudioPreloadReady(false)
+    scenarioTimingsRef.current = []
+    setScenarioAudioUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return ''
+    })
+  }
+
   const updateTurn = (index: number, field: keyof DialogTurn, value: any) => {
     setEditedDialogue(prev => prev.map((t, i) => i === index ? { ...t, [field]: value } : t))
+    invalidateScenarioAudio()
   }
 
   const deleteTurn = (index: number) => {
     setEditedDialogue(prev => prev.filter((_, i) => i !== index))
+    invalidateScenarioAudio()
   }
 
   const addTurn = () => {
@@ -533,6 +633,12 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
           </Card>
 
           <Card className="p-5 sm:p-6 shadow-xs border-border">
+            <audio
+              ref={scenarioAudioRef}
+              src={scenarioAudioUrl || undefined}
+              preload="auto"
+              className="hidden"
+            />
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <h2 className="text-heading font-bold text-text">Dialog</h2>
@@ -573,27 +679,34 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   <button
                     type="button"
                     onClick={handlePlayAll}
-                    disabled={editedDialogue.length === 0 || !audioPreloadReady}
+                    disabled={editedDialogue.length === 0 || audioSynthesizing}
                     className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-all ${
                       audioPreloadReady
                         ? 'bg-primary text-on-primary hover:opacity-95 cursor-pointer'
                         : 'bg-surface-muted text-text-muted border border-border cursor-not-allowed opacity-75'
                     }`}
                     title={
-                      !audioPreloadReady
-                        ? `Menyiapkan audio percakapan (${cachedAudioCount}/${editedDialogue.length}). Harap tunggu hingga 100% lengkap.`
-                        : 'Putar Semua Dialog'
+                      audioSynthesizing
+                        ? 'Menyintesis seluruh dialog jadi satu audio...'
+                        : audioPreloadReady
+                          ? 'Putar Semua Dialog'
+                          : 'Klik untuk menyintesis audio dialog'
                     }
                   >
-                    {!audioPreloadReady ? (
+                    {audioSynthesizing ? (
                       <>
                         <Loader2 size={13} className="animate-spin text-primary shrink-0" />
-                        <span>Memuat Audio ({cachedAudioCount}/{editedDialogue.length})</span>
+                        <span>Menyiapkan Audio...</span>
                       </>
-                    ) : (
+                    ) : audioPreloadReady ? (
                       <>
                         <Play size={13} className="fill-white" />
                         <span>Putar Semua Dialog</span>
+                      </>
+                    ) : (
+                      <>
+                        <Loader2 size={13} className="shrink-0" />
+                        <span>Buat Audio Dialog</span>
                       </>
                     )}
                   </button>
@@ -631,7 +744,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               {editedDialogue.map((turn, i) => (
                 <div
                   key={i}
-                  className={`flex gap-3 items-start p-3 bg-surface rounded-md border transition-colors ${
+                  ref={(el) => (turnRefs.current[i] = el)}
+                  className={`flex gap-3 items-start p-3 bg-surface rounded-md border transition-colors scroll-mt-24 ${
                     playingIndex === i ? 'ring-2 ring-primary border-primary shadow-xs' : 'border-border'
                   }`}
                 >
@@ -700,8 +814,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                           onEnd: () => setPlayingIndex(null),
                         })
                       }}
-                      disabled={!turn.germanText || !audioPreloadReady}
-                      title={!audioPreloadReady ? 'Menunggu audio selesai dimuat...' : 'Putar audio'}
+                      disabled={!turn.germanText}
+                      title="Putar baris ini"
                       className={`p-1.5 text-text-muted hover:text-primary disabled:opacity-30 transition-colors ${
                         !audioPreloadReady ? 'cursor-not-allowed' : 'cursor-pointer'
                       } ${

@@ -1,101 +1,59 @@
+/**
+ * Route TTS satu kalimat — dipakai tombol ▶ per baris, vocab clue, dan
+ * pratinjau di Generator.
+ *
+ * Suara diambil dari HuggingFace Space Edge-TTS (Conrad/Killian/Florian pria
+ * asli), bukan lagi Kokoro + Google. Endpoint WebSocket Microsoft langsung
+ * tidak bisa dipakai: handshake-nya dijawab HTTP 200 di semua lingkungan yang
+ * diuji, sehingga node-edge-tts selalu gagal.
+ *
+ * Dipisah dari /api/sessions/:id/audio (skenario gabungan) karena per-kalimat
+ * dipanggil acak dan hasilnya di-cache per kalimat oleh CDN.
+ */
 import { Hono } from 'hono'
-import { synthesizeKokoroMartin } from '../lib/kokoroHf'
-import { detuneWavBuffer } from '../lib/wavDetune'
+import { createHash } from 'node:crypto'
+import { edgeTtsSpace, VOICE_LABEL_BY_ID } from '../lib/hfEdgeTts'
 import { getTtsPersona } from '../../shared/ttsPersonas'
 
 const ttsRouter = new Hono()
 
 export const MAX_TTS_TEXT_LENGTH = 1000
 
-/**
- * Route TTS sisi server:
- * - Pria (male, männlich-1, männlich-2): Disintesis via HuggingFace Space Kokoro Martin neural
- * - Wanita (female, weiblich): Disintesis via Google Translate TTS native stream
- * - Header Vercel Edge CDN Cache 1 tahun untuk penghematan bandwidth maksimal
- */
 ttsRouter.get('/', async (c) => {
   const text = c.req.query('text')
-  const persona = c.req.query('persona')
-  const genderQuery = c.req.query('gender') as 'male' | 'female' | undefined
+  const personaId = c.req.query('persona')
+  const gender = c.req.query('gender') as 'male' | 'female' | undefined
 
   if (!text || text.trim() === '') {
     return c.json({ error: 'Text parameter is required' }, 400)
   }
-
   if (text.length > MAX_TTS_TEXT_LENGTH) {
     return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400)
   }
 
-  const personaObj = getTtsPersona(persona)
-  const isMale = personaObj
-    ? personaObj.gender === 'male'
-    : (genderQuery === 'male' || (persona && (persona.includes('male') || persona.includes('männlich'))))
+  const persona = getTtsPersona(personaId)
+  const resolvedId = persona?.id ?? (gender === 'male' ? 'männlich-1' : 'weiblich')
+  const voiceLabel = VOICE_LABEL_BY_ID[resolvedId] ?? VOICE_LABEL_BY_ID['weiblich']
 
-  // 1. Prioritas Suara Pria: Kokoro German Martin via HuggingFace Space
-  // Pembedaan Akustik:
-  // - männlich-1: Bariton matang/dewasa (detune -2.0 semitone, speed 0.98x)
-  // - männlich-2: Suara Asli Martin Murni (detune 0 semitone, speed 1.0x tanpa perubahan)
-  if (isMale) {
-    try {
-      const isMale2 = persona === 'männlich-2' || persona === 'male-2'
-      const speed = isMale2 ? 1.0 : 0.98
-      const semitoneShift = isMale2 ? 0 : -2.0
+  const etag = '"' + createHash('sha1').update(resolvedId + '|' + text.trim()).digest('hex').slice(0, 20) + '"'
+  if (c.req.header('if-none-match') === etag) return c.body(null, 304)
 
-      const kokoroBuffer = await synthesizeKokoroMartin(text.trim(), speed)
-      if (kokoroBuffer) {
-        // Terapkan detune pitch instan pada header WAV jika semitoneShift != 0
-        const tunedBuffer = semitoneShift !== 0 ? detuneWavBuffer(kokoroBuffer, semitoneShift) : kokoroBuffer
-
-        c.header('Content-Type', 'audio/wav')
-        c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
-        c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
-        c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
-        return c.body(tunedBuffer as unknown as ArrayBuffer)
-      }
-    } catch (err: any) {
-      console.warn('[Kokoro HF Fallback to Google]:', err?.message || err)
-    }
-  }
-
-  // 2. Prioritas Suara Wanita / Fallback Jaring Pengaman: Google Translate TTS Stream
   try {
-    const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(
-      text.trim()
-    )}&tl=de&client=tw-ob`
+    const audio = await edgeTtsSpace.synthesize(text.trim(), voiceLabel)
 
-    const fallbackResp = await fetch(googleTtsUrl, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Referer: 'https://translate.google.com/',
-      },
-    })
-
-    if (fallbackResp.ok) {
-      const audioBuffer = Buffer.from(await fallbackResp.arrayBuffer())
-      c.header('Content-Type', 'audio/mpeg')
-
-      if (isMale) {
-        // Fallback darurat untuk pria: jangan di-cache CDN permanen agar request berikutnya
-        // tetap mencoba HuggingFace Space Kokoro Martin saat server siap kembali.
-        c.header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        c.header('CDN-Cache-Control', 'no-store')
-        c.header('Vercel-CDN-Cache-Control', 'no-store')
-        c.header('x-tts-fallback', 'google-male')
-      } else {
-        // Suara wanita Google Translate murni: aman di-cache permanen
-        c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
-        c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
-        c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
-      }
-
-      return c.body(audioBuffer)
-    }
-
-    return c.json({ error: 'TTS upstream response not ok' }, 502)
-  } catch (error: any) {
-    console.error('[TTS Remote Fallback Error]:', error?.message || error)
-    return c.json({ error: error?.message || 'TTS generation failed' }, 500)
+    c.header('Content-Type', 'audio/mpeg')
+    c.header('ETag', etag)
+    c.header('X-TTS-Engine', 'hf-edge-tts')
+    c.header('X-TTS-Voice', voiceLabel.split(' - ')[0])
+    c.header('X-TTS-Gender', persona?.gender ?? (gender === 'male' ? 'male' : 'female'))
+    c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
+    c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
+    c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
+    return c.body(audio as unknown as ArrayBuffer)
+  } catch (err: any) {
+    console.warn('[tts] gagal:', err?.message || err)
+    c.header('X-TTS-Error', 'upstream_failed')
+    return c.json({ error: 'tts_unavailable' }, 502)
   }
 })
 

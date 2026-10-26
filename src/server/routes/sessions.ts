@@ -1,9 +1,12 @@
 import { Hono } from 'hono'
+import { createHash } from 'node:crypto'
 import { db } from '../../db/client'
 import { learningSession } from '../../db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { requireTeacherAuth } from './auth'
 import { authorizeSessionAccess } from './access-guard'
+import { edgeTtsSpace } from '../lib/hfEdgeTts'
+import { synthesizeScenario, type ScenarioTurn } from '../lib/scenarioTts'
 import {
   MIN_DIALOGUE_COUNT,
   MAX_DIALOGUE_COUNT,
@@ -177,6 +180,69 @@ sessionsRouter.delete('/:id', requireTeacherAuth, async (c) => {
     return c.json({ success: true })
   } catch (error) {
     return c.json({ error: 'Failed to delete session' }, 500)
+  }
+})
+
+/**
+ * GET /api/sessions/:id/audio — satu file MP3 untuk SELURUH dialog sesi.
+ *
+ * Klien cukup satu <audio src>: tidak ada retry per baris, tidak ada timer
+ * antar baris, tidak ada onend yang bisa tidak terpicu.
+ *
+ * ETag = hash(dialogueJson + persona tiap baris). Kalau guru mengedit dialog,
+ * hash berubah sehingga CDN tidak pernah menyajikan audio basi. GET dipilih
+ * (bukan POST) supaya Vercel CDN bisa meng-cache hasilnya.
+ */
+sessionsRouter.get('/:id/audio', async (c) => {
+  try {
+    const id = c.req.param('id')
+
+    const access = await authorizeSessionAccess(c.req.raw.headers, id, c.req.query('key'))
+    if (!access.allowed) {
+      return c.json({ error: 'Access key required', reason: access.reason }, 403)
+    }
+
+    const [session] = await db.select().from(learningSession).where(eq(learningSession.id, id)).limit(1)
+    if (!session) return c.json({ error: 'Session not found' }, 404)
+
+    let turns: ScenarioTurn[]
+    try {
+      turns = JSON.parse(session.dialogueJson) as ScenarioTurn[]
+    } catch {
+      return c.json({ error: 'dialogue_json tidak valid' }, 500)
+    }
+    if (!Array.isArray(turns) || turns.length === 0) {
+      return c.json({ error: 'Sesi tidak punya dialog' }, 404)
+    }
+
+    const etag = '"' + createHash('sha1').update(
+      session.dialogueJson + '|' + turns.map((t) => t.personaId ?? '').join(','),
+    ).digest('hex').slice(0, 20) + '"'
+
+    if (c.req.header('if-none-match') === etag) {
+      return c.body(null, 304)
+    }
+
+    const result = await synthesizeScenario(turns, edgeTtsSpace)
+
+    c.header('Content-Type', result.contentType)
+    c.header('ETag', etag)
+    c.header('X-Scenario-Turns', String(result.turns))
+    c.header('X-Scenario-Turns-Ok', String(result.perTurn.filter((t) => t.ok).length))
+    c.header('X-Scenario-Timings', result.timings.join(','))
+    c.header('X-Scenario-Elapsed-Ms', String(result.elapsedMs))
+    // JANGAN immutable: URL sama dipakai lagi setelah guru mengedit dialog.
+    // `immutable` melarang revalidasi, sehingga siswa memutar audio lama
+    // sampai setahun. Dengan must-revalidate, klien mengirim If-None-Match:
+    // ETag cocok -> 304 tanpa sintesis ulang (murah), ETag beda -> audio baru.
+    c.header('Cache-Control', 'public, max-age=0, must-revalidate')
+    c.header('CDN-Cache-Control', 'public, s-maxage=0, must-revalidate')
+    c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=0, must-revalidate')
+    return c.body(result.audio as unknown as ArrayBuffer)
+  } catch (error: any) {
+    console.warn('[sessions/audio] gagal:', error?.message || error)
+    c.header('X-Scenario-Error', 'upstream_failed')
+    return c.json({ error: 'scenario_tts_unavailable' }, 502)
   }
 })
 

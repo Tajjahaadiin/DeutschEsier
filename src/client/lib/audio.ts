@@ -231,21 +231,17 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
     storedPersonaId: getStoredPersonaId(),
   })
 
-  // JALUR UTAMA (Pria & Wanita): Remote /api/tts HTTP Audio Stream (CDN-Cached, Ringan, 0ms WASM Lag)
-  // Backend menyintesis Pria via Kokoro Martin HuggingFace Space & Wanita via Google Translate Stream
+  // JALUR UTAMA (Pria & Wanita): /api/tts → HF Edge-TTS.
+  // Suara pria kini Conrad/Killian asli, jadi tidak ada lagi playbackRate
+  // persona maupun formant filter untuk memalsukan timbre. playbackRate hanya
+  // dipakai bila pemanggil meminta kecepatan eksplisit (kontrol 0.75x–1.25x).
   const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&persona=${encodeURIComponent(request.personaId)}`
   const audio = new Audio(audioUrl)
   audio.crossOrigin = 'anonymous'
-  
-  // Modulasi playbackRate jika diminta atau ikuti profil persona
-  const targetRate = options.rate !== undefined ? options.rate : (PERSONA_ACOUSTICS[request.personaId]?.rate || 1.0)
+
+  const targetRate = options.rate !== undefined ? options.rate : 1.0
   audio.playbackRate = targetRate
   audio.defaultPlaybackRate = targetRate
-
-  // Jika persona adalah pria, siapkan formant filter saat audio mulai diputar
-  if (request.gender === 'male') {
-    applyMaleFormantFilter(audio)
-  }
 
   currentHtmlAudio = audio
   let fallbackExecuted = false
