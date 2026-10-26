@@ -14,7 +14,7 @@ import {
 } from '../lib/grammarTopicsParser'
 import { parseGrammarQuestions, type AiGrammarQuestion } from '../lib/grammarQuestions'
 import GrammarTopicPicker from '../components/generator/GrammarTopicPicker'
-import { SCENARIO_PERSONAS, type TtsPersonaId } from '../../shared/ttsPersonas'
+import { SCENARIO_PERSONAS, getTtsPersona, type TtsPersonaId } from '../../shared/ttsPersonas'
 
 interface DialogTurn {
   speaker: string
@@ -130,11 +130,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         // Biarkan turnA/turnB gender lama tetap terbaca bila ada
         const turnA = parsedDialogue.find(t => t.speaker === 'Sprecher A')
         if (turnA?.gender) {
-          setSpeakerPersonas(prev => ({ ...prev, 'Sprecher A': turnA.gender === 'male' ? 'male-1' : 'female-1' }))
+          setSpeakerPersonas(prev => ({ ...prev, 'Sprecher A': turnA.gender === 'male' ? 'männlich-1' : 'weiblich' }))
         }
         const turnB = parsedDialogue.find(t => t.speaker === 'Sprecher B')
         if (turnB?.gender) {
-          setSpeakerPersonas(prev => ({ ...prev, 'Sprecher B': turnB.gender === 'male' ? 'male-1' : 'female-1' }))
+          setSpeakerPersonas(prev => ({ ...prev, 'Sprecher B': turnB.gender === 'male' ? 'männlich-1' : 'weiblich' }))
         }
       })
       .catch(err => {
@@ -174,12 +174,13 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       const generated: GeneratedLesson = data.lesson
       setLesson(generated)
       const turnsWithPersonas: DialogTurn[] = generated.dialogue.map(t => {
-        const personaId = speakerPersonas[t.speaker] || 'female-1'
-        const isMale = personaId.startsWith('male')
+        const personaId = t.personaId || speakerPersonas[t.speaker] || (t.speaker === 'Sprecher A' ? 'weiblich' : 'männlich-1')
+        const persona = getTtsPersona(personaId)
+        const gender = persona ? persona.gender : (personaId.includes('male') || personaId.includes('männlich') ? 'male' : 'female')
         return {
           ...t,
           personaId,
-          gender: isMale ? ('male' as const) : ('female' as const),
+          gender,
         }
       })
       setEditedDialogue(turnsWithPersonas)
@@ -656,10 +657,12 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                       onClick={() => {
                         if (isPlayingAll) handleStopAll()
                         setPlayingIndex(i)
-                        const pId = turn.personaId || speakerPersonas[turn.speaker] || 'female-1'
+                        const pId = turn.personaId || speakerPersonas[turn.speaker] || 'weiblich'
+                        const persona = getTtsPersona(pId)
+                        const g = persona ? persona.gender : (pId.includes('male') || pId.includes('männlich') ? 'male' : 'female')
                         speakGerman(turn.germanText, {
                           personaId: pId,
-                          gender: pId.startsWith('male') ? 'male' : 'female',
+                          gender: g,
                           rate: playbackRateRef.current,
                           onEnd: () => setPlayingIndex(null),
                         })

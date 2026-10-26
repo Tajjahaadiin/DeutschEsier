@@ -289,8 +289,9 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
       if (cancelledRef.current) break
       const turn = session.dialogue[i]
       const isA = turn.speaker === speakerA
-      const turnGender: 'male' | 'female' = turn.gender || (isA ? 'female' : 'male')
       const turnPersonaId = turn.personaId || (isA ? 'weiblich' : 'männlich-1')
+      const persona = getTtsPersona(turnPersonaId)
+      const turnGender: 'male' | 'female' = persona ? persona.gender : (turn.gender || (isA ? 'female' : 'male'))
 
       setPlayingIndex(i)
 
@@ -336,14 +337,16 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     }
   }
 
-  const handlePlayTurn = (index: number, germanText: string, gender: 'male' | 'female', personaId?: string) => {
+  const handlePlayTurn = (index: number, germanText: string, gender?: 'male' | 'female', personaId?: string) => {
     if (isPlayingAll) {
       handleStopAll()
     }
     const resolvedPersonaId = personaId || (gender === 'female' ? 'weiblich' : 'männlich-1')
+    const persona = getTtsPersona(resolvedPersonaId)
+    const resolvedGender: 'male' | 'female' = persona ? persona.gender : (gender || 'female')
     setPlayingIndex(index)
     speakGerman(germanText, {
-      gender,
+      gender: resolvedGender,
       personaId: resolvedPersonaId,
       rate: playbackRateRef.current,
       onEnd: () => setPlayingIndex(null),
