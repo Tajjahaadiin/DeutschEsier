@@ -65,6 +65,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   /** Milidetik mulai tiap baris, dari header X-TTS-Timings. */
   const scenarioTimingsRef = React.useRef<number[]>([])
   const scenarioAudioRef = React.useRef<HTMLAudioElement | null>(null)
+  /** Ref tiap kartu dialog, dipakai untuk memposisikan baris yang diputar. */
+  const turnRefs = React.useRef<(HTMLDivElement | null)[]>([])
   const [speakerPersonas, setSpeakerPersonas] = useState<Record<string, TtsPersonaId>>({
     'Sprecher A': 'weiblich',
     'Sprecher B': 'männlich-1',
@@ -394,7 +396,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       setPlayingIndex(null)
       setAudioPreloadReady(false)
     }
-    // Sorot baris dari timings nyata (bukan proporsi panjang teks).
+    // Sorot + posisikan kartu dari timings nyata (bukan proporsi panjang teks).
+    let lastIdx = -1
     el.ontimeupdate = () => {
       const timings = scenarioTimingsRef.current
       if (cancelledRef.current || timings.length === 0) return
@@ -407,7 +410,10 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         if (ms >= start) idx = i
         else break
       }
-      if (idx >= 0) setPlayingIndex(idx)
+      if (idx < 0 || idx === lastIdx) return
+      lastIdx = idx
+      setPlayingIndex(idx)
+      turnRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
 
     el.currentTime = 0
@@ -738,7 +744,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
               {editedDialogue.map((turn, i) => (
                 <div
                   key={i}
-                  className={`flex gap-3 items-start p-3 bg-surface rounded-md border transition-colors ${
+                  ref={(el) => (turnRefs.current[i] = el)}
+                  className={`flex gap-3 items-start p-3 bg-surface rounded-md border transition-colors scroll-mt-24 ${
                     playingIndex === i ? 'ring-2 ring-primary border-primary shadow-xs' : 'border-border'
                   }`}
                 >

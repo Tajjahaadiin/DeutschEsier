@@ -377,6 +377,11 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
      * tidak linear terhadap jumlah karakter ("Ja." 3 karakter = 1.9s, kalimat
      * 107 karakter = 6.3s), sehingga sorotan melenceng makin jauh ke akhir.
      */
+    // `ontimeupdate` menyala ~4x/detik. Tanpa penjaga ini, scrollIntoView
+    // dipanggil berulang untuk baris yang sama sehingga animasi smooth
+    // bertabrakan (gemetar) dan melawan scroll manual pengguna.
+    let lastIdx = -1
+
     const markActive = () => {
       if (cancelledRef.current || scenarioTimings.length === 0) return
       const ms = el.currentTime * 1000
@@ -388,9 +393,12 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
         if (ms >= start) idx = i
         else break
       }
-      if (idx < 0) return
+      if (idx < 0 || idx === lastIdx) return
+      lastIdx = idx
       setPlayingIndex(idx)
-      turnRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      // `block: center` memposisikan kartu yang sedang diputar di tengah
+      // pandangan, bukan hanya menggulir ketika ia keluar layar.
+      turnRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
 
     el.onended = () => {
@@ -847,7 +855,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <div
                         ref={(el) => (turnRefs.current[i] = el)}
                         className={
-                          'max-w-[88%] rounded-lg p-4 shadow-xs transition-colors ' +
+                          'max-w-[88%] rounded-lg p-4 shadow-xs transition-colors scroll-mt-24 ' +
                           (playingIndex === i
                             ? 'ring-2 ring-primary border-primary '
                             : 'border border-border ') +
