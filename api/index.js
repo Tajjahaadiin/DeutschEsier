@@ -56070,108 +56070,8 @@ sessionsRouter.get("/:id/audio", async (c) => {
 });
 var sessions_default = sessionsRouter;
 
-// src/server/lib/kokoroHf.ts
-var HF_SPACE_BASE = process.env.KOKORO_HF_SPACE_URL || "https://tajjz-deutscheasier-tts.hf.space";
-async function synthesizeKokoroMartin(text3, speed = 1) {
-  const cleanBase = HF_SPACE_BASE.replace(/\/+$/, "");
-  const totalTimeoutController = new AbortController();
-  const timeoutId = setTimeout(() => totalTimeoutController.abort(), 6e3);
-  try {
-    const callRes = await fetch(`${cleanBase}/gradio_api/call/synthesize`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        data: [text3.trim(), "martin", speed]
-      }),
-      signal: totalTimeoutController.signal
-    });
-    if (!callRes.ok) {
-      console.warn(`[Kokoro HF] call/synthesize failed with status ${callRes.status}`);
-      return null;
-    }
-    const { event_id } = await callRes.json();
-    if (!event_id) {
-      console.warn("[Kokoro HF] No event_id returned");
-      return null;
-    }
-    let audioUrl = null;
-    const startTime = Date.now();
-    while (Date.now() - startTime < 5e3 && !audioUrl) {
-      if (totalTimeoutController.signal.aborted) break;
-      const streamRes = await fetch(`${cleanBase}/gradio_api/call/synthesize/${event_id}`, {
-        headers: {
-          "Accept": "text/event-stream"
-        },
-        signal: totalTimeoutController.signal
-      });
-      if (!streamRes.ok) {
-        console.warn(`[Kokoro HF] SSE stream failed with status ${streamRes.status}`);
-        break;
-      }
-      const sseText = await streamRes.text();
-      const lines = sseText.split("\n");
-      for (const line2 of lines) {
-        const trimmed2 = line2.trim();
-        if (trimmed2.startsWith("data:")) {
-          const rawPayload = trimmed2.slice(5).trim();
-          try {
-            const parsed = JSON.parse(rawPayload);
-            if (Array.isArray(parsed) && parsed[0]?.url) {
-              audioUrl = parsed[0].url;
-              break;
-            }
-          } catch {
-          }
-        }
-      }
-      if (!audioUrl) {
-        await new Promise((r) => setTimeout(r, 300));
-      }
-    }
-    if (!audioUrl) {
-      console.warn("[Kokoro HF] No audio URL received from SSE stream within timeout (fallback triggered)");
-      return null;
-    }
-    const audioRes = await fetch(audioUrl, {
-      signal: totalTimeoutController.signal
-    });
-    if (!audioRes.ok) {
-      console.warn(`[Kokoro HF] Failed to download audio file: ${audioRes.status}`);
-      return null;
-    }
-    const arrayBuf = await audioRes.arrayBuffer();
-    return Buffer.from(arrayBuf);
-  } catch (err) {
-    const isTimeout = err.name === "AbortError" || totalTimeoutController.signal.aborted;
-    if (isTimeout) {
-      console.warn("[Kokoro HF Timeout 6s]: HuggingFace Space terlalu lama merespons, beralih ke fallback...");
-    } else {
-      console.warn("[Kokoro HF Error]:", err?.message || err);
-    }
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-// src/server/lib/wavDetune.ts
-function detuneWavBuffer(wavBuffer, semitones) {
-  if (semitones === 0 || wavBuffer.length < 44) return wavBuffer;
-  if (wavBuffer.subarray(0, 4).toString("ascii") !== "RIFF" || wavBuffer.subarray(8, 12).toString("ascii") !== "WAVE") {
-    return wavBuffer;
-  }
-  const modified = Buffer.from(wavBuffer);
-  const originalSampleRate = modified.readUInt32LE(24);
-  const originalByteRate = modified.readUInt32LE(28);
-  const factor = Math.pow(2, semitones / 12);
-  const newSampleRate = Math.round(originalSampleRate * factor);
-  const newByteRate = Math.round(originalByteRate * factor);
-  modified.writeUInt32LE(newSampleRate, 24);
-  modified.writeUInt32LE(newByteRate, 28);
-  return modified;
-}
+// src/server/routes/tts.ts
+import { createHash as createHash2 } from "node:crypto";
 
 // src/shared/ttsPersonas.ts
 var TTS_PERSONAS = [
@@ -56285,63 +56185,34 @@ var ttsRouter = new Hono2();
 var MAX_TTS_TEXT_LENGTH = 1e3;
 ttsRouter.get("/", async (c) => {
   const text3 = c.req.query("text");
-  const persona = c.req.query("persona");
-  const genderQuery = c.req.query("gender");
+  const personaId = c.req.query("persona");
+  const gender = c.req.query("gender");
   if (!text3 || text3.trim() === "") {
     return c.json({ error: "Text parameter is required" }, 400);
   }
   if (text3.length > MAX_TTS_TEXT_LENGTH) {
     return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400);
   }
-  const personaObj = getTtsPersona(persona);
-  const isMale = personaObj ? personaObj.gender === "male" : genderQuery === "male" || persona && (persona.includes("male") || persona.includes("m\xE4nnlich"));
-  if (isMale) {
-    try {
-      const isMale2 = persona === "m\xE4nnlich-2" || persona === "male-2";
-      const speed = isMale2 ? 1 : 0.98;
-      const semitoneShift = isMale2 ? 0 : -2;
-      const kokoroBuffer = await synthesizeKokoroMartin(text3.trim(), speed);
-      if (kokoroBuffer) {
-        const tunedBuffer = semitoneShift !== 0 ? detuneWavBuffer(kokoroBuffer, semitoneShift) : kokoroBuffer;
-        c.header("Content-Type", "audio/wav");
-        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-        return c.body(tunedBuffer);
-      }
-    } catch (err) {
-      console.warn("[Kokoro HF Fallback to Google]:", err?.message || err);
-    }
-  }
+  const persona = getTtsPersona(personaId);
+  const resolvedId = persona?.id ?? (gender === "male" ? "m\xE4nnlich-1" : "weiblich");
+  const voiceLabel = VOICE_LABEL_BY_ID[resolvedId] ?? VOICE_LABEL_BY_ID["weiblich"];
+  const etag = '"' + createHash2("sha1").update(resolvedId + "|" + text3.trim()).digest("hex").slice(0, 20) + '"';
+  if (c.req.header("if-none-match") === etag) return c.body(null, 304);
   try {
-    const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(
-      text3.trim()
-    )}&tl=de&client=tw-ob`;
-    const fallbackResp = await fetch(googleTtsUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Referer: "https://translate.google.com/"
-      }
-    });
-    if (fallbackResp.ok) {
-      const audioBuffer = Buffer.from(await fallbackResp.arrayBuffer());
-      c.header("Content-Type", "audio/mpeg");
-      if (isMale) {
-        c.header("Cache-Control", "no-cache, no-store, must-revalidate");
-        c.header("CDN-Cache-Control", "no-store");
-        c.header("Vercel-CDN-Cache-Control", "no-store");
-        c.header("x-tts-fallback", "google-male");
-      } else {
-        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-      }
-      return c.body(audioBuffer);
-    }
-    return c.json({ error: "TTS upstream response not ok" }, 502);
-  } catch (error) {
-    console.error("[TTS Remote Fallback Error]:", error?.message || error);
-    return c.json({ error: error?.message || "TTS generation failed" }, 500);
+    const audio = await edgeTtsSpace.synthesize(text3.trim(), voiceLabel);
+    c.header("Content-Type", "audio/mpeg");
+    c.header("ETag", etag);
+    c.header("X-TTS-Engine", "hf-edge-tts");
+    c.header("X-TTS-Voice", voiceLabel.split(" - ")[0]);
+    c.header("X-TTS-Gender", persona?.gender ?? (gender === "male" ? "male" : "female"));
+    c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
+    c.header("CDN-Cache-Control", "public, s-maxage=31536000");
+    c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+    return c.body(audio);
+  } catch (err) {
+    console.warn("[tts] gagal:", err?.message || err);
+    c.header("X-TTS-Error", "upstream_failed");
+    return c.json({ error: "tts_unavailable" }, 502);
   }
 });
 var tts_default = ttsRouter;
