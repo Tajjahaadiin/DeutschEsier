@@ -56,7 +56,7 @@ beforeEach(() => {
 })
 
 describe('resolveTtsRequest — persona selalu menang atas gender', () => {
-  it('setiap persona dipetakan ke voiceId-nya sendiri dan unik (3 persona pilihan)', () => {
+  it('setiap persona dipetakan ke voiceId-nya sendiri dan unik (ADR-0003: 6 suara berbeda)', () => {
     const voiceIds = TTS_PERSONAS.map((p) => {
       const req = resolveTtsRequest({ personaId: p.id })
       expect(req.voiceId).toBe(p.voiceId)
@@ -64,7 +64,7 @@ describe('resolveTtsRequest — persona selalu menang atas gender', () => {
       expect(req.gender).toBe(p.gender)
       return req.voiceId
     })
-    expect(new Set(voiceIds).size).toBe(3)
+    expect(new Set(voiceIds).size).toBe(6)
   })
 
   it('gender saja tetap menghasilkan persona neural nyata, bukan suara browser', () => {
@@ -94,7 +94,7 @@ describe('resolveTtsRequest — persona selalu menang atas gender', () => {
   })
 
   it('tanpa argumen memakai persona tersimpan, atau default wanita', () => {
-    expect(resolveTtsRequest({ storedPersonaId: 'female-1' }).voiceId).toBe('de-DE-KatjaNeural')
+    expect(resolveTtsRequest({ storedPersonaId: 'female-3' }).voiceId).toBe('de-DE-SeraphinaMultilingualNeural')
     expect(resolveTtsRequest({}).voiceId).toBe('de-DE-KatjaNeural')
   })
 
@@ -132,10 +132,10 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts HTTP Stream', () =>
   })
 
   it('persona tersimpan dipakai bila tidak ada opsi persona/gender', () => {
-    localStorage.setItem('preferredPersonaId', 'weiblich')
+    localStorage.setItem('preferredPersonaId', 'female-2')
     speakGerman('Hallo')
 
-    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&persona=weiblich')
+    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&persona=female-2')
     localStorage.clear()
   })
 
@@ -146,14 +146,14 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts HTTP Stream', () =>
   })
 
   it('fallback memetakan personaId ke profil akustik pitch & rate saat jaringan gagal', () => {
-    speakGerman('Hallo', { personaId: 'weiblich' })
+    speakGerman('Hallo', { personaId: 'female-3' })
 
     const audio = FakeAudio.instances[0]
     audio.onerror?.()
 
     expect(spoken).toHaveLength(1)
     expect(spoken[0].text).toBe('Hallo')
-    expect(spoken[0].pitch).toBe(1.20)
+    expect(spoken[0].pitch).toBe(0.95)
   })
 
   it('safeFallback tidak dijalankan jika audio sudah di-stop via stopSpeech', () => {
@@ -170,7 +170,7 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts HTTP Stream', () =>
     speakGerman('Hallo A', { personaId: 'female-1' })
     const audioA = FakeAudio.instances[0]
 
-    speakGerman('Hallo B', { personaId: 'weiblich' })
+    speakGerman('Hallo B', { personaId: 'female-2' })
     const audioB = FakeAudio.instances[1]
 
     audioA.onerror?.()
@@ -252,8 +252,7 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts HTTP Stream', () =>
     expect(resolveVoice('male').pitch).toBe(1)
     expect(resolveVoice('female').pitch).toBe(1)
     expect(resolveVoice('male', 'male-1').pitch).toBe(0.75)
-    expect(resolveVoice('female', 'female-1').pitch).toBe(1.05)
-    expect(resolveVoice('female', 'weiblich').pitch).toBe(1.20)
+    expect(resolveVoice('female', 'female-2').pitch).toBe(1.20)
   })
 
   it('applyMaleFormantFilter terhubung dengan benar saat audio diputar', async () => {

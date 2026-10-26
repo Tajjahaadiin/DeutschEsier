@@ -21,20 +21,70 @@ export interface TtsPersona {
   emoji: string
 }
 
-/**
- * Tiga persona yang diekspos ke UI pemilih suara — sama dengan
- * `SCENARIO_PERSONAS` di bawah.
- *
- * `male-3`, `female-2`, dan `female-3` dihapus: ketiganya tidak pernah dipilih
- * oleh UI maupun logika (`female-2` bahkan duplikat persis `weiblich` — voiceId
- * Amala yang sama). `male-1`/`male-2` juga hilang dari daftar ini; keduanya
- * tetap hidup sebagai alias legacy di `getTtsPersona()`.
- *
- * `female-1` (Katja) TIDAK lagi di daftar ini tetapi tetap resolvable lewat
- * `getTtsPersona()` karena `GRUNDLAGEN_PERSONA_ID` memakainya sebagai tujuan
- * fallback dinamis Die Grundlagen.
- */
 export const TTS_PERSONAS: readonly TtsPersona[] = [
+  {
+    id: 'male-1',
+    name: 'Conrad',
+    gender: 'male',
+    voiceId: 'de-DE-ConradNeural',
+    geminiVoiceName: 'Charon',
+    roleId: 'Guru Formal (Der Lehrer)',
+    descriptionId: 'Dewasa matang, bariton tegas, artikulasi akademis',
+    emoji: '👨‍🏫',
+  },
+  {
+    id: 'male-2',
+    name: 'Killian',
+    gender: 'male',
+    voiceId: 'de-DE-KillianNeural',
+    geminiVoiceName: 'Puck',
+    roleId: 'Mahasiswa Santai (Der Student)',
+    descriptionId: 'Muda, tenor luwes, percakapan sehari-hari',
+    emoji: '🧑‍🎓',
+  },
+  {
+    id: 'male-3',
+    name: 'Florian',
+    gender: 'male',
+    voiceId: 'de-DE-FlorianMultilingualNeural',
+    geminiVoiceName: 'Fenrir',
+    roleId: 'Rekan Kerja (Der Kollege)',
+    descriptionId: 'Dewasa muda, modern, lugas & profesional',
+    emoji: '👨‍💼',
+  },
+  {
+    id: 'female-1',
+    name: 'Katja',
+    gender: 'female',
+    voiceId: 'de-DE-KatjaNeural',
+    geminiVoiceName: 'Kore',
+    roleId: 'Tutor Utama (Die Lehrerin)',
+    descriptionId: 'Dewasa, vokal jernih, hangat & artikulatif (Grundlagen)',
+    emoji: '👩‍🏫',
+  },
+  {
+    id: 'female-2',
+    name: 'Amala',
+    gender: 'female',
+    voiceId: 'de-DE-AmalaNeural',
+    geminiVoiceName: 'Zephyr',
+    roleId: 'Rekan Belajar (Die Studentin)',
+    descriptionId: 'Muda, ceria, energik & dinamis',
+    emoji: '👧',
+  },
+  {
+    id: 'female-3',
+    name: 'Seraphina',
+    gender: 'female',
+    voiceId: 'de-DE-SeraphinaMultilingualNeural',
+    geminiVoiceName: 'Aoede',
+    roleId: 'Konsultan Ramah (Die Beraterin)',
+    descriptionId: 'Dewasa muda, nada ramah, empatik & halus',
+    emoji: '👩‍💼',
+  },
+] as const
+
+export const CANONICAL_SCENARIO_PERSONAS: readonly TtsPersona[] = [
   {
     id: 'weiblich',
     name: 'Weiblich',
@@ -67,9 +117,16 @@ export const TTS_PERSONAS: readonly TtsPersona[] = [
   },
 ] as const
 
-export const CANONICAL_SCENARIO_PERSONAS: readonly TtsPersona[] = TTS_PERSONAS
-
-export type TtsPersonaId = 'weiblich' | 'männlich-1' | 'männlich-2' | 'male-1' | 'male-2' | 'female-1'
+export type TtsPersonaId =
+  | 'weiblich'
+  | 'männlich-1'
+  | 'männlich-2'
+  | 'male-1'
+  | 'male-2'
+  | 'male-3'
+  | 'female-1'
+  | 'female-2'
+  | 'female-3'
 
 export const DEFAULT_MALE_PERSONA: TtsPersonaId = 'male-1'
 export const DEFAULT_FEMALE_PERSONA: TtsPersonaId = 'female-1'
@@ -86,34 +143,7 @@ export const GRUNDLAGEN_PERSONA_ID: TtsPersonaId = 'female-1'
  */
 export const SCENARIO_PERSONAS: readonly TtsPersona[] = CANONICAL_SCENARIO_PERSONAS
 
-/**
- * Katja (female-1) tidak lagi diekspos sebagai persona pilihan, tetapi tetap
- * harus bisa di-resolve: `GRUNDLAGEN_PERSONA_ID` memakainya sebagai tujuan
- * fallback dinamis Die Grundlagen saat aset statis gagal dimuat.
- */
-const GRUNDLAGEN_PERSONA: TtsPersona = {
-  id: 'female-1',
-  name: 'Katja',
-  gender: 'female',
-  voiceId: 'de-DE-KatjaNeural',
-  geminiVoiceName: 'Kore',
-  roleId: 'Tutor Utama (Die Lehrerin)',
-  descriptionId: 'Dewasa, vokal jernih, hangat & artikulatif (Grundlagen)',
-  emoji: '👩‍🏫',
-}
-
-/** Alias legacy yang masih diterima dari localStorage/sesi lama. */
-const LEGACY_ALIASES: readonly TtsPersona[] = [
-  { ...GRUNDLAGEN_PERSONA, id: 'male-1', name: 'Conrad', gender: 'male', voiceId: 'de-DE-ConradNeural', emoji: '👨‍🏫' },
-  { ...GRUNDLAGEN_PERSONA, id: 'male-2', name: 'Killian', gender: 'male', voiceId: 'de-DE-KillianNeural', emoji: '🧑‍🎓' },
-]
-
-const ALL_LOOKUP_PERSONAS = [
-  ...TTS_PERSONAS,
-  ...CANONICAL_SCENARIO_PERSONAS,
-  GRUNDLAGEN_PERSONA,
-  ...LEGACY_ALIASES,
-]
+const ALL_LOOKUP_PERSONAS = [...TTS_PERSONAS, ...CANONICAL_SCENARIO_PERSONAS]
 
 const PERSONA_BY_ID = new Map<string, TtsPersona>(
   ALL_LOOKUP_PERSONAS.map((p) => [p.id, p])
@@ -140,7 +170,7 @@ export function resolveEdgeVoiceId(
     return fallbackGender === 'male' ? 'de-DE-ConradNeural' : 'de-DE-KatjaNeural'
   }
 
-  // 1. Cek apakah cocok persona ID (misal: 'männlich-1', 'female-1')
+  // 1. Cek apakah cocok persona ID (misal: 'male-1', 'female-2')
   const byId = PERSONA_BY_ID.get(voiceOrPersona)
   if (byId) return byId.voiceId
 
