@@ -26634,6 +26634,10 @@ var edgeTtsSpace = new EdgeTtsSpace();
 
 // src/server/lib/scenarioTts.ts
 var TURN_GAP_MS = 450;
+var MP3_KBPS = 48;
+function mp3DurationMs(bytes) {
+  return Math.round(bytes * 8 / MP3_KBPS);
+}
 var CONCURRENCY = 4;
 async function mapLimit(items, limit, fn2) {
   const out = new Array(items.length);
@@ -26666,10 +26670,21 @@ async function synthesizeScenario(turns, space) {
   const parts2 = results.map((r) => r.buf).filter((b) => b !== null);
   if (parts2.length === 0) throw new Error("tidak ada baris yang berhasil disintesis");
   const silence = parts2.length > 1 ? await space.silence(TURN_GAP_MS) : null;
+  const gapMs = silence ? mp3DurationMs(silence.length) : 0;
   const merged = [];
-  parts2.forEach((p, idx) => {
-    merged.push(p);
-    if (silence && idx < parts2.length - 1) merged.push(silence);
+  const timings = [];
+  let cursorMs = 0;
+  let emitted = 0;
+  results.forEach((r) => {
+    if (!r.buf) return;
+    timings.push(cursorMs);
+    merged.push(r.buf);
+    cursorMs += mp3DurationMs(r.buf.length);
+    emitted++;
+    if (silence && emitted < parts2.length) {
+      merged.push(silence);
+      cursorMs += gapMs;
+    }
   });
   const audio = Buffer.concat(merged);
   return {
@@ -26678,7 +26693,8 @@ async function synthesizeScenario(turns, space) {
     turns: turns.length,
     bytes: audio.length,
     elapsedMs: Date.now() - started,
-    perTurn: results.map((r, i) => ({ index: i, persona: r.persona, ok: r.ok, bytes: r.bytes, ms: r.ms }))
+    perTurn: results.map((r, i) => ({ index: i, persona: r.persona, ok: r.ok, bytes: r.bytes, ms: r.ms })),
+    timings
   };
 }
 
@@ -56057,6 +56073,7 @@ sessionsRouter.get("/:id/audio", async (c) => {
     c.header("ETag", etag);
     c.header("X-Scenario-Turns", String(result2.turns));
     c.header("X-Scenario-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
+    c.header("X-Scenario-Timings", result2.timings.join(","));
     c.header("X-Scenario-Elapsed-Ms", String(result2.elapsedMs));
     c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
     c.header("CDN-Cache-Control", "public, s-maxage=31536000");
@@ -56295,6 +56312,7 @@ scenarioRouter.post("/", async (c) => {
     c.header("X-TTS-Engine", "hf-edge-tts");
     c.header("X-TTS-Turns", String(result2.turns));
     c.header("X-TTS-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
+    c.header("X-TTS-Timings", result2.timings.join(","));
     c.header("X-TTS-Bytes", String(result2.bytes));
     c.header("X-TTS-Elapsed-Ms", String(result2.elapsedMs));
     c.header("X-TTS-Gap-Ms", String(TURN_GAP_MS));

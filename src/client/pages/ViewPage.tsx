@@ -108,6 +108,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   const [scenarioAudio, setScenarioAudio] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle')
   const [scenarioError, setScenarioError] = useState<string>('')
   const [scenarioAudioUrl, setScenarioAudioUrl] = useState<string>('')
+  /** Milidetik mulai tiap baris, diambil dari header X-Scenario-Timings. */
+  const [scenarioTimings, setScenarioTimings] = useState<number[]>([])
 
   // Teacher Modals states
   const [showKeyManager, setShowKeyManager] = useState(false)
@@ -157,6 +159,10 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     fetch(url, { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const raw = res.headers.get('x-scenario-timings')
+        setScenarioTimings(
+          raw ? raw.split(',').map((n) => Number(n)).filter((n) => Number.isFinite(n)) : [],
+        )
         setScenarioAudio('ready')
       })
       .catch((err) => {
@@ -340,20 +346,23 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     const el = scenarioAudioRef.current
     if (!el) return
 
+    /**
+     * Sorot baris aktif dari timings nyata hasil sintesis.
+     *
+     * Estimasi proporsional panjang teks tidak dipakai lagi: durasi Edge-TTS
+     * tidak linear terhadap jumlah karakter ("Ja." 3 karakter = 1.9s, kalimat
+     * 107 karakter = 6.3s), sehingga sorotan melenceng makin jauh ke akhir.
+     */
     const markActive = () => {
-      if (!el.duration || cancelledRef.current) return
-      const totalChars = session.dialogue.reduce((a, t) => a + t.germanText.length, 0) || 1
-      let acc = 0
-      const p = el.currentTime / el.duration
-      for (let i = 0; i < session.dialogue.length; i++) {
-        acc += session.dialogue[i].germanText.length / totalChars
-        if (p <= acc) {
-          setPlayingIndex(i)
-          turnRefs.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-          return
-        }
+      if (cancelledRef.current || scenarioTimings.length === 0) return
+      const ms = el.currentTime * 1000
+      let idx = 0
+      for (let i = 0; i < scenarioTimings.length; i++) {
+        if (ms >= scenarioTimings[i]) idx = i
+        else break
       }
-      setPlayingIndex(session.dialogue.length - 1)
+      setPlayingIndex(idx)
+      turnRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
 
     el.onended = () => {

@@ -62,6 +62,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [audioPreloadReady, setAudioPreloadReady] = useState<boolean>(false)
   const [audioSynthesizing, setAudioSynthesizing] = useState<boolean>(false)
   const [scenarioAudioUrl, setScenarioAudioUrl] = useState<string>('')
+  /** Milidetik mulai tiap baris, dari header X-TTS-Timings. */
+  const scenarioTimingsRef = React.useRef<number[]>([])
   const scenarioAudioRef = React.useRef<HTMLAudioElement | null>(null)
   const [speakerPersonas, setSpeakerPersonas] = useState<Record<string, TtsPersonaId>>({
     'Sprecher A': 'weiblich',
@@ -322,6 +324,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
+      const raw = res.headers.get('x-tts-timings')
+      scenarioTimingsRef.current = raw
+        ? raw.split(',').map((n) => Number(n)).filter((n) => Number.isFinite(n))
+        : []
+
       const blob = await res.blob()
       setScenarioAudioUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev)
@@ -363,19 +370,17 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       setPlayingIndex(null)
       setAudioPreloadReady(false)
     }
+    // Sorot baris dari timings nyata (bukan proporsi panjang teks).
     el.ontimeupdate = () => {
-      if (!el.duration || cancelledRef.current) return
-      const totalChars = editedDialogue.reduce((a, t) => a + t.germanText.length, 0) || 1
-      let acc = 0
-      const p = el.currentTime / el.duration
-      for (let i = 0; i < editedDialogue.length; i++) {
-        acc += editedDialogue[i].germanText.length / totalChars
-        if (p <= acc) {
-          setPlayingIndex(i)
-          return
-        }
+      const timings = scenarioTimingsRef.current
+      if (cancelledRef.current || timings.length === 0) return
+      const ms = el.currentTime * 1000
+      let idx = 0
+      for (let i = 0; i < timings.length; i++) {
+        if (ms >= timings[i]) idx = i
+        else break
       }
-      setPlayingIndex(editedDialogue.length - 1)
+      setPlayingIndex(idx)
     }
 
     el.currentTime = 0
@@ -394,6 +399,7 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
    */
   const invalidateScenarioAudio = () => {
     setAudioPreloadReady(false)
+    scenarioTimingsRef.current = []
     setScenarioAudioUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev)
       return ''

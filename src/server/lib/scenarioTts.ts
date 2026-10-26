@@ -28,10 +28,27 @@ export interface ScenarioAudio {
   elapsedMs: number
   /** Per-baris hasil, untuk diagnostik. */
   perTurn: Array<{ index: number; persona: string; ok: boolean; bytes: number; ms: number }>
+  /**
+   * Milidetik mulai tiap baris di dalam `audio`, sejajar dengan `turns`.
+   * Baris yang gagal disintesis tidak punya entri — pakai `perTurn[i].ok`
+   * untuk memetakan index baris ke index timings.
+   */
+  timings: number[]
 }
 
 /** Jeda antar baris. Dipakai juga oleh klien untuk scroll sinkron. */
 export const TURN_GAP_MS = 450
+
+/**
+ * Bitrate MP3 dari Space Edge-TTS (48 kbps CBR, 24 kHz mono). Konstan, jadi
+ * durasi bisa dihitung dari ukuran byte tanpa mendekode audio.
+ */
+const MP3_KBPS = 48
+
+/** Durasi blok MP3 dalam milidetik. */
+function mp3DurationMs(bytes: number): number {
+  return Math.round((bytes * 8) / MP3_KBPS)
+}
 
 /**
  * Batas paralel ke Space. Uji rate limit: 8 request serentak sukses, wall 3s,
@@ -80,11 +97,29 @@ export async function synthesizeScenario(
 
   // MP3 adalah format stream: konkatenasi frame valid. Jeda dibuat dengan
   // menyisipkan MP3 senyap pendek agar tidak perlu ffmpeg.
+  //
+  // Timings dihitung dari ukuran byte tiap blok (bitrate CBR), bukan dari
+  // proporsi panjang teks: kalimat pendek seperti "Ja." hanya 3 karakter tapi
+  // butuh ~1.9s, sementara kalimat 107 karakter butuh ~6.3s. Estimasi
+  // proporsional karakter melenceng makin jauh di baris-baris akhir.
   const silence = parts.length > 1 ? await space.silence(TURN_GAP_MS) : null
+  const gapMs = silence ? mp3DurationMs(silence.length) : 0
+
   const merged: Buffer[] = []
-  parts.forEach((p, idx) => {
-    merged.push(p)
-    if (silence && idx < parts.length - 1) merged.push(silence)
+  const timings: number[] = []
+  let cursorMs = 0
+  let emitted = 0
+
+  results.forEach((r) => {
+    if (!r.buf) return
+    timings.push(cursorMs)
+    merged.push(r.buf)
+    cursorMs += mp3DurationMs(r.buf.length)
+    emitted++
+    if (silence && emitted < parts.length) {
+      merged.push(silence)
+      cursorMs += gapMs
+    }
   })
 
   const audio = Buffer.concat(merged)
@@ -95,5 +130,6 @@ export async function synthesizeScenario(
     bytes: audio.length,
     elapsedMs: Date.now() - started,
     perTurn: results.map((r, i) => ({ index: i, persona: r.persona, ok: r.ok, bytes: r.bytes, ms: r.ms })),
+    timings,
   }
 }

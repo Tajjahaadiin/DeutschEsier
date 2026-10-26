@@ -229,6 +229,7 @@ sessionsRouter.get('/:id/audio', async (c) => {
     c.header('ETag', etag)
     c.header('X-Scenario-Turns', String(result.turns))
     c.header('X-Scenario-Turns-Ok', String(result.perTurn.filter((t) => t.ok).length))
+    c.header('X-Scenario-Timings', result.timings.join(','))
     c.header('X-Scenario-Elapsed-Ms', String(result.elapsedMs))
     c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
     c.header('CDN-Cache-Control', 'public, s-maxage=31536000')

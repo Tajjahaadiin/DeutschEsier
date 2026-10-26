@@ -69,6 +69,38 @@ describe('synthesizeScenario', () => {
     await expect(synthesizeScenario(turns, space)).rejects.toThrow(/tidak ada baris/)
   })
 
+  it('timings menandai awal tiap baris, termasuk jeda sebelumnya', async () => {
+    // Baris 1024B @48kbps ≈ 171ms; jeda 64B ≈ 11ms
+    const { space } = fakeSpace()
+    const result = await synthesizeScenario(turns, space)
+
+    const lineMs = Math.round((1024 * 8) / 48)
+    const gapMs = Math.round((64 * 8) / 48)
+    expect(result.timings).toHaveLength(3)
+    expect(result.timings[0]).toBe(0)
+    expect(result.timings[1]).toBe(lineMs + gapMs)
+    expect(result.timings[2]).toBe(2 * (lineMs + gapMs))
+  })
+
+  it('timings tidak linear terhadap panjang teks (alasan estimasi proporsional dibuang)', async () => {
+    // Baris pendek dan panjang sama-sama 1024B di tiruan ini, jadi timings
+    // harus mengikuti ukuran byte, bukan jumlah karakter.
+    const uneven = [
+      { speaker: 'A', germanText: 'Ja.', personaId: 'weiblich' },
+      { speaker: 'B', germanText: 'x'.repeat(500), personaId: 'männlich-1' },
+    ]
+    const { space } = fakeSpace()
+    const result = await synthesizeScenario(uneven, space)
+    expect(result.timings[1]).toBe(Math.round((1024 * 8) / 48) + Math.round((64 * 8) / 48))
+  })
+
+  it('baris gagal tidak menyumbang timings', async () => {
+    const { space } = fakeSpace({ failOn: [1] })
+    const result = await synthesizeScenario(turns, space)
+    expect(result.timings).toHaveLength(2)
+    expect(result.timings[0]).toBe(0)
+  })
+
   it('memakai persona default selang-seling bila personaId tidak diberikan', async () => {
     const { space, calls } = fakeSpace()
     await synthesizeScenario(

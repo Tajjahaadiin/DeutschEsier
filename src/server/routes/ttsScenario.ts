@@ -58,6 +58,7 @@ scenarioRouter.post('/', async (c) => {
     c.header('X-TTS-Engine', 'hf-edge-tts')
     c.header('X-TTS-Turns', String(result.turns))
     c.header('X-TTS-Turns-Ok', String(result.perTurn.filter((t) => t.ok).length))
+    c.header('X-TTS-Timings', result.timings.join(','))
     c.header('X-TTS-Bytes', String(result.bytes))
     c.header('X-TTS-Elapsed-Ms', String(result.elapsedMs))
     c.header('X-TTS-Gap-Ms', String(TURN_GAP_MS))
