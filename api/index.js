@@ -37768,17 +37768,29 @@ function getDahlConfig() {
   return { base, keys: keys5, model };
 }
 function extractCleanJson(rawText) {
+  if (!rawText || typeof rawText !== "string") return "";
   let cleaned = rawText.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+  if (cleaned.includes("<think>")) {
+    const thinkEndIdx = cleaned.indexOf("</think>");
+    if (thinkEndIdx !== -1) {
+      cleaned = cleaned.substring(thinkEndIdx + 8).trim();
+    } else {
+      const braceIdx = cleaned.indexOf("{");
+      if (braceIdx !== -1) {
+        cleaned = cleaned.substring(braceIdx);
+      }
+    }
+  }
   const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
   if (codeBlockMatch) {
     cleaned = codeBlockMatch[1].trim();
   }
   const firstBrace = cleaned.indexOf("{");
   const lastBrace = cleaned.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
+    return cleaned.substring(firstBrace, lastBrace + 1).trim();
   }
-  return cleaned;
+  return "";
 }
 async function callDahlWithKeyRotation(fullPrompt) {
   const config3 = getDahlConfig();
@@ -37790,6 +37802,8 @@ async function callDahlWithKeyRotation(fullPrompt) {
   for (let attempt = 0; attempt < keys5.length; attempt++) {
     const currentKey = keys5[dahlKeyIndex % keys5.length];
     dahlKeyIndex = (dahlKeyIndex + 1) % keys5.length;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 28e3);
     try {
       const res = await fetch(`${base}/chat/completions`, {
         method: "POST",
@@ -37802,16 +37816,18 @@ async function callDahlWithKeyRotation(fullPrompt) {
           messages: [
             {
               role: "system",
-              content: "You are an expert German language teacher. Respond ONLY with a valid, raw JSON object matching the requested schema. Do not include markdown formatting, codeblocks, or explanatory text."
+              content: "You are an expert German language teacher. Respond ONLY with a valid, raw JSON object matching the requested schema. Do not generate <think> tokens, do not include reasoning, and do not use markdown codeblocks. Output the raw JSON directly starting with { and ending with }."
             },
             {
               role: "user",
               content: fullPrompt
             }
           ],
-          temperature: 0.3
-        })
+          temperature: 0.2
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       if (res.status === 429) {
         console.warn(`[Dahl Key ${dahlKeyIndex}] 429 Rate limited, mencoba key berikutnya...`);
         lastError = new Error(`Dahl 429 Rate Limit (Key ${dahlKeyIndex})`);
@@ -37819,8 +37835,8 @@ async function callDahlWithKeyRotation(fullPrompt) {
       }
       if (!res.ok) {
         const errText = await res.text();
-        console.warn(`[Dahl Key ${dahlKeyIndex}] HTTP Error ${res.status}:`, errText);
-        lastError = new Error(`Dahl HTTP ${res.status}: ${errText}`);
+        console.warn(`[Dahl Key ${dahlKeyIndex}] HTTP Error ${res.status}:`, errText.slice(0, 200));
+        lastError = new Error(`Dahl HTTP ${res.status}`);
         continue;
       }
       const data = await res.json();
@@ -37830,8 +37846,11 @@ async function callDahlWithKeyRotation(fullPrompt) {
       }
       return content;
     } catch (err) {
-      console.warn(`[Dahl attempt ${attempt + 1}/${keys5.length} failed]:`, err.message || err);
-      lastError = err;
+      clearTimeout(timeoutId);
+      const isAbort = err.name === "AbortError" || err.message?.includes("aborted");
+      const msg = isAbort ? "Request timeout (28s exceeded)" : err.message || String(err);
+      console.warn(`[Dahl attempt ${attempt + 1}/${keys5.length} failed]:`, msg);
+      lastError = new Error(msg);
     }
   }
   throw new DahlApiError(`Semua key Dahl gagal: ${lastError?.message || lastError}`);

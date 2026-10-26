@@ -33,31 +33,49 @@ function getDahlConfig(): { base: string; keys: string[]; model: string } | null
 }
 
 /**
- * Membersihkan respon teks dari model (misal tag <think>...</think> atau markdown code fences)
+ * Membersihkan respon teks dari model (misal tag <think>...</think>, markdown code fences, atau unclosed thinking)
  * agar JSON.parse dapat mengekstrak objek JSON yang valid.
  */
 export function extractCleanJson(rawText: string): string {
-  // 1. Hapus tag <think>...</think> dari model reasoning
+  if (!rawText || typeof rawText !== 'string') return ''
+
+  // 1. Hapus tag <think>...</think> jika berpasangan lengkap
   let cleaned = rawText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
 
-  // 2. Jika dibungkus code block markdown ```json ... ```, ekstrak isinya
+  // 2. Jika tag <think> belum tertutup (misal kena limit token), buang semua teks sampai tag <think> berakhir atau cari JSON setelahnya
+  if (cleaned.includes('<think>')) {
+    // Cari index kurung kurawal pertama '{' setelah kata kunci JSON atau setelah substring
+    const thinkEndIdx = cleaned.indexOf('</think>')
+    if (thinkEndIdx !== -1) {
+      cleaned = cleaned.substring(thinkEndIdx + 8).trim()
+    } else {
+      // Tidak ada tag penutup </think>. Buang segmen <think> dengan mencari '{' pertama yang valid
+      const braceIdx = cleaned.indexOf('{')
+      if (braceIdx !== -1) {
+        cleaned = cleaned.substring(braceIdx)
+      }
+    }
+  }
+
+  // 3. Jika dibungkus code block markdown ```json ... ```, ekstrak isinya
   const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
   if (codeBlockMatch) {
     cleaned = codeBlockMatch[1].trim()
   }
 
-  // 3. Cari bracket pembuka { pertama dan bracket penutup } terakhir
+  // 4. Pastikan mengambil tepat dari bracket pembuka { pertama hingga bracket penutup } terakhir
   const firstBrace = cleaned.indexOf('{')
   const lastBrace = cleaned.lastIndexOf('}')
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    cleaned = cleaned.substring(firstBrace, lastBrace + 1)
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
+    return cleaned.substring(firstBrace, lastBrace + 1).trim()
   }
 
-  return cleaned
+  // Jika tidak ditemukan bracket { ... }, kembalikan string kosong
+  return ''
 }
 
 /**
- * Panggilan fallback ke Dahl Inference dengan rotasi multi-key otomatis
+ * Panggilan fallback ke Dahl Inference dengan rotasi multi-key otomatis dan timeout per-request
  */
 async function callDahlWithKeyRotation(fullPrompt: string): Promise<string> {
   const config = getDahlConfig()
@@ -73,6 +91,10 @@ async function callDahlWithKeyRotation(fullPrompt: string): Promise<string> {
     const currentKey = keys[dahlKeyIndex % keys.length]
     dahlKeyIndex = (dahlKeyIndex + 1) % keys.length
 
+    // Pasang timeout 28 detik per percobaan agar tidak tertahan oleh timeout Cloudflare 524 (100 detik)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 28000)
+
     try {
       const res = await fetch(`${base}/chat/completions`, {
         method: 'POST',
@@ -86,16 +108,19 @@ async function callDahlWithKeyRotation(fullPrompt: string): Promise<string> {
             {
               role: 'system',
               content:
-                'You are an expert German language teacher. Respond ONLY with a valid, raw JSON object matching the requested schema. Do not include markdown formatting, codeblocks, or explanatory text.',
+                'You are an expert German language teacher. Respond ONLY with a valid, raw JSON object matching the requested schema. Do not generate <think> tokens, do not include reasoning, and do not use markdown codeblocks. Output the raw JSON directly starting with { and ending with }.',
             },
             {
               role: 'user',
               content: fullPrompt,
             },
           ],
-          temperature: 0.3,
+          temperature: 0.2,
         }),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (res.status === 429) {
         console.warn(`[Dahl Key ${dahlKeyIndex}] 429 Rate limited, mencoba key berikutnya...`)
@@ -105,8 +130,8 @@ async function callDahlWithKeyRotation(fullPrompt: string): Promise<string> {
 
       if (!res.ok) {
         const errText = await res.text()
-        console.warn(`[Dahl Key ${dahlKeyIndex}] HTTP Error ${res.status}:`, errText)
-        lastError = new Error(`Dahl HTTP ${res.status}: ${errText}`)
+        console.warn(`[Dahl Key ${dahlKeyIndex}] HTTP Error ${res.status}:`, errText.slice(0, 200))
+        lastError = new Error(`Dahl HTTP ${res.status}`)
         continue
       }
 
@@ -118,8 +143,11 @@ async function callDahlWithKeyRotation(fullPrompt: string): Promise<string> {
 
       return content
     } catch (err: any) {
-      console.warn(`[Dahl attempt ${attempt + 1}/${keys.length} failed]:`, err.message || err)
-      lastError = err
+      clearTimeout(timeoutId)
+      const isAbort = err.name === 'AbortError' || err.message?.includes('aborted')
+      const msg = isAbort ? 'Request timeout (28s exceeded)' : (err.message || String(err))
+      console.warn(`[Dahl attempt ${attempt + 1}/${keys.length} failed]:`, msg)
+      lastError = new Error(msg)
     }
   }
 
