@@ -34,6 +34,7 @@ import {
   Layers,
   FileCheck2,
   GraduationCap,
+  Loader2,
 } from 'lucide-react'
 
 interface DialogTurn {
@@ -104,6 +105,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   const [gateSubmitting, setGateSubmitting] = useState(false)
   const [gateErrorMsg, setGateErrorMsg] = useState('')
   const [cachedAudioCount, setCachedAudioCount] = useState<number>(0)
+  const [audioPreloadReady, setAudioPreloadReady] = useState<boolean>(false)
 
   // Teacher Modals states
   const [showKeyManager, setShowKeyManager] = useState(false)
@@ -130,15 +132,27 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     }
   }, [])
 
-  // Efek Pre-warming Audio Dialog Secara Sekuensial di Latar Belakang (Antrean Santai)
+  // Efek Pre-warming Audio Dialog Secara Sekuensial dengan Retry Loop
   useEffect(() => {
     if (!accessGranted || !session || !session.dialogue || session.dialogue.length === 0) return
+
+    setAudioPreloadReady(false)
+    setCachedAudioCount(0)
 
     const controller = new AbortController()
     warmUpDialogueCache(session.dialogue, {
       speakerA,
       signal: controller.signal,
-      onProgress: (done) => setCachedAudioCount(done),
+      onProgress: (done, total) => {
+        setCachedAudioCount(done)
+        if (done === total) {
+          setAudioPreloadReady(true)
+        }
+      },
+    }).then((allSuccess) => {
+      if (allSuccess) {
+        setAudioPreloadReady(true)
+      }
     })
 
     return () => {
@@ -728,16 +742,29 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <button
                         type="button"
                         onClick={handlePlayAll}
-                        disabled={session.dialogue.length === 0}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer disabled:opacity-50"
+                        disabled={session.dialogue.length === 0 || !audioPreloadReady}
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-all ${
+                          audioPreloadReady
+                            ? 'bg-primary text-on-primary hover:opacity-95 cursor-pointer'
+                            : 'bg-surface-muted text-text-muted border border-border cursor-not-allowed opacity-75'
+                        }`}
                         title={
-                          cachedAudioCount > 0 && cachedAudioCount < session.dialogue.length
-                            ? `Menyiapkan audio latar: ${cachedAudioCount}/${session.dialogue.length}`
+                          !audioPreloadReady
+                            ? `Menyiapkan audio percakapan (${cachedAudioCount}/${session.dialogue.length}). Harap tunggu hingga 100% lengkap.`
                             : 'Putar Seluruh Dialog'
                         }
                       >
-                        <Play size={13} className="fill-white" />
-                        <span>Putar Seluruh Dialog</span>
+                        {!audioPreloadReady ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin text-primary shrink-0" />
+                            <span>Memuat Audio ({cachedAudioCount}/{session.dialogue.length})</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play size={13} className="fill-white" />
+                            <span>Putar Seluruh Dialog</span>
+                          </>
+                        )}
                       </button>
                     )}
                   </div>
@@ -810,13 +837,16 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                         <button
                           type="button"
                           onClick={() => handlePlayTurn(i, turn.germanText, turnGender, turn.personaId)}
+                          disabled={playingIndex === i || !audioPreloadReady}
+                          title={!audioPreloadReady ? 'Menunggu audio siap...' : 'Putar audio'}
                           className={
-                            'inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md transition-colors cursor-pointer ' +
-                            (isA
-                              ? 'bg-surface-muted hover:bg-border text-text'
-                              : 'bg-white/20 hover:bg-white/30 text-white')
+                            'inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md transition-colors ' +
+                            (!audioPreloadReady
+                              ? 'opacity-40 cursor-not-allowed ' + (isA ? 'bg-surface-muted text-text-muted' : 'bg-white/10 text-white/50')
+                              : isA
+                              ? 'bg-surface-muted hover:bg-border text-text cursor-pointer'
+                              : 'bg-white/20 hover:bg-white/30 text-white cursor-pointer')
                           }
-                          disabled={playingIndex === i}
                         >
                           <Volume2
                             size={13}

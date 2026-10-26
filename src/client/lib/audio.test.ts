@@ -211,11 +211,38 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts HTTP Stream', () =>
 
     const onProgress = vi.fn()
     try {
-      await warmUpDialogueCache(sampleDialogue, { onProgress })
+      const res = await warmUpDialogueCache(sampleDialogue, { onProgress, maxRetries: 1 })
+      expect(res).toBe(true)
       expect(fetchedUrls).toHaveLength(2)
       expect(fetchedUrls[0]).toContain('/api/tts?text=Hallo!&persona=weiblich')
       expect(fetchedUrls[1]).toContain('/api/tts?text=Guten%20Tag!&persona=m%C3%A4nnlich-1')
       expect(onProgress).toHaveBeenCalledTimes(2)
+    } finally {
+      globalThis.fetch = origFetch
+    }
+  })
+
+  it('warmUpDialogueCache melakukan retry ketika baris audio gagal di awal', async () => {
+    const origFetch = globalThis.fetch
+    let callCount = 0
+
+    globalThis.fetch = vi.fn().mockImplementation(() => {
+      callCount++
+      if (callCount === 1) {
+        // Percobaan pertama gagal 500
+        return Promise.resolve({ ok: false, status: 500 } as any)
+      }
+      return Promise.resolve({ ok: true, status: 200 } as any)
+    })
+
+    const sampleDialogue = [{ speaker: 'Sprecher A', germanText: 'Hallo!' }]
+    const onProgress = vi.fn()
+
+    try {
+      const res = await warmUpDialogueCache(sampleDialogue, { onProgress, maxRetries: 2 })
+      expect(res).toBe(true)
+      expect(callCount).toBe(2) // 1 gagal + 1 retry sukses
+      expect(onProgress).toHaveBeenCalledWith(1, 1)
     } finally {
       globalThis.fetch = origFetch
     }

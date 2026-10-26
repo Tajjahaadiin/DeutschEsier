@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
-import { Trash2, Plus, Volume2, ChevronLeft, Save, Sparkles, Play, Square } from 'lucide-react'
+import { Trash2, Plus, Volume2, ChevronLeft, Save, Sparkles, Play, Square, Loader2 } from 'lucide-react'
 import { speakGerman, stopSpeech, warmUpDialogueCache } from '../lib/audio'
 import { nanoid } from 'nanoid'
 import { getAuthHeaders } from '../lib/auth'
@@ -59,6 +59,8 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
   const [editedVocab, setEditedVocab] = useState<VocabClue[]>([])
   const [editedTitle, setEditedTitle] = useState('')
   const [editedSceneDesc, setEditedSceneDesc] = useState('')
+  const [audioPreloadReady, setAudioPreloadReady] = useState<boolean>(true)
+  const [cachedAudioCount, setCachedAudioCount] = useState<number>(0)
   const [speakerPersonas, setSpeakerPersonas] = useState<Record<string, TtsPersonaId>>({
     'Sprecher A': 'weiblich',
     'Sprecher B': 'männlich-1',
@@ -188,9 +190,17 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       setEditedTitle(generated.title)
       setEditedSceneDesc(generated.sceneDescription)
 
-      // Pre-warm antrean audio sekuensial di latar belakang saat baru digenerate
+      // Pre-warm antrean audio sekuensial dengan loading barrier
+      setAudioPreloadReady(false)
+      setCachedAudioCount(0)
       warmUpDialogueCache(turnsWithPersonas, {
         speakerA: 'Sprecher A',
+        onProgress: (done, total) => {
+          setCachedAudioCount(done)
+          if (done === total) setAudioPreloadReady(true)
+        },
+      }).then((allSuccess) => {
+        if (allSuccess) setAudioPreloadReady(true)
       })
     } catch (err: any) {
       setError(err.message || 'Gagal menghubungi AI. Pastikan GEMINI_API_KEY sudah dikonfigurasi.')
@@ -563,11 +573,29 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                   <button
                     type="button"
                     onClick={handlePlayAll}
-                    disabled={editedDialogue.length === 0}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer disabled:opacity-50"
+                    disabled={editedDialogue.length === 0 || !audioPreloadReady}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-all ${
+                      audioPreloadReady
+                        ? 'bg-primary text-on-primary hover:opacity-95 cursor-pointer'
+                        : 'bg-surface-muted text-text-muted border border-border cursor-not-allowed opacity-75'
+                    }`}
+                    title={
+                      !audioPreloadReady
+                        ? `Menyiapkan audio percakapan (${cachedAudioCount}/${editedDialogue.length}). Harap tunggu hingga 100% lengkap.`
+                        : 'Putar Semua Dialog'
+                    }
                   >
-                    <Play size={13} className="fill-white" />
-                    <span>Putar Semua Dialog</span>
+                    {!audioPreloadReady ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin text-primary shrink-0" />
+                        <span>Memuat Audio ({cachedAudioCount}/{editedDialogue.length})</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play size={13} className="fill-white" />
+                        <span>Putar Semua Dialog</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>
@@ -672,9 +700,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
                           onEnd: () => setPlayingIndex(null),
                         })
                       }}
-                      disabled={!turn.germanText}
-                      title="Putar audio"
-                      className={`p-1.5 text-text-muted hover:text-primary disabled:opacity-30 transition-colors cursor-pointer ${
+                      disabled={!turn.germanText || !audioPreloadReady}
+                      title={!audioPreloadReady ? 'Menunggu audio selesai dimuat...' : 'Putar audio'}
+                      className={`p-1.5 text-text-muted hover:text-primary disabled:opacity-30 transition-colors ${
+                        !audioPreloadReady ? 'cursor-not-allowed' : 'cursor-pointer'
+                      } ${
                         playingIndex === i ? 'text-primary' : ''
                       }`}
                     >

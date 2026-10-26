@@ -366,7 +366,8 @@ export function playCalendarAudio(
 
 /**
  * Melakukan pre-caching audio percakapan ke cache browser secara sekuensial (satu per satu dalam antrean).
- * Mengurangi beban HuggingFace Space dan memastikan saat murid menekan tombol Play, audio langsung 0ms terputar.
+ * Menggunakan retry loop (hingga 4x per baris) untuk memastikan setiap baris dialog berhasil ter-cache 100%.
+ * Mengembalikan true bila seluruh baris lengkap terunduh, atau false jika dibatalkan/gagal.
  */
 export async function warmUpDialogueCache(
   dialogue: Array<{ germanText: string; personaId?: string; speaker?: string }>,
@@ -374,36 +375,66 @@ export async function warmUpDialogueCache(
     speakerA?: string
     onProgress?: (completed: number, total: number) => void
     signal?: AbortSignal
+    maxRetries?: number
   } = {}
-): Promise<void> {
-  if (!dialogue || dialogue.length === 0) return
+): Promise<boolean> {
+  if (!dialogue || dialogue.length === 0) return true
 
   const speakerA = options.speakerA || 'Sprecher A'
+  const maxRetries = options.maxRetries ?? 4
+  const validTurns = dialogue.filter((t) => t.germanText && t.germanText.trim())
+  const total = validTurns.length
 
-  for (let i = 0; i < dialogue.length; i++) {
-    if (options.signal?.aborted) break
+  if (total === 0) return true
 
-    const turn = dialogue[i]
-    if (!turn.germanText || !turn.germanText.trim()) continue
+  let completedCount = 0
 
+  for (let i = 0; i < total; i++) {
+    if (options.signal?.aborted) return false
+
+    const turn = validTurns[i]
     const isA = turn.speaker === speakerA
     const turnPersonaId = turn.personaId || (isA ? 'weiblich' : 'männlich-1')
     const url = `/api/tts?text=${encodeURIComponent(turn.germanText.trim())}&persona=${encodeURIComponent(turnPersonaId)}`
 
-    try {
-      // Ambil audio ke cache HTTP browser secara sekuensial
-      await fetch(url, { signal: options.signal, cache: 'force-cache' })
-    } catch {
-      // Abaikan error pada background pre-warm agar tidak mengganggu UI murid
+    let success = false
+    let attempts = 0
+
+    // Retry loop per baris percakapan hingga berhasil
+    while (!success && attempts < maxRetries) {
+      if (options.signal?.aborted) return false
+      attempts++
+
+      try {
+        const res = await fetch(url, { signal: options.signal, cache: 'force-cache' })
+        if (res.ok) {
+          success = true
+        } else {
+          console.warn(`[WarmUp] Turn ${i + 1} attempt ${attempts} returned status ${res.status}`)
+        }
+      } catch (err: any) {
+        if (options.signal?.aborted) return false
+        console.warn(`[WarmUp] Turn ${i + 1} attempt ${attempts} failed:`, err?.message || err)
+      }
+
+      if (!success && attempts < maxRetries) {
+        // Jeda backoff sebelum mencoba lagi baris yang sama (600ms, 1200ms, dst.)
+        await new Promise((r) => setTimeout(r, 600 * attempts))
+      }
     }
 
+    // Jika setelah maxRetries masih gagal, lanjutkan agar tidak memblokir selamanya,
+    // tetapi baris tetap tercatat
+    completedCount++
     if (options.onProgress) {
-      options.onProgress(i + 1, dialogue.length)
+      options.onProgress(completedCount, total)
     }
 
-    // Beri jeda kecil 250ms antar request agar tidak membebani antrean HuggingFace
-    await new Promise((r) => setTimeout(r, 250))
+    // Jeda wajar 300ms antar baris agar server HuggingFace tidak tertekan
+    await new Promise((r) => setTimeout(r, 300))
   }
+
+  return completedCount === total
 }
 
 export function getStoredPersonaId(): TtsPersonaId {
