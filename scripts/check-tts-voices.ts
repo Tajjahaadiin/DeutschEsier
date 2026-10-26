@@ -20,7 +20,19 @@ import { promises as fs } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { EdgeTTS } from 'node-edge-tts'
-import { TTS_PERSONAS } from '../src/shared/ttsPersonas'
+import { TTS_PERSONAS, SCENARIO_PERSONAS, GRUNDLAGEN_PERSONA_ID, getTtsPersona } from '../src/shared/ttsPersonas'
+
+/**
+ * Daftar yang di-smoke bukan hanya TTS_PERSONAS: `GRUNDLAGEN_PERSONA_ID`
+ * (Katja) tetap hidup sebagai resolver untuk fallback dinamis Die Grundlagen
+ * walau tidak lagi diekspos sebagai persona pilihan. Kalau Katja rusak,
+ * halaman Grundlagen ikut rusak saat aset statis gagal dimuat.
+ */
+const SMOKE_PERSONAS = [
+  ...TTS_PERSONAS,
+  ...SCENARIO_PERSONAS,
+  getTtsPersona(GRUNDLAGEN_PERSONA_ID)!,
+].filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i)
 
 const SAMPLE = 'Guten Tag! Ich heiße Bernd und wohne in Berlin.'
 const TIMEOUT_MS = 15000
@@ -37,7 +49,7 @@ async function main() {
   const failures: string[] = []
   const usedVoiceIds = new Set<string>()
 
-  for (const persona of TTS_PERSONAS) {
+  for (const persona of SMOKE_PERSONAS) {
     const out = join(tmpdir(), `tts-smoke-${persona.id}-${Date.now()}.mp3`)
     const started = Date.now()
 
@@ -71,9 +83,9 @@ async function main() {
     }
   }
 
-  if (usedVoiceIds.size !== TTS_PERSONAS.length) {
+  if (usedVoiceIds.size !== SMOKE_PERSONAS.length) {
     failures.push(
-      `hanya ${usedVoiceIds.size}/${TTS_PERSONAS.length} persona menghasilkan audio berbeda`
+      `hanya ${usedVoiceIds.size}/${SMOKE_PERSONAS.length} persona menghasilkan audio berbeda`
     )
   }
 
@@ -84,7 +96,7 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`\nSemua ${TTS_PERSONAS.length} persona menghasilkan audio yang valid.`)
+  console.log(`\nSemua ${SMOKE_PERSONAS.length} persona menghasilkan audio yang valid.`)
 }
 
 main().catch((error) => {
