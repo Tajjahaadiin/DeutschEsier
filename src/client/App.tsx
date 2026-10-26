@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage'
 import GrundlagenPage from './pages/GrundlagenPage'
 import GeneratorPage from './pages/GeneratorPage'
 import ViewPage from './pages/ViewPage'
+import TtsLabPage from './pages/TtsLabPage'
 import LoginPage from './pages/LoginPage'
 import DashboardLayout from './components/layout/DashboardLayout'
 import { initGermanVoice } from './lib/audio'
@@ -50,6 +51,11 @@ export default function App() {
   if (currentPath.startsWith('/view/')) {
     const id = currentPath.split('/view/')[1].split('?')[0]
     return <ViewPage id={id} navigate={navigate} />
+  }
+
+  // 2b. PROTOTIPE: /tts-lab — perbandingan engine TTS (rute publik, sementara)
+  if (currentPath === '/tts-lab') {
+    return <TtsLabPage />
   }
 
   // 3. Rute Terbuka Guru & Murid: /grundlagen (Portal Modul Fondasi Dasar)

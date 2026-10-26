@@ -5,6 +5,7 @@ import wordsRouter from './routes/words'
 import sessionsRouter from './routes/sessions'
 import generateRouter from './routes/generate'
 import ttsRouter from './routes/tts'
+import ttsPrototypeRouter from './routes/ttsPrototype'
 import authRouter from './routes/auth'
 import accessKeysRouter from './routes/access-keys'
 import submissionsRouter from './routes/submissions'
@@ -22,5 +23,6 @@ app.route('/api/sessions', accessKeysRouter)
 app.route('/api/sessions', submissionsRouter)
 app.route('/api/generate', generateRouter)
 app.route('/api/tts', ttsRouter)
+app.route('/api/tts-prototype', ttsPrototypeRouter)
 
 export default app
