@@ -38498,6 +38498,23 @@ async function synthesizeKokoroMartin(text2, speed = 1) {
   }
 }
 
+// src/server/lib/wavDetune.ts
+function detuneWavBuffer(wavBuffer, semitones) {
+  if (semitones === 0 || wavBuffer.length < 44) return wavBuffer;
+  if (wavBuffer.subarray(0, 4).toString("ascii") !== "RIFF" || wavBuffer.subarray(8, 12).toString("ascii") !== "WAVE") {
+    return wavBuffer;
+  }
+  const modified = Buffer.from(wavBuffer);
+  const originalSampleRate = modified.readUInt32LE(24);
+  const originalByteRate = modified.readUInt32LE(28);
+  const factor = Math.pow(2, semitones / 12);
+  const newSampleRate = Math.round(originalSampleRate * factor);
+  const newByteRate = Math.round(originalByteRate * factor);
+  modified.writeUInt32LE(newSampleRate, 24);
+  modified.writeUInt32LE(newByteRate, 28);
+  return modified;
+}
+
 // src/shared/ttsPersonas.ts
 var TTS_PERSONAS = [
   {
@@ -38622,13 +38639,17 @@ ttsRouter.get("/", async (c) => {
   const isMale = personaObj ? personaObj.gender === "male" : genderQuery === "male" || persona && (persona.includes("male") || persona.includes("m\xE4nnlich"));
   if (isMale) {
     try {
-      const kokoroBuffer = await synthesizeKokoroMartin(text2.trim());
+      const isMale2 = persona === "m\xE4nnlich-2" || persona === "male-2";
+      const speed = isMale2 ? 1.05 : 0.98;
+      const semitoneShift = isMale2 ? 1.8 : -2;
+      const kokoroBuffer = await synthesizeKokoroMartin(text2.trim(), speed);
       if (kokoroBuffer) {
+        const tunedBuffer = detuneWavBuffer(kokoroBuffer, semitoneShift);
         c.header("Content-Type", "audio/wav");
         c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
         c.header("CDN-Cache-Control", "public, s-maxage=31536000");
         c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
-        return c.body(kokoroBuffer);
+        return c.body(tunedBuffer);
       }
     } catch (err) {
       console.warn("[Kokoro HF Fallback to Google]:", err?.message || err);

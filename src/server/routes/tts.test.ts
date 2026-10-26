@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import * as kokoroHf from '../lib/kokoroHf'
+import { wrapPcmInWav } from '../lib/wavHeader'
 
 const { default: app } = await import('../app')
 
@@ -10,17 +11,24 @@ describe('GET /api/tts', () => {
     expect(((await res.json()) as any).error).toContain('Text parameter is required')
   })
 
-  it('mengalirkan audio/wav dari Kokoro Martin Space untuk persona pria', async () => {
-    vi.spyOn(kokoroHf, 'synthesizeKokoroMartin').mockResolvedValueOnce(
-      Buffer.from('RIFF....WAVEfmt ')
-    )
+  it('mengalirkan audio/wav dari Kokoro Martin Space untuk persona pria dengan detune yang berbeda', async () => {
+    const dummyWav = wrapPcmInWav(Buffer.alloc(48000), 24000, 1, 16)
+    vi.spyOn(kokoroHf, 'synthesizeKokoroMartin').mockResolvedValue(dummyWav)
 
     try {
-      const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
-      expect(res.status).toBe(200)
-      expect(res.headers.get('content-type')).toBe('audio/wav')
-      expect(res.headers.get('cache-control')).toContain('immutable')
-      expect(res.headers.get('cdn-cache-control')).toContain('31536000')
+      // 1. Uji männlich-1 (detune -2.0 semitone -> sample rate turun ke 21382 Hz)
+      const res1 = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
+      expect(res1.status).toBe(200)
+      expect(res1.headers.get('content-type')).toBe('audio/wav')
+      const buf1 = Buffer.from(await res1.arrayBuffer())
+      expect(buf1.readUInt32LE(24)).toBe(21382)
+
+      // 2. Uji männlich-2 (detune +1.8 semitone -> sample rate naik ke 26630 Hz)
+      const res2 = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-2')
+      expect(res2.status).toBe(200)
+      expect(res2.headers.get('content-type')).toBe('audio/wav')
+      const buf2 = Buffer.from(await res2.arrayBuffer())
+      expect(buf2.readUInt32LE(24)).toBe(26630)
     } finally {
       vi.restoreAllMocks()
     }

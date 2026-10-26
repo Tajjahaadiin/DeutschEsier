@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { synthesizeKokoroMartin } from '../lib/kokoroHf'
+import { detuneWavBuffer } from '../lib/wavDetune'
 import { getTtsPersona } from '../../shared/ttsPersonas'
 
 const ttsRouter = new Hono()
@@ -31,15 +32,25 @@ ttsRouter.get('/', async (c) => {
     : (genderQuery === 'male' || (persona && (persona.includes('male') || persona.includes('männlich'))))
 
   // 1. Prioritas Suara Pria: Kokoro German Martin via HuggingFace Space
+  // Pembedaan Akustik:
+  // - männlich-1: Bariton matang/dewasa (detune -2.0 semitone, speed 0.98x)
+  // - männlich-2: Tenor muda/energik (detune +1.8 semitone, speed 1.05x)
   if (isMale) {
     try {
-      const kokoroBuffer = await synthesizeKokoroMartin(text.trim())
+      const isMale2 = persona === 'männlich-2' || persona === 'male-2'
+      const speed = isMale2 ? 1.05 : 0.98
+      const semitoneShift = isMale2 ? 1.8 : -2.0
+
+      const kokoroBuffer = await synthesizeKokoroMartin(text.trim(), speed)
       if (kokoroBuffer) {
+        // Terapkan detune pitch instan pada header WAV
+        const tunedBuffer = detuneWavBuffer(kokoroBuffer, semitoneShift)
+
         c.header('Content-Type', 'audio/wav')
         c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
         c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
         c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
-        return c.body(kokoroBuffer as unknown as ArrayBuffer)
+        return c.body(tunedBuffer as unknown as ArrayBuffer)
       }
     } catch (err: any) {
       console.warn('[Kokoro HF Fallback to Google]:', err?.message || err)
