@@ -38682,9 +38682,16 @@ ttsRouter.get("/", async (c) => {
     if (fallbackResp.ok) {
       const audioBuffer = Buffer.from(await fallbackResp.arrayBuffer());
       c.header("Content-Type", "audio/mpeg");
-      c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-      c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-      c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+      if (isMale) {
+        c.header("Cache-Control", "no-cache, no-store, must-revalidate");
+        c.header("CDN-Cache-Control", "no-store");
+        c.header("Vercel-CDN-Cache-Control", "no-store");
+        c.header("x-tts-fallback", "google-male");
+      } else {
+        c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
+        c.header("CDN-Cache-Control", "public, s-maxage=31536000");
+        c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+      }
       return c.body(audioBuffer);
     }
     return c.json({ error: "TTS upstream response not ok" }, 502);

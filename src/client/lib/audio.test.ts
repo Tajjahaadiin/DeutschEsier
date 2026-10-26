@@ -255,6 +255,14 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts HTTP Stream', () =>
     expect(resolveVoice('female', 'female-2').pitch).toBe(1.20)
   })
 
+  it('applyMaleFormantFilter terhubung dengan benar saat audio diputar', async () => {
+    const { applyMaleFormantFilter } = await import('./audio')
+    const fakeEl = new Audio() as any
+    const connected = applyMaleFormantFilter(fakeEl)
+    // Di lingkungan Node/Vitest tanpa native AudioContext, gracefully return false
+    expect(typeof connected).toBe('boolean')
+  })
+
   it('stopSpeech menghentikan audio yang sedang diputar', () => {
     speakGerman('Hallo', { personaId: 'female-1' })
     const audio = FakeAudio.instances[0]

@@ -168,6 +168,59 @@ function fallbackSpeechSynthesis(text: string, options: SpeakOptions) {
   window.speechSynthesis.speak(utterance)
 }
 
+let sharedAudioContext: AudioContext | null = null
+const connectedAudioElements = new WeakSet<HTMLAudioElement>()
+
+function getSharedAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null
+  const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+  if (!AudioCtx) return null
+  if (!sharedAudioContext) {
+    sharedAudioContext = new AudioCtx()
+  }
+  if (sharedAudioContext.state === 'suspended') {
+    sharedAudioContext.resume().catch(() => {})
+  }
+  return sharedAudioContext
+}
+
+/**
+ * Menerapkan Digital Signal Processing (DSP) Formant Reshaping:
+ * Mengubah karakter vokal wanita (Google TTS fallback) menjadi berbobot pria:
+ * - Low-shelf (+6 dB di 180 Hz): Memperkuat resonansi rongga dada pria (chest resonance).
+ * - High-shelf (-8 dB di 3200 Hz): Meredam frekuensi melengking/desis pita suara wanita.
+ */
+export function applyMaleFormantFilter(audio: HTMLAudioElement): boolean {
+  try {
+    const ctx = getSharedAudioContext()
+    if (!ctx) return false
+
+    // MediaElementAudioSourceNode hanya boleh dibuat SEKALI per elemen HTMLAudioElement
+    if (connectedAudioElements.has(audio)) return true
+
+    const source = ctx.createMediaElementSource(audio)
+    const lowShelf = ctx.createBiquadFilter()
+    lowShelf.type = 'lowshelf'
+    lowShelf.frequency.value = 180
+    lowShelf.gain.value = 6 // +6 dB chest resonance boost
+
+    const highShelf = ctx.createBiquadFilter()
+    highShelf.type = 'highshelf'
+    highShelf.frequency.value = 3200
+    highShelf.gain.value = -8 // -8 dB vocal sibilance cut
+
+    source.connect(lowShelf)
+    lowShelf.connect(highShelf)
+    highShelf.connect(ctx.destination)
+
+    connectedAudioElements.add(audio)
+    return true
+  } catch (err) {
+    console.warn('[Formant DSP Filter Warning]:', err)
+    return false
+  }
+}
+
 export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() => void)) {
   stopSpeech()
   const options: SpeakOptions = typeof optionsOrOnEnd === 'function' ? { onEnd: optionsOrOnEnd } : (optionsOrOnEnd || {})
@@ -182,11 +235,17 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
   // Backend menyintesis Pria via Kokoro Martin HuggingFace Space & Wanita via Google Translate Stream
   const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&persona=${encodeURIComponent(request.personaId)}`
   const audio = new Audio(audioUrl)
+  audio.crossOrigin = 'anonymous'
   
   // Modulasi playbackRate jika diminta atau ikuti profil persona
   const targetRate = options.rate !== undefined ? options.rate : (PERSONA_ACOUSTICS[request.personaId]?.rate || 1.0)
   audio.playbackRate = targetRate
   audio.defaultPlaybackRate = targetRate
+
+  // Jika persona adalah pria, siapkan formant filter saat audio mulai diputar
+  if (request.gender === 'male') {
+    applyMaleFormantFilter(audio)
+  }
 
   currentHtmlAudio = audio
   let fallbackExecuted = false

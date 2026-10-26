@@ -57,7 +57,7 @@ describe('GET /api/tts', () => {
     expect(((await res.json()) as any).error).toContain('exceeds maximum allowed length')
   })
 
-  it('mengalirkan audio/mpeg fallback bila Kokoro Martin timeout/gagal', async () => {
+  it('mengalirkan audio/mpeg fallback dengan header no-store bila Kokoro Martin timeout/gagal untuk pria', async () => {
     vi.spyOn(kokoroHf, 'synthesizeKokoroMartin').mockResolvedValueOnce(null)
 
     const origFetch = globalThis.fetch
@@ -70,6 +70,9 @@ describe('GET /api/tts', () => {
       const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
       expect(res.status).toBe(200)
       expect(res.headers.get('content-type')).toBe('audio/mpeg')
+      // Memastikan cache-control tidak di-cache permanen di CDN saat fallback
+      expect(res.headers.get('cache-control')).toContain('no-store')
+      expect(res.headers.get('x-tts-fallback')).toBe('google-male')
     } finally {
       vi.restoreAllMocks()
       globalThis.fetch = origFetch
