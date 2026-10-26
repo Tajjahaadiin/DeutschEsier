@@ -26559,7 +26559,7 @@ var VOICE_LABEL_BY_ID = {
   "female-3": "de-DE-SeraphinaMultilingualNeural - de-DE (Female)",
   "male-3": "de-DE-FlorianMultilingualNeural - de-DE (Male)"
 };
-var EdgeTtsSpace = class {
+var EdgeTtsSpace = class _EdgeTtsSpace {
   base;
   constructor(spaceUrl = process.env.HF_EDGE_TTS_SPACE || DEFAULT_SPACE) {
     this.base = spaceUrl.replace(/\/+$/, "");
@@ -26587,47 +26587,33 @@ var EdgeTtsSpace = class {
     return buf;
   }
   /**
-   * MP3 senyap. Space tidak menyediakan ini, jadi dibuat sekali lalu di-cache.
-   * ponytail: satu-satunya titik yang butuh ffmpeg saat build; kalau ffmpeg
-   * tidak ada, jeda jatuh ke 0 ms (audio tetap valid, hanya tanpa jeda).
+   * MP3 senyap untuk jeda antar baris.
+   *
+   * Tidak memakai ffmpeg: biner itu tidak tersedia di runtime Vercel secara
+   * default, sehingga seluruh jeda hilang di produksi (terverifikasi — dengan
+   * PATH tanpa ffmpeg, fungsi lama selalu mengembalikan null).
+   *
+   * Frame dibangun langsung dari bitstream MP3. Space mengeluarkan
+   * MPEG-2 Layer III, 48 kbps, 24 kHz, mono, tanpa CRC:
+   *   header ff f3 64 c4, frame 144 byte, 576 sampel = 24 ms per frame.
+   * Sisa 140 byte (side info + main data) dinolkan → senyap sejati
+   * (diverifikasi astats: peak/RMS = -inf dB) dan tetap ter-decode bersih
+   * saat dikonkatenasi dengan frame suara.
    */
   silenceCache = /* @__PURE__ */ new Map();
-  async silence(ms) {
-    const key = Math.round(ms / 50) * 50;
-    const cached4 = this.silenceCache.get(key);
+  static SILENT_FRAME = Buffer.concat([
+    Buffer.from([255, 243, 100, 196]),
+    Buffer.alloc(140)
+  ]);
+  static FRAME_MS = 24;
+  /** Jeda senyap sepanjang ~`ms`, dibulatkan ke kelipatan frame (24 ms). */
+  silence(ms) {
+    const frames = Math.max(1, Math.round(ms / _EdgeTtsSpace.FRAME_MS));
+    const cached4 = this.silenceCache.get(frames);
     if (cached4) return cached4;
-    try {
-      const { execFile } = await import("node:child_process");
-      const { promisify } = await import("node:util");
-      const run3 = promisify(execFile);
-      const { stdout } = await run3(
-        "ffmpeg",
-        [
-          "-f",
-          "lavfi",
-          "-i",
-          "anullsrc=r=24000:cl=mono",
-          "-t",
-          String(key / 1e3),
-          "-c:a",
-          "libmp3lame",
-          "-b:a",
-          "48k",
-          "-f",
-          "mp3",
-          "-"
-        ],
-        { encoding: "buffer", maxBuffer: 4 * 1024 * 1024 }
-      );
-      const buf = Buffer.isBuffer(stdout) ? stdout : Buffer.from(stdout);
-      if (buf.length > 512) {
-        this.silenceCache.set(key, buf);
-        return buf;
-      }
-      return null;
-    } catch {
-      return null;
-    }
+    const buf = Buffer.concat(Array.from({ length: frames }, () => _EdgeTtsSpace.SILENT_FRAME));
+    this.silenceCache.set(frames, buf);
+    return buf;
   }
 };
 var edgeTtsSpace = new EdgeTtsSpace();
@@ -26669,15 +26655,15 @@ async function synthesizeScenario(turns, space) {
   });
   const parts2 = results.map((r) => r.buf).filter((b) => b !== null);
   if (parts2.length === 0) throw new Error("tidak ada baris yang berhasil disintesis");
-  const silence = parts2.length > 1 ? await space.silence(TURN_GAP_MS) : null;
+  const silence = parts2.length > 1 ? space.silence(TURN_GAP_MS) : null;
   const gapMs = silence ? mp3DurationMs(silence.length) : 0;
   const merged = [];
-  const timings = [];
+  const timings = results.map(() => -1);
   let cursorMs = 0;
   let emitted = 0;
-  results.forEach((r) => {
+  results.forEach((r, i) => {
     if (!r.buf) return;
-    timings.push(cursorMs);
+    timings[i] = cursorMs;
     merged.push(r.buf);
     cursorMs += mp3DurationMs(r.buf.length);
     emitted++;
@@ -56075,9 +56061,9 @@ sessionsRouter.get("/:id/audio", async (c) => {
     c.header("X-Scenario-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
     c.header("X-Scenario-Timings", result2.timings.join(","));
     c.header("X-Scenario-Elapsed-Ms", String(result2.elapsedMs));
-    c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
-    c.header("CDN-Cache-Control", "public, s-maxage=31536000");
-    c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+    c.header("Cache-Control", "public, max-age=0, must-revalidate");
+    c.header("CDN-Cache-Control", "public, s-maxage=0, must-revalidate");
+    c.header("Vercel-CDN-Cache-Control", "public, s-maxage=0, must-revalidate");
     return c.body(result2.audio);
   } catch (error) {
     console.warn("[sessions/audio] gagal:", error?.message || error);
@@ -56316,7 +56302,7 @@ scenarioRouter.post("/", async (c) => {
     c.header("X-TTS-Bytes", String(result2.bytes));
     c.header("X-TTS-Elapsed-Ms", String(result2.elapsedMs));
     c.header("X-TTS-Gap-Ms", String(TURN_GAP_MS));
-    c.header("Cache-Control", "public, max-age=31536000, immutable");
+    c.header("Cache-Control", "no-store");
     return c.body(result2.audio);
   } catch (err) {
     console.warn("[tts-scenario] gagal:", err?.message || err);

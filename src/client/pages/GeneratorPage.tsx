@@ -304,18 +304,28 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
    * per versi dialog; mengubah teks akan membuang blob lama agar tidak
    * memutar audio basi.
    */
-  const buildScenarioAudio = async (turns: DialogTurn[]) => {
+  const buildScenarioAudio = async (turns: DialogTurn[]): Promise<string> => {
     setAudioSynthesizing(true)
     setAudioPreloadReady(false)
     try {
-      const payload = turns
-        .filter((t) => t.germanText.trim())
-        .map((t) => ({
+      // Baris kosong dilewati, tapi indeks aslinya dicatat: server mengembalikan
+      // timings sejajar `payload`, sedangkan UI memakai indeks `editedDialogue`.
+      // Tanpa peta ini, satu baris kosong menggeser seluruh sorotan.
+      const payload: Array<{ speaker: string; germanText: string; personaId: string }> = []
+      const payloadToTurn: number[] = []
+      turns.forEach((t, i) => {
+        if (!t.germanText.trim()) return
+        payloadToTurn.push(i)
+        payload.push({
           speaker: t.speaker,
           germanText: t.germanText,
-          personaId: t.personaId || speakerPersonas[t.speaker] || 'weiblich',
-        }))
-      if (payload.length === 0) return
+          personaId:
+            t.personaId ||
+            (t.gender === 'male' ? 'männlich-1' : t.gender === 'female' ? 'weiblich' : '') ||
+            'weiblich',
+        })
+      })
+      if (payload.length === 0) return ''
 
       const res = await fetch('/api/tts-scenario', {
         method: 'POST',
@@ -325,19 +335,29 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
       const raw = res.headers.get('x-tts-timings')
-      scenarioTimingsRef.current = raw
+      const payloadTimings = raw
         ? raw.split(',').map((n) => Number(n)).filter((n) => Number.isFinite(n))
         : []
+      // Sebar kembali ke ruang indeks dialog; baris kosong/gagal = -1.
+      const aligned: number[] = turns.map(() => -1)
+      payloadTimings.forEach((ms, i) => {
+        const turnIdx = payloadToTurn[i]
+        if (turnIdx !== undefined) aligned[turnIdx] = ms
+      })
+      scenarioTimingsRef.current = aligned
 
       const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
       setScenarioAudioUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev)
-        return URL.createObjectURL(blob)
+        return objectUrl
       })
       setAudioPreloadReady(true)
+      return objectUrl
     } catch (err: any) {
       console.warn('[generator] sintesis skenario gagal:', err?.message || err)
       setAudioPreloadReady(false)
+      return ''
     } finally {
       setAudioSynthesizing(false)
     }
@@ -349,10 +369,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       handleStopAll()
       return
     }
-    if (!scenarioAudioUrl) {
-      // Belum siap: picu sintesis, pemutaran dilakukan setelah pengguna klik lagi.
-      void buildScenarioAudio(editedDialogue)
-      return
+    let src = scenarioAudioUrl
+    if (!src) {
+      // Belum ada audio: sintesis dulu, lalu putar tanpa menuntut klik kedua.
+      src = await buildScenarioAudio(editedDialogue)
+      if (!src) return
     }
     stopSpeech()
     cancelledRef.current = false
@@ -360,6 +381,9 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
 
     const el = scenarioAudioRef.current
     if (!el) return
+    // State React belum tentu sudah ter-apply saat sintesis baru selesai,
+    // jadi src dipasang langsung agar play() tidak memutar elemen kosong.
+    if (el.src !== src) el.src = src
 
     el.onended = () => {
       setIsPlayingAll(false)
@@ -375,12 +399,15 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       const timings = scenarioTimingsRef.current
       if (cancelledRef.current || timings.length === 0) return
       const ms = el.currentTime * 1000
-      let idx = 0
+      // timings sejajar dialog; -1 = baris yang gagal disintesis.
+      let idx = -1
       for (let i = 0; i < timings.length; i++) {
-        if (ms >= timings[i]) idx = i
+        const start = timings[i]
+        if (start < 0) continue
+        if (ms >= start) idx = i
         else break
       }
-      setPlayingIndex(idx)
+      if (idx >= 0) setPlayingIndex(idx)
     }
 
     el.currentTime = 0

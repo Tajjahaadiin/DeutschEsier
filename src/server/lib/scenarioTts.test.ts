@@ -15,7 +15,7 @@ function fakeSpace(opts: { failOn?: number[] } = {}) {
       if (opts.failOn?.includes(idx)) throw new Error('upstream down')
       return Buffer.alloc(1024, idx + 1)
     },
-    async silence() {
+    silence() {
       return Buffer.alloc(64, 0)
     },
   } as unknown as EdgeTtsSpace
@@ -94,11 +94,16 @@ describe('synthesizeScenario', () => {
     expect(result.timings[1]).toBe(Math.round((1024 * 8) / 48) + Math.round((64 * 8) / 48))
   })
 
-  it('baris gagal tidak menyumbang timings', async () => {
+  it('REGRESI: baris gagal ditandai -1 tapi timings tetap sejajar dialog', async () => {
     const { space } = fakeSpace({ failOn: [1] })
     const result = await synthesizeScenario(turns, space)
-    expect(result.timings).toHaveLength(2)
+
+    // Panjang harus sama dengan jumlah baris dialog, bukan jumlah baris sukses.
+    // Kalau dipadatkan, indeks timings bergeser dan klien menyorot baris salah.
+    expect(result.timings).toHaveLength(3)
     expect(result.timings[0]).toBe(0)
+    expect(result.timings[1]).toBe(-1)
+    expect(result.timings[2]).toBeGreaterThan(0)
   })
 
   it('memakai persona default selang-seling bila personaId tidak diberikan', async () => {

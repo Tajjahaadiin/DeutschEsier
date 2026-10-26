@@ -68,36 +68,37 @@ export class EdgeTtsSpace {
   }
 
   /**
-   * MP3 senyap. Space tidak menyediakan ini, jadi dibuat sekali lalu di-cache.
-   * ponytail: satu-satunya titik yang butuh ffmpeg saat build; kalau ffmpeg
-   * tidak ada, jeda jatuh ke 0 ms (audio tetap valid, hanya tanpa jeda).
+   * MP3 senyap untuk jeda antar baris.
+   *
+   * Tidak memakai ffmpeg: biner itu tidak tersedia di runtime Vercel secara
+   * default, sehingga seluruh jeda hilang di produksi (terverifikasi — dengan
+   * PATH tanpa ffmpeg, fungsi lama selalu mengembalikan null).
+   *
+   * Frame dibangun langsung dari bitstream MP3. Space mengeluarkan
+   * MPEG-2 Layer III, 48 kbps, 24 kHz, mono, tanpa CRC:
+   *   header ff f3 64 c4, frame 144 byte, 576 sampel = 24 ms per frame.
+   * Sisa 140 byte (side info + main data) dinolkan → senyap sejati
+   * (diverifikasi astats: peak/RMS = -inf dB) dan tetap ter-decode bersih
+   * saat dikonkatenasi dengan frame suara.
    */
   private silenceCache = new Map<number, Buffer>()
 
-  async silence(ms: number): Promise<Buffer | null> {
-    const key = Math.round(ms / 50) * 50
-    const cached = this.silenceCache.get(key)
+  private static readonly SILENT_FRAME = Buffer.concat([
+    Buffer.from([0xff, 0xf3, 0x64, 0xc4]),
+    Buffer.alloc(140),
+  ])
+
+  private static readonly FRAME_MS = 24
+
+  /** Jeda senyap sepanjang ~`ms`, dibulatkan ke kelipatan frame (24 ms). */
+  silence(ms: number): Buffer {
+    const frames = Math.max(1, Math.round(ms / EdgeTtsSpace.FRAME_MS))
+    const cached = this.silenceCache.get(frames)
     if (cached) return cached
 
-    try {
-      const { execFile } = await import('node:child_process')
-      const { promisify } = await import('node:util')
-      const run = promisify(execFile)
-      const { stdout } = await run(
-        'ffmpeg',
-        ['-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', String(key / 1000),
-         '-c:a', 'libmp3lame', '-b:a', '48k', '-f', 'mp3', '-'],
-        { encoding: 'buffer', maxBuffer: 4 * 1024 * 1024 },
-      )
-      const buf = Buffer.isBuffer(stdout) ? stdout : Buffer.from(stdout as any)
-      if (buf.length > 512) {
-        this.silenceCache.set(key, buf)
-        return buf
-      }
-      return null
-    } catch {
-      return null
-    }
+    const buf = Buffer.concat(Array.from({ length: frames }, () => EdgeTtsSpace.SILENT_FRAME))
+    this.silenceCache.set(frames, buf)
+    return buf
   }
 }
 

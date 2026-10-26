@@ -29,9 +29,13 @@ export interface ScenarioAudio {
   /** Per-baris hasil, untuk diagnostik. */
   perTurn: Array<{ index: number; persona: string; ok: boolean; bytes: number; ms: number }>
   /**
-   * Milidetik mulai tiap baris di dalam `audio`, sejajar dengan `turns`.
-   * Baris yang gagal disintesis tidak punya entri — pakai `perTurn[i].ok`
-   * untuk memetakan index baris ke index timings.
+   * Milidetik mulai tiap baris di dalam `audio`, SEJAJAR dengan `turns`
+   * (indeks sama). Baris yang gagal disintesis bernilai -1.
+   *
+   * Dulu array ini dipadatkan (hanya baris sukses), sehingga klien yang
+   * memakai indeksnya langsung sebagai indeks dialog akan menyorot baris yang
+   * salah setelah ada satu baris gagal. Sekarang panjangnya selalu sama dengan
+   * `turns` agar tidak ada pemetaan ulang di klien.
    */
   timings: number[]
 }
@@ -102,17 +106,20 @@ export async function synthesizeScenario(
   // proporsi panjang teks: kalimat pendek seperti "Ja." hanya 3 karakter tapi
   // butuh ~1.9s, sementara kalimat 107 karakter butuh ~6.3s. Estimasi
   // proporsional karakter melenceng makin jauh di baris-baris akhir.
-  const silence = parts.length > 1 ? await space.silence(TURN_GAP_MS) : null
+  // Silence() kini sinkron (frame MP3 dibangun sendiri), jadi tidak ada
+  // ketergantungan pada ffmpeg yang tidak tersedia di Vercel.
+  const silence = parts.length > 1 ? space.silence(TURN_GAP_MS) : null
   const gapMs = silence ? mp3DurationMs(silence.length) : 0
 
   const merged: Buffer[] = []
-  const timings: number[] = []
+  // Sejajar `turns`: -1 menandai baris yang gagal.
+  const timings: number[] = results.map(() => -1)
   let cursorMs = 0
   let emitted = 0
 
-  results.forEach((r) => {
+  results.forEach((r, i) => {
     if (!r.buf) return
-    timings.push(cursorMs)
+    timings[i] = cursorMs
     merged.push(r.buf)
     cursorMs += mp3DurationMs(r.buf.length)
     emitted++

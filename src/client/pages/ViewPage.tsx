@@ -110,6 +110,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   const [scenarioAudioUrl, setScenarioAudioUrl] = useState<string>('')
   /** Milidetik mulai tiap baris, diambil dari header X-Scenario-Timings. */
   const [scenarioTimings, setScenarioTimings] = useState<number[]>([])
+  /** Jumlah baris yang gagal disintesis (audio tetap ada, baris tidak). */
+  const [scenarioMissing, setScenarioMissing] = useState(0)
 
   // Teacher Modals states
   const [showKeyManager, setShowKeyManager] = useState(false)
@@ -154,15 +156,32 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     const key = new URLSearchParams(window.location.search).get('key')
     const url = `/api/sessions/${session.id}/audio${key ? `?key=${encodeURIComponent(key)}` : ''}`
     const controller = new AbortController()
-    setScenarioAudioUrl(url)
+    let objectUrl: string | null = null
+    setScenarioAudioUrl('')
 
+    // Satu unduhan saja. Dulu fungsi ini `fetch(url)` hanya untuk membaca
+    // header lalu <audio src={url}> mengunduh ulang seluruh audio. Sekarang
+    // body dijadikan blob dan blob itu yang dipakai <audio>.
     fetch(url, { signal: controller.signal })
-      .then((res) => {
+      .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
         const raw = res.headers.get('x-scenario-timings')
-        setScenarioTimings(
-          raw ? raw.split(',').map((n) => Number(n)).filter((n) => Number.isFinite(n)) : [],
-        )
+        const timings = raw
+          ? raw.split(',').map((n) => Number(n)).filter((n) => Number.isFinite(n))
+          : []
+        setScenarioTimings(timings)
+
+        // Sebagian baris bisa gagal tanpa menggagalkan seluruh audio. Tanpa
+        // pemberitahuan, siswa mengira dialognya lengkap padahal ada baris
+        // yang hilang dari rekaman.
+        const missing = timings.filter((t) => t < 0).length
+        setScenarioMissing(missing)
+
+        const blob = await res.blob()
+        if (controller.signal.aborted) return
+        objectUrl = URL.createObjectURL(blob)
+        setScenarioAudioUrl(objectUrl)
         setScenarioAudio('ready')
       })
       .catch((err) => {
@@ -172,8 +191,13 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
         setScenarioError(err?.message || 'audio tidak tersedia')
       })
 
-    return () => controller.abort()
-  }, [accessGranted, session?.id])
+    return () => {
+      controller.abort()
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+    // `dialogue.length` ikut jadi dependensi: bila guru mengedit jumlah baris,
+    // audio dan timings harus diambil ulang, bukan memakai versi lama.
+  }, [accessGranted, session?.id, session?.dialogue?.length])
 
   // Fetch Session Data
   useEffect(() => {
@@ -356,11 +380,15 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     const markActive = () => {
       if (cancelledRef.current || scenarioTimings.length === 0) return
       const ms = el.currentTime * 1000
-      let idx = 0
+      // timings sejajar dialog; -1 = baris yang gagal disintesis (dilewati).
+      let idx = -1
       for (let i = 0; i < scenarioTimings.length; i++) {
-        if (ms >= scenarioTimings[i]) idx = i
+        const start = scenarioTimings[i]
+        if (start < 0) continue
+        if (ms >= start) idx = i
         else break
       }
+      if (idx < 0) return
       setPlayingIndex(idx)
       turnRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
@@ -771,7 +799,9 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                             ? 'Menyiapkan audio percakapan...'
                             : scenarioAudio === 'failed'
                               ? `Audio tidak tersedia (${scenarioError}). Baris tetap bisa diputar satu per satu.`
-                              : 'Putar Seluruh Dialog'
+                              : scenarioMissing > 0
+                                ? `${scenarioMissing} baris gagal disintesis dan tidak ikut di audio.`
+                                : 'Putar Seluruh Dialog'
                         }
                       >
                         {scenarioAudio === 'loading' ? (
@@ -787,7 +817,10 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                         ) : (
                           <>
                             <Play size={13} className="fill-white" />
-                            <span>Putar Seluruh Dialog</span>
+                            <span>
+                              Putar Seluruh Dialog
+                              {scenarioMissing > 0 ? ` (${scenarioMissing} baris hilang)` : ''}
+                            </span>
                           </>
                         )}
                       </button>

@@ -231,9 +231,13 @@ sessionsRouter.get('/:id/audio', async (c) => {
     c.header('X-Scenario-Turns-Ok', String(result.perTurn.filter((t) => t.ok).length))
     c.header('X-Scenario-Timings', result.timings.join(','))
     c.header('X-Scenario-Elapsed-Ms', String(result.elapsedMs))
-    c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
-    c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
-    c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
+    // JANGAN immutable: URL sama dipakai lagi setelah guru mengedit dialog.
+    // `immutable` melarang revalidasi, sehingga siswa memutar audio lama
+    // sampai setahun. Dengan must-revalidate, klien mengirim If-None-Match:
+    // ETag cocok -> 304 tanpa sintesis ulang (murah), ETag beda -> audio baru.
+    c.header('Cache-Control', 'public, max-age=0, must-revalidate')
+    c.header('CDN-Cache-Control', 'public, s-maxage=0, must-revalidate')
+    c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=0, must-revalidate')
     return c.body(result.audio as unknown as ArrayBuffer)
   } catch (error: any) {
     console.warn('[sessions/audio] gagal:', error?.message || error)

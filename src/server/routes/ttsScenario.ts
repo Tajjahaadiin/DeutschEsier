@@ -62,9 +62,9 @@ scenarioRouter.post('/', async (c) => {
     c.header('X-TTS-Bytes', String(result.bytes))
     c.header('X-TTS-Elapsed-Ms', String(result.elapsedMs))
     c.header('X-TTS-Gap-Ms', String(TURN_GAP_MS))
-    // Cache panjang: isi dialog ikut jadi bagian kunci URL (POST tidak di-cache
-    // CDN, tapi header ini berguna bila nanti dipindah ke GET).
-    c.header('Cache-Control', 'public, max-age=31536000, immutable')
+    // Respons POST tidak pernah di-cache CDN. Header panjang di sini hanya
+    // menyesatkan: audio bisa berubah setiap kali dialog diedit.
+    c.header('Cache-Control', 'no-store')
     return c.body(result.audio as unknown as ArrayBuffer)
   } catch (err: any) {
     console.warn('[tts-scenario] gagal:', err?.message || err)
