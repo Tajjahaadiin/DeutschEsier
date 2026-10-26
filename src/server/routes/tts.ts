@@ -34,17 +34,17 @@ ttsRouter.get('/', async (c) => {
   // 1. Prioritas Suara Pria: Kokoro German Martin via HuggingFace Space
   // Pembedaan Akustik:
   // - männlich-1: Bariton matang/dewasa (detune -2.0 semitone, speed 0.98x)
-  // - männlich-2: Tenor muda/energik (detune +1.8 semitone, speed 1.05x)
+  // - männlich-2: Suara Asli Martin Murni (detune 0 semitone, speed 1.0x tanpa perubahan)
   if (isMale) {
     try {
       const isMale2 = persona === 'männlich-2' || persona === 'male-2'
-      const speed = isMale2 ? 1.05 : 0.98
-      const semitoneShift = isMale2 ? 1.8 : -2.0
+      const speed = isMale2 ? 1.0 : 0.98
+      const semitoneShift = isMale2 ? 0 : -2.0
 
       const kokoroBuffer = await synthesizeKokoroMartin(text.trim(), speed)
       if (kokoroBuffer) {
-        // Terapkan detune pitch instan pada header WAV
-        const tunedBuffer = detuneWavBuffer(kokoroBuffer, semitoneShift)
+        // Terapkan detune pitch instan pada header WAV jika semitoneShift != 0
+        const tunedBuffer = semitoneShift !== 0 ? detuneWavBuffer(kokoroBuffer, semitoneShift) : kokoroBuffer
 
         c.header('Content-Type', 'audio/wav')
         c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')

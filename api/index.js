@@ -38640,11 +38640,11 @@ ttsRouter.get("/", async (c) => {
   if (isMale) {
     try {
       const isMale2 = persona === "m\xE4nnlich-2" || persona === "male-2";
-      const speed = isMale2 ? 1.05 : 0.98;
-      const semitoneShift = isMale2 ? 1.8 : -2;
+      const speed = isMale2 ? 1 : 0.98;
+      const semitoneShift = isMale2 ? 0 : -2;
       const kokoroBuffer = await synthesizeKokoroMartin(text2.trim(), speed);
       if (kokoroBuffer) {
-        const tunedBuffer = detuneWavBuffer(kokoroBuffer, semitoneShift);
+        const tunedBuffer = semitoneShift !== 0 ? detuneWavBuffer(kokoroBuffer, semitoneShift) : kokoroBuffer;
         c.header("Content-Type", "audio/wav");
         c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
         c.header("CDN-Cache-Control", "public, s-maxage=31536000");

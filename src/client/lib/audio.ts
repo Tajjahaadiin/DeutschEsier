@@ -364,6 +364,48 @@ export function playCalendarAudio(
   playStaticAudioWithFallback(`/audio/days/${slug}.mp3`, text, optionsOrOnEnd)
 }
 
+/**
+ * Melakukan pre-caching audio percakapan ke cache browser secara sekuensial (satu per satu dalam antrean).
+ * Mengurangi beban HuggingFace Space dan memastikan saat murid menekan tombol Play, audio langsung 0ms terputar.
+ */
+export async function warmUpDialogueCache(
+  dialogue: Array<{ germanText: string; personaId?: string; speaker?: string }>,
+  options: {
+    speakerA?: string
+    onProgress?: (completed: number, total: number) => void
+    signal?: AbortSignal
+  } = {}
+): Promise<void> {
+  if (!dialogue || dialogue.length === 0) return
+
+  const speakerA = options.speakerA || 'Sprecher A'
+
+  for (let i = 0; i < dialogue.length; i++) {
+    if (options.signal?.aborted) break
+
+    const turn = dialogue[i]
+    if (!turn.germanText || !turn.germanText.trim()) continue
+
+    const isA = turn.speaker === speakerA
+    const turnPersonaId = turn.personaId || (isA ? 'weiblich' : 'männlich-1')
+    const url = `/api/tts?text=${encodeURIComponent(turn.germanText.trim())}&persona=${encodeURIComponent(turnPersonaId)}`
+
+    try {
+      // Ambil audio ke cache HTTP browser secara sekuensial
+      await fetch(url, { signal: options.signal, cache: 'force-cache' })
+    } catch {
+      // Abaikan error pada background pre-warm agar tidak mengganggu UI murid
+    }
+
+    if (options.onProgress) {
+      options.onProgress(i + 1, dialogue.length)
+    }
+
+    // Beri jeda kecil 250ms antar request agar tidak membebani antrean HuggingFace
+    await new Promise((r) => setTimeout(r, 250))
+  }
+}
+
 export function getStoredPersonaId(): TtsPersonaId {
   if (typeof window === 'undefined') return DEFAULT_FEMALE_PERSONA
   try {

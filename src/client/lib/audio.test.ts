@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { resolveTtsRequest, speakGerman, stopSpeech, resolveVoice } from './audio'
+import { resolveTtsRequest, speakGerman, stopSpeech, resolveVoice, warmUpDialogueCache } from './audio'
 import { TTS_PERSONAS, getTtsPersona } from '../../shared/ttsPersonas'
 
 class FakeUtterance {
@@ -193,6 +193,31 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts HTTP Stream', () =>
       expect(spoken).toHaveLength(0)
     } finally {
       window.speechSynthesis = origSynthesis
+    }
+  })
+
+  it('warmUpDialogueCache mengambil URL audio baris dialog secara berurutan', async () => {
+    const origFetch = globalThis.fetch
+    const fetchedUrls: string[] = []
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+      fetchedUrls.push(url)
+      return Promise.resolve({ ok: true } as any)
+    })
+
+    const sampleDialogue = [
+      { speaker: 'Sprecher A', germanText: 'Hallo!' },
+      { speaker: 'Sprecher B', germanText: 'Guten Tag!' },
+    ]
+
+    const onProgress = vi.fn()
+    try {
+      await warmUpDialogueCache(sampleDialogue, { onProgress })
+      expect(fetchedUrls).toHaveLength(2)
+      expect(fetchedUrls[0]).toContain('/api/tts?text=Hallo!&persona=weiblich')
+      expect(fetchedUrls[1]).toContain('/api/tts?text=Guten%20Tag!&persona=m%C3%A4nnlich-1')
+      expect(onProgress).toHaveBeenCalledTimes(2)
+    } finally {
+      globalThis.fetch = origFetch
     }
   })
 

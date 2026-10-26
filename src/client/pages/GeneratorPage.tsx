@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Trash2, Plus, Volume2, ChevronLeft, Save, Sparkles, Play, Square } from 'lucide-react'
-import { speakGerman, stopSpeech } from '../lib/audio'
+import { speakGerman, stopSpeech, warmUpDialogueCache } from '../lib/audio'
 import { nanoid } from 'nanoid'
 import { getAuthHeaders } from '../lib/auth'
 import { parseComprehensionQuestions, type ComprehensionQuestion } from '../lib/comprehension'
@@ -187,6 +187,11 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
       setEditedVocab([...generated.vocabClues])
       setEditedTitle(generated.title)
       setEditedSceneDesc(generated.sceneDescription)
+
+      // Pre-warm antrean audio sekuensial di latar belakang saat baru digenerate
+      warmUpDialogueCache(turnsWithPersonas, {
+        speakerA: 'Sprecher A',
+      })
     } catch (err: any) {
       setError(err.message || 'Gagal menghubungi AI. Pastikan GEMINI_API_KEY sudah dikonfigurasi.')
     } finally {

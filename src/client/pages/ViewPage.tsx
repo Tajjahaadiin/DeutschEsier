@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Card } from '../components/ui/card'
-import { speakGerman, stopSpeech } from '../lib/audio'
+import { speakGerman, stopSpeech, warmUpDialogueCache } from '../lib/audio'
 import { isTeacherAuthenticated, getAuthHeaders } from '../lib/auth'
 import KeyManagerModal from '../components/access/KeyManagerModal'
 import SubmissionAnalyticsModal from '../components/analytics/SubmissionAnalyticsModal'
@@ -103,6 +103,7 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   const [inputKey, setInputKey] = useState<string>('')
   const [gateSubmitting, setGateSubmitting] = useState(false)
   const [gateErrorMsg, setGateErrorMsg] = useState('')
+  const [cachedAudioCount, setCachedAudioCount] = useState<number>(0)
 
   // Teacher Modals states
   const [showKeyManager, setShowKeyManager] = useState(false)
@@ -128,6 +129,22 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
       stopSpeech()
     }
   }, [])
+
+  // Efek Pre-warming Audio Dialog Secara Sekuensial di Latar Belakang (Antrean Santai)
+  useEffect(() => {
+    if (!accessGranted || !session || !session.dialogue || session.dialogue.length === 0) return
+
+    const controller = new AbortController()
+    warmUpDialogueCache(session.dialogue, {
+      speakerA,
+      signal: controller.signal,
+      onProgress: (done) => setCachedAudioCount(done),
+    })
+
+    return () => {
+      controller.abort()
+    }
+  }, [accessGranted, session?.id])
 
   // Fetch Session Data
   useEffect(() => {
@@ -713,6 +730,11 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                         onClick={handlePlayAll}
                         disabled={session.dialogue.length === 0}
                         className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-on-primary text-xs font-semibold hover:opacity-95 transition-opacity shadow-xs cursor-pointer disabled:opacity-50"
+                        title={
+                          cachedAudioCount > 0 && cachedAudioCount < session.dialogue.length
+                            ? `Menyiapkan audio latar: ${cachedAudioCount}/${session.dialogue.length}`
+                            : 'Putar Seluruh Dialog'
+                        }
                       >
                         <Play size={13} className="fill-white" />
                         <span>Putar Seluruh Dialog</span>
