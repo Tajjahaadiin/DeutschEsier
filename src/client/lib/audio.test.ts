@@ -108,8 +108,8 @@ describe('resolveTtsRequest — persona selalu menang atas gender', () => {
   })
 })
 
-describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
-  it('REGRESI: gender saja tidak boleh jatuh ke Web Speech API', () => {
+describe('speakGerman — audio Jerman lewat /api/tts atau client native pria', () => {
+  it('REGRESI: gender female tetap lewat /api/tts', () => {
     speakGerman('Hallo', { gender: 'female' })
 
     expect(spoken).toHaveLength(0)
@@ -118,20 +118,24 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
     expect(FakeAudio.instances[0].played).toBe(true)
   })
 
-  it('gender pria memakai persona pria default', () => {
+  it('gender pria langsung disintesis native client dengan modulasi pitch bariton', () => {
     speakGerman('Guten Tag', { gender: 'male' })
 
-    expect(spoken).toHaveLength(0)
-    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Guten%20Tag&persona=male-1')
+    // Pria langsung memicu Web Speech API tanpa request remote audio
+    expect(spoken).toHaveLength(1)
+    expect(spoken[0].text).toBe('Guten Tag')
+    expect(spoken[0].pitch).toBe(0.75) // male-1 bariton
   })
 
-  it('personaId eksplisit memilih suara persona tersebut', () => {
-    speakGerman('Hallo', { personaId: 'male-3', gender: 'male' })
+  it('personaId pria eksplisit memicu profil nada persona tersebut', () => {
+    speakGerman('Hallo', { personaId: 'männlich-2', gender: 'male' })
 
-    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&persona=male-3')
+    expect(spoken).toHaveLength(1)
+    expect(spoken[0].text).toBe('Hallo')
+    expect(spoken[0].pitch).toBe(0.9) // männlich-2 nada energik
   })
 
-  it('persona tersimpan dipakai bila tidak ada opsi persona/gender', () => {
+  it('persona tersimpan wanita dipakai bila tidak ada opsi persona/gender', () => {
     localStorage.setItem('preferredPersonaId', 'female-2')
     speakGerman('Hallo')
 
@@ -139,27 +143,25 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
     localStorage.clear()
   })
 
-  it('rate diteruskan sebagai playbackRate (time-stretch, bukan ubah nada)', () => {
+  it('rate diteruskan sebagai playbackRate untuk suara wanita', () => {
     speakGerman('Hallo', { personaId: 'female-1', rate: 0.75 })
 
     expect(FakeAudio.instances[0].playbackRate).toBe(0.75)
   })
 
-  it('fallback memetakan personaId ke profil akustik pitch & rate saat jaringan gagal', () => {
-    speakGerman('Hallo', { personaId: 'male-2' })
+  it('fallback wanita memetakan personaId ke profil akustik pitch & rate saat jaringan gagal', () => {
+    speakGerman('Hallo', { personaId: 'female-3' })
 
     const audio = FakeAudio.instances[0]
     audio.onerror?.()
 
     expect(spoken).toHaveLength(1)
     expect(spoken[0].text).toBe('Hallo')
-    // male-2 (Killian): pitch 0.90, rate 1.05
-    expect(spoken[0].pitch).toBe(0.9)
-    expect(spoken[0].rate).toBe(1.05)
+    expect(spoken[0].pitch).toBe(0.95)
   })
 
-  it('safeFallback tidak dijalankan jika audio sudah di-stop via stopSpeech', () => {
-    speakGerman('Hallo', { personaId: 'male-1' })
+  it('safeFallback wanita tidak dijalankan jika audio sudah di-stop via stopSpeech', () => {
+    speakGerman('Hallo', { personaId: 'female-1' })
     const audio = FakeAudio.instances[0]
 
     stopSpeech()
@@ -169,10 +171,10 @@ describe('speakGerman — audio Jerman selalu lewat /api/tts', () => {
   })
 
   it('safeFallback audio lama diabaikan saat audio baru sudah mulai diputar', () => {
-    speakGerman('Hallo A', { personaId: 'male-1' })
+    speakGerman('Hallo A', { personaId: 'female-1' })
     const audioA = FakeAudio.instances[0]
 
-    speakGerman('Hallo B', { personaId: 'female-1' })
+    speakGerman('Hallo B', { personaId: 'female-2' })
     const audioB = FakeAudio.instances[1]
 
     audioA.onerror?.()
