@@ -7,6 +7,9 @@ const HF_SPACE_BASE = process.env.KOKORO_HF_SPACE_URL || 'https://tajjz-deutsche
 
 export async function synthesizeKokoroMartin(text: string, speed: number = 1.0): Promise<Buffer | null> {
   const cleanBase = HF_SPACE_BASE.replace(/\/+$/, '')
+  // Batas timeout ketat 6 detik agar request tidak menggantung dan memicu stuck di klien
+  const totalTimeoutController = new AbortController()
+  const timeoutId = setTimeout(() => totalTimeoutController.abort(), 6000)
 
   try {
     // 1. Submit tugas sintesis via Gradio SSE API v3
@@ -18,6 +21,7 @@ export async function synthesizeKokoroMartin(text: string, speed: number = 1.0):
       body: JSON.stringify({
         data: [text.trim(), 'martin', speed],
       }),
+      signal: totalTimeoutController.signal,
     })
 
     if (!callRes.ok) {
@@ -31,16 +35,18 @@ export async function synthesizeKokoroMartin(text: string, speed: number = 1.0):
       return null
     }
 
-    // 2. Baca hasil EventSource / SSE stream untuk mendapatkan URL file audio
-    // Tambahkan polling loop kecil (hingga 10 detik) jika HuggingFace sedang antre/generating
+    // 2. Baca hasil EventSource / SSE stream untuk mendapatkan URL file audio (maksimal 5 detik polling)
     let audioUrl: string | null = null
     const startTime = Date.now()
 
-    while (Date.now() - startTime < 12000 && !audioUrl) {
+    while (Date.now() - startTime < 5000 && !audioUrl) {
+      if (totalTimeoutController.signal.aborted) break
+
       const streamRes = await fetch(`${cleanBase}/gradio_api/call/synthesize/${event_id}`, {
         headers: {
           'Accept': 'text/event-stream',
         },
+        signal: totalTimeoutController.signal,
       })
 
       if (!streamRes.ok) {
@@ -67,18 +73,20 @@ export async function synthesizeKokoroMartin(text: string, speed: number = 1.0):
       }
 
       if (!audioUrl) {
-        // Jika masih status generating / queued, tunggu 350ms lalu coba baca stream lagi
-        await new Promise((r) => setTimeout(r, 350))
+        // Jika masih status generating / queued, tunggu 300ms lalu coba baca stream lagi
+        await new Promise((r) => setTimeout(r, 300))
       }
     }
 
     if (!audioUrl) {
-      console.warn('[Kokoro HF] No audio URL received from SSE stream within timeout')
+      console.warn('[Kokoro HF] No audio URL received from SSE stream within timeout (fallback triggered)')
       return null
     }
 
     // 3. Download buffer audio WAV dari HuggingFace
-    const audioRes = await fetch(audioUrl)
+    const audioRes = await fetch(audioUrl, {
+      signal: totalTimeoutController.signal,
+    })
     if (!audioRes.ok) {
       console.warn(`[Kokoro HF] Failed to download audio file: ${audioRes.status}`)
       return null
@@ -87,7 +95,14 @@ export async function synthesizeKokoroMartin(text: string, speed: number = 1.0):
     const arrayBuf = await audioRes.arrayBuffer()
     return Buffer.from(arrayBuf)
   } catch (err: any) {
-    console.warn('[Kokoro HF Error]:', err?.message || err)
+    const isTimeout = err.name === 'AbortError' || totalTimeoutController.signal.aborted
+    if (isTimeout) {
+      console.warn('[Kokoro HF Timeout 6s]: HuggingFace Space terlalu lama merespons, beralih ke fallback...')
+    } else {
+      console.warn('[Kokoro HF Error]:', err?.message || err)
+    }
     return null
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

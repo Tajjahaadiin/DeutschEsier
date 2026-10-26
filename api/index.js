@@ -38430,6 +38430,8 @@ var sessions_default = sessionsRouter;
 var HF_SPACE_BASE = process.env.KOKORO_HF_SPACE_URL || "https://tajjz-deutscheasier-tts.hf.space";
 async function synthesizeKokoroMartin(text2, speed = 1) {
   const cleanBase = HF_SPACE_BASE.replace(/\/+$/, "");
+  const totalTimeoutController = new AbortController();
+  const timeoutId = setTimeout(() => totalTimeoutController.abort(), 6e3);
   try {
     const callRes = await fetch(`${cleanBase}/gradio_api/call/synthesize`, {
       method: "POST",
@@ -38438,7 +38440,8 @@ async function synthesizeKokoroMartin(text2, speed = 1) {
       },
       body: JSON.stringify({
         data: [text2.trim(), "martin", speed]
-      })
+      }),
+      signal: totalTimeoutController.signal
     });
     if (!callRes.ok) {
       console.warn(`[Kokoro HF] call/synthesize failed with status ${callRes.status}`);
@@ -38451,11 +38454,13 @@ async function synthesizeKokoroMartin(text2, speed = 1) {
     }
     let audioUrl = null;
     const startTime = Date.now();
-    while (Date.now() - startTime < 12e3 && !audioUrl) {
+    while (Date.now() - startTime < 5e3 && !audioUrl) {
+      if (totalTimeoutController.signal.aborted) break;
       const streamRes = await fetch(`${cleanBase}/gradio_api/call/synthesize/${event_id}`, {
         headers: {
           "Accept": "text/event-stream"
-        }
+        },
+        signal: totalTimeoutController.signal
       });
       if (!streamRes.ok) {
         console.warn(`[Kokoro HF] SSE stream failed with status ${streamRes.status}`);
@@ -38478,14 +38483,16 @@ async function synthesizeKokoroMartin(text2, speed = 1) {
         }
       }
       if (!audioUrl) {
-        await new Promise((r) => setTimeout(r, 350));
+        await new Promise((r) => setTimeout(r, 300));
       }
     }
     if (!audioUrl) {
-      console.warn("[Kokoro HF] No audio URL received from SSE stream within timeout");
+      console.warn("[Kokoro HF] No audio URL received from SSE stream within timeout (fallback triggered)");
       return null;
     }
-    const audioRes = await fetch(audioUrl);
+    const audioRes = await fetch(audioUrl, {
+      signal: totalTimeoutController.signal
+    });
     if (!audioRes.ok) {
       console.warn(`[Kokoro HF] Failed to download audio file: ${audioRes.status}`);
       return null;
@@ -38493,8 +38500,15 @@ async function synthesizeKokoroMartin(text2, speed = 1) {
     const arrayBuf = await audioRes.arrayBuffer();
     return Buffer.from(arrayBuf);
   } catch (err) {
-    console.warn("[Kokoro HF Error]:", err?.message || err);
+    const isTimeout = err.name === "AbortError" || totalTimeoutController.signal.aborted;
+    if (isTimeout) {
+      console.warn("[Kokoro HF Timeout 6s]: HuggingFace Space terlalu lama merespons, beralih ke fallback...");
+    } else {
+      console.warn("[Kokoro HF Error]:", err?.message || err);
+    }
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

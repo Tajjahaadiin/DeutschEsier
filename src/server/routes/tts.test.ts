@@ -57,6 +57,25 @@ describe('GET /api/tts', () => {
     expect(((await res.json()) as any).error).toContain('exceeds maximum allowed length')
   })
 
+  it('mengalirkan audio/mpeg fallback bila Kokoro Martin timeout/gagal', async () => {
+    vi.spyOn(kokoroHf, 'synthesizeKokoroMartin').mockResolvedValueOnce(null)
+
+    const origFetch = globalThis.fetch
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      arrayBuffer: () => Promise.resolve(Buffer.from('fallback-google-mp3').buffer),
+    } as any)
+
+    try {
+      const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
+      expect(res.status).toBe(200)
+      expect(res.headers.get('content-type')).toBe('audio/mpeg')
+    } finally {
+      vi.restoreAllMocks()
+      globalThis.fetch = origFetch
+    }
+  })
+
   it('mengembalikan status 502 bila upstream audio gagal', async () => {
     const origFetch = globalThis.fetch
     globalThis.fetch = vi.fn().mockResolvedValueOnce({
