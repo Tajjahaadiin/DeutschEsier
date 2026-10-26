@@ -26419,6 +26419,9 @@ wordsRouter.get("/", async (c) => {
 });
 var words_default = wordsRouter;
 
+// src/server/routes/sessions.ts
+import { createHash } from "node:crypto";
+
 // src/server/routes/auth.ts
 import crypto2 from "crypto";
 var authRouter = new Hono2();
@@ -26540,6 +26543,143 @@ async function authorizeSessionAccess(headers, sessionId, rawKey) {
   if (isTeacherRequest(headers)) return { allowed: true };
   if (!accessKeyRequired()) return { allowed: true };
   return verifySessionKey(sessionId, rawKey);
+}
+
+// src/server/lib/hfEdgeTts.ts
+var DEFAULT_SPACE = "https://innoai-edge-tts-text-to-speech.hf.space";
+var CALL_PATH = "/gradio_api/call/tts_interface";
+var VOICE_LABEL_BY_ID = {
+  weiblich: "de-DE-AmalaNeural - de-DE (Female)",
+  "m\xE4nnlich-1": "de-DE-ConradNeural - de-DE (Male)",
+  "m\xE4nnlich-2": "de-DE-KillianNeural - de-DE (Male)",
+  "male-1": "de-DE-ConradNeural - de-DE (Male)",
+  "male-2": "de-DE-KillianNeural - de-DE (Male)",
+  "female-1": "de-DE-KatjaNeural - de-DE (Female)",
+  "female-2": "de-DE-AmalaNeural - de-DE (Female)",
+  "female-3": "de-DE-SeraphinaMultilingualNeural - de-DE (Female)",
+  "male-3": "de-DE-FlorianMultilingualNeural - de-DE (Male)"
+};
+var EdgeTtsSpace = class {
+  base;
+  constructor(spaceUrl = process.env.HF_EDGE_TTS_SPACE || DEFAULT_SPACE) {
+    this.base = spaceUrl.replace(/\/+$/, "");
+  }
+  /** Sintesis satu potongan teks. Melempar bila upstream gagal. */
+  async synthesize(text3, voiceLabel, timeoutMs = 3e4) {
+    const clean = text3.trim();
+    if (!clean) throw new Error("text kosong");
+    const call = await fetch(`${this.base}${CALL_PATH}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: [clean, voiceLabel, 1, 0, 0] }),
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+    if (!call.ok) throw new Error(`call gagal: HTTP ${call.status}`);
+    const { event_id } = await call.json();
+    if (!event_id) throw new Error("event_id tidak ada");
+    const sse = await (await fetch(`${this.base}${CALL_PATH}/${event_id}`, { signal: AbortSignal.timeout(timeoutMs) })).text();
+    const url2 = sse.match(/"url": "([^"]+)"/)?.[1];
+    if (!url2) throw new Error("URL audio tidak ada di respons SSE");
+    const audioRes = await fetch(url2, { signal: AbortSignal.timeout(timeoutMs) });
+    if (!audioRes.ok) throw new Error(`unduh audio gagal: HTTP ${audioRes.status}`);
+    const buf = Buffer.from(await audioRes.arrayBuffer());
+    if (buf.length < 512) throw new Error("audio kosong");
+    return buf;
+  }
+  /**
+   * MP3 senyap. Space tidak menyediakan ini, jadi dibuat sekali lalu di-cache.
+   * ponytail: satu-satunya titik yang butuh ffmpeg saat build; kalau ffmpeg
+   * tidak ada, jeda jatuh ke 0 ms (audio tetap valid, hanya tanpa jeda).
+   */
+  silenceCache = /* @__PURE__ */ new Map();
+  async silence(ms) {
+    const key = Math.round(ms / 50) * 50;
+    const cached4 = this.silenceCache.get(key);
+    if (cached4) return cached4;
+    try {
+      const { execFile } = await import("node:child_process");
+      const { promisify } = await import("node:util");
+      const run3 = promisify(execFile);
+      const { stdout } = await run3(
+        "ffmpeg",
+        [
+          "-f",
+          "lavfi",
+          "-i",
+          "anullsrc=r=24000:cl=mono",
+          "-t",
+          String(key / 1e3),
+          "-c:a",
+          "libmp3lame",
+          "-b:a",
+          "48k",
+          "-f",
+          "mp3",
+          "-"
+        ],
+        { encoding: "buffer", maxBuffer: 4 * 1024 * 1024 }
+      );
+      const buf = Buffer.isBuffer(stdout) ? stdout : Buffer.from(stdout);
+      if (buf.length > 512) {
+        this.silenceCache.set(key, buf);
+        return buf;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+};
+var edgeTtsSpace = new EdgeTtsSpace();
+
+// src/server/lib/scenarioTts.ts
+var TURN_GAP_MS = 450;
+var CONCURRENCY = 4;
+async function mapLimit(items, limit, fn2) {
+  const out = new Array(items.length);
+  let next4 = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (; ; ) {
+      const i = next4++;
+      if (i >= items.length) return;
+      out[i] = await fn2(items[i], i);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
+async function synthesizeScenario(turns, space) {
+  const started = Date.now();
+  const results = await mapLimit(turns, CONCURRENCY, async (turn, i) => {
+    const persona = turn.personaId ?? (i % 2 === 0 ? "weiblich" : "m\xE4nnlich-1");
+    const voice = VOICE_LABEL_BY_ID[persona] ?? VOICE_LABEL_BY_ID["weiblich"];
+    const t0 = Date.now();
+    try {
+      const buf = await space.synthesize(turn.germanText, voice);
+      const ok = buf.length > 512;
+      return { persona, ok, buf: ok ? buf : null, bytes: buf.length, ms: Date.now() - t0 };
+    } catch (err) {
+      console.warn(`[scenario] baris ${i + 1} gagal:`, err?.message || err);
+      return { persona, ok: false, buf: null, bytes: 0, ms: Date.now() - t0 };
+    }
+  });
+  const parts2 = results.map((r) => r.buf).filter((b) => b !== null);
+  if (parts2.length === 0) throw new Error("tidak ada baris yang berhasil disintesis");
+  const silence = parts2.length > 1 ? await space.silence(TURN_GAP_MS) : null;
+  const merged = [];
+  parts2.forEach((p, idx) => {
+    merged.push(p);
+    if (silence && idx < parts2.length - 1) merged.push(silence);
+  });
+  const audio = Buffer.concat(merged);
+  return {
+    audio,
+    contentType: "audio/mpeg",
+    turns: turns.length,
+    bytes: audio.length,
+    elapsedMs: Date.now() - started,
+    perTurn: results.map((r, i) => ({ index: i, persona: r.persona, ok: r.ok, bytes: r.bytes, ms: r.ms }))
+  };
 }
 
 // node_modules/effect/dist/esm/Function.js
@@ -55888,6 +56028,46 @@ sessionsRouter.delete("/:id", requireTeacherAuth, async (c) => {
     return c.json({ error: "Failed to delete session" }, 500);
   }
 });
+sessionsRouter.get("/:id/audio", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const access = await authorizeSessionAccess(c.req.raw.headers, id, c.req.query("key"));
+    if (!access.allowed) {
+      return c.json({ error: "Access key required", reason: access.reason }, 403);
+    }
+    const [session] = await db.select().from(learningSession).where(eq(learningSession.id, id)).limit(1);
+    if (!session) return c.json({ error: "Session not found" }, 404);
+    let turns;
+    try {
+      turns = JSON.parse(session.dialogueJson);
+    } catch {
+      return c.json({ error: "dialogue_json tidak valid" }, 500);
+    }
+    if (!Array.isArray(turns) || turns.length === 0) {
+      return c.json({ error: "Sesi tidak punya dialog" }, 404);
+    }
+    const etag = '"' + createHash("sha1").update(
+      session.dialogueJson + "|" + turns.map((t) => t.personaId ?? "").join(",")
+    ).digest("hex").slice(0, 20) + '"';
+    if (c.req.header("if-none-match") === etag) {
+      return c.body(null, 304);
+    }
+    const result2 = await synthesizeScenario(turns, edgeTtsSpace);
+    c.header("Content-Type", result2.contentType);
+    c.header("ETag", etag);
+    c.header("X-Scenario-Turns", String(result2.turns));
+    c.header("X-Scenario-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
+    c.header("X-Scenario-Elapsed-Ms", String(result2.elapsedMs));
+    c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
+    c.header("CDN-Cache-Control", "public, s-maxage=31536000");
+    c.header("Vercel-CDN-Cache-Control", "public, s-maxage=31536000");
+    return c.body(result2.audio);
+  } catch (error) {
+    console.warn("[sessions/audio] gagal:", error?.message || error);
+    c.header("X-Scenario-Error", "upstream_failed");
+    return c.json({ error: "scenario_tts_unavailable" }, 502);
+  }
+});
 var sessions_default = sessionsRouter;
 
 // src/server/lib/kokoroHf.ts
@@ -56205,6 +56385,58 @@ protoRouter.get("/", async (c) => {
 });
 var ttsPrototype_default = protoRouter;
 
+// src/server/routes/ttsScenario.ts
+var scenarioRouter = new Hono2();
+var MAX_TURNS = 20;
+var MAX_TURN_CHARS = 1e3;
+scenarioRouter.post("/", async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Body harus JSON" }, 400);
+  }
+  const raw2 = body.turns;
+  if (!Array.isArray(raw2) || raw2.length === 0) {
+    return c.json({ error: "turns wajib berupa array tidak kosong" }, 400);
+  }
+  if (raw2.length > MAX_TURNS) {
+    return c.json({ error: `Maksimal ${MAX_TURNS} baris dialog` }, 400);
+  }
+  const turns = [];
+  for (let i = 0; i < raw2.length; i++) {
+    const t = raw2[i];
+    if (typeof t?.germanText !== "string" || !t.germanText.trim()) {
+      return c.json({ error: `turns[${i}].germanText wajib diisi` }, 400);
+    }
+    if (t.germanText.length > MAX_TURN_CHARS) {
+      return c.json({ error: `turns[${i}].germanText melebihi ${MAX_TURN_CHARS} karakter` }, 400);
+    }
+    turns.push({
+      speaker: String(t.speaker ?? "Sprecher"),
+      germanText: t.germanText,
+      personaId: typeof t.personaId === "string" ? t.personaId : void 0
+    });
+  }
+  try {
+    const result2 = await synthesizeScenario(turns, edgeTtsSpace);
+    c.header("Content-Type", result2.contentType);
+    c.header("X-TTS-Engine", "hf-edge-tts");
+    c.header("X-TTS-Turns", String(result2.turns));
+    c.header("X-TTS-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
+    c.header("X-TTS-Bytes", String(result2.bytes));
+    c.header("X-TTS-Elapsed-Ms", String(result2.elapsedMs));
+    c.header("X-TTS-Gap-Ms", String(TURN_GAP_MS));
+    c.header("Cache-Control", "public, max-age=31536000, immutable");
+    return c.body(result2.audio);
+  } catch (err) {
+    console.warn("[tts-scenario] gagal:", err?.message || err);
+    c.header("X-TTS-Error", "upstream_failed");
+    return c.json({ error: "scenario_tts_unavailable", detail: err?.message }, 502);
+  }
+});
+var ttsScenario_default = scenarioRouter;
+
 // src/server/routes/access-keys.ts
 var accessKeysRouter = new Hono2();
 function generateAccessKeyCode() {
@@ -56460,6 +56692,7 @@ app.route("/api/sessions", submissions_default);
 app.route("/api/generate", generate_default);
 app.route("/api/tts", tts_default);
 app.route("/api/tts-prototype", ttsPrototype_default);
+app.route("/api/tts-scenario", ttsScenario_default);
 var app_default = app;
 
 // src/server/vercel.ts

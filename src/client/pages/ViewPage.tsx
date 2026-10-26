@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Card } from '../components/ui/card'
-import { speakGerman, stopSpeech, warmUpDialogueCache } from '../lib/audio'
+import { speakGerman, stopSpeech } from '../lib/audio'
 import { isTeacherAuthenticated, getAuthHeaders } from '../lib/auth'
 import KeyManagerModal from '../components/access/KeyManagerModal'
 import SubmissionAnalyticsModal from '../components/analytics/SubmissionAnalyticsModal'
@@ -104,8 +104,10 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   const [inputKey, setInputKey] = useState<string>('')
   const [gateSubmitting, setGateSubmitting] = useState(false)
   const [gateErrorMsg, setGateErrorMsg] = useState('')
-  const [cachedAudioCount, setCachedAudioCount] = useState<number>(0)
-  const [audioPreloadReady, setAudioPreloadReady] = useState<boolean>(false)
+  /** Status audio skenario: satu <audio> untuk seluruh dialog (bukan per baris). */
+  const [scenarioAudio, setScenarioAudio] = useState<'idle' | 'loading' | 'ready' | 'failed'>('idle')
+  const [scenarioError, setScenarioError] = useState<string>('')
+  const [scenarioAudioUrl, setScenarioAudioUrl] = useState<string>('')
 
   // Teacher Modals states
   const [showKeyManager, setShowKeyManager] = useState(false)
@@ -123,6 +125,8 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
   const cancelledRef = React.useRef(false)
   const timeoutRef = React.useRef<any>(null)
   const turnRefs = React.useRef<(HTMLDivElement | null)[]>([])
+  /** Elemen <audio> tunggal untuk seluruh dialog sesi. */
+  const scenarioAudioRef = React.useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     return () => {
@@ -132,32 +136,37 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     }
   }, [])
 
-  // Efek Pre-warming Audio Dialog Secara Sekuensial dengan Retry Loop
+  /**
+   * Preload audio skenario: SATU file MP3 untuk seluruh dialog.
+   *
+   * Server menyintesis semua baris sekaligus lalu menggabungkannya, jadi klien
+   * tidak perlu loop per baris, retry, atau timer antar baris. Status 'ready'
+   * dipakai untuk mengaktifkan tombol putar; 'failed' membuka jalur Web Speech.
+   */
   useEffect(() => {
     if (!accessGranted || !session || !session.dialogue || session.dialogue.length === 0) return
 
-    setAudioPreloadReady(false)
-    setCachedAudioCount(0)
+    setScenarioAudio('loading')
+    setScenarioError('')
 
+    const key = new URLSearchParams(window.location.search).get('key')
+    const url = `/api/sessions/${session.id}/audio${key ? `?key=${encodeURIComponent(key)}` : ''}`
     const controller = new AbortController()
-    warmUpDialogueCache(session.dialogue, {
-      speakerA,
-      signal: controller.signal,
-      onProgress: (done, total) => {
-        setCachedAudioCount(done)
-        if (done === total) {
-          setAudioPreloadReady(true)
-        }
-      },
-    }).then((allSuccess) => {
-      if (allSuccess) {
-        setAudioPreloadReady(true)
-      }
-    })
+    setScenarioAudioUrl(url)
 
-    return () => {
-      controller.abort()
-    }
+    fetch(url, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        setScenarioAudio('ready')
+      })
+      .catch((err) => {
+        if (err?.name === 'AbortError') return
+        console.warn('[scenario audio] gagal dimuat:', err?.message || err)
+        setScenarioAudio('failed')
+        setScenarioError(err?.message || 'audio tidak tersedia')
+      })
+
+    return () => controller.abort()
   }, [accessGranted, session?.id])
 
   // Fetch Session Data
@@ -302,12 +311,24 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     cancelledRef.current = true
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     stopSpeech()
+    const el = scenarioAudioRef.current
+    if (el) {
+      el.pause()
+      el.ontimeupdate = null
+    }
     setPlayingIndex(null)
     setIsPlayingAll(false)
   }
 
+  /**
+   * Putar seluruh dialog dari satu file audio.
+   *
+   * Pengganti loop per baris: tidak ada speakGerman(), setTimeout(650), atau
+   * safetyTimer. Baris aktif ditandai dari estimasi durasi proporsional panjang
+   * teks, karena audio gabungan tidak membawa batas waktu per baris.
+   */
   const handlePlayAll = async () => {
-    if (!session || session.dialogue.length === 0) return
+    if (!session || session.dialogue.length === 0 || !scenarioAudioUrl) return
     if (isPlayingAll) {
       handleStopAll()
       return
@@ -316,54 +337,42 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
     cancelledRef.current = false
     setIsPlayingAll(true)
 
-    for (let i = 0; i < session.dialogue.length; i++) {
-      if (cancelledRef.current) break
-      const turn = session.dialogue[i]
-      const isA = turn.speaker === speakerA
-      const turnPersonaId = turn.personaId || (isA ? 'weiblich' : 'männlich-1')
-      const persona = getTtsPersona(turnPersonaId)
-      const turnGender: 'male' | 'female' = persona ? persona.gender : (turn.gender || (isA ? 'female' : 'male'))
+    const el = scenarioAudioRef.current
+    if (!el) return
 
-      setPlayingIndex(i)
-
-      if (turnRefs.current[i]) {
-        turnRefs.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      }
-
-      await new Promise<void>((resolve) => {
-        let finished = false
-        let safetyTimer: any = null
-
-        const done = () => {
-          if (!finished) {
-            finished = true
-            if (safetyTimer) clearTimeout(safetyTimer)
-            if (!cancelledRef.current) {
-              timeoutRef.current = setTimeout(resolve, 650)
-            } else {
-              resolve()
-            }
-          }
+    const markActive = () => {
+      if (!el.duration || cancelledRef.current) return
+      const totalChars = session.dialogue.reduce((a, t) => a + t.germanText.length, 0) || 1
+      let acc = 0
+      const p = el.currentTime / el.duration
+      for (let i = 0; i < session.dialogue.length; i++) {
+        acc += session.dialogue[i].germanText.length / totalChars
+        if (p <= acc) {
+          setPlayingIndex(i)
+          turnRefs.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+          return
         }
-
-        // Safety timeout fallback jika browser engine men-drop event onend
-        const estimatedDurationMs = Math.max(5000, Math.round((turn.germanText.length / 10) * 1000) + 4000)
-        safetyTimer = setTimeout(() => {
-          console.warn('Speech onEnd event timed out, auto-advancing turn...')
-          done()
-        }, estimatedDurationMs)
-
-        speakGerman(turn.germanText, {
-          gender: turnGender,
-          personaId: turnPersonaId,
-          rate: playbackRateRef.current,
-          onEnd: done,
-        })
-      })
+      }
+      setPlayingIndex(session.dialogue.length - 1)
     }
 
-    if (!cancelledRef.current) {
+    el.onended = () => {
+      setIsPlayingAll(false)
       setPlayingIndex(null)
+    }
+    el.onerror = () => {
+      setIsPlayingAll(false)
+      setPlayingIndex(null)
+      setScenarioAudio('failed')
+    }
+    el.ontimeupdate = markActive
+
+    el.currentTime = 0
+    el.playbackRate = playbackRateRef.current
+    try {
+      await el.play()
+    } catch (err: any) {
+      console.warn('[scenario audio] play gagal:', err?.message || err)
       setIsPlayingAll(false)
     }
   }
@@ -742,22 +751,29 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                       <button
                         type="button"
                         onClick={handlePlayAll}
-                        disabled={session.dialogue.length === 0 || !audioPreloadReady}
+                        disabled={session.dialogue.length === 0 || scenarioAudio !== 'ready'}
                         className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold shadow-xs transition-all ${
-                          audioPreloadReady
+                          scenarioAudio === 'ready'
                             ? 'bg-primary text-on-primary hover:opacity-95 cursor-pointer'
                             : 'bg-surface-muted text-text-muted border border-border cursor-not-allowed opacity-75'
                         }`}
                         title={
-                          !audioPreloadReady
-                            ? `Menyiapkan audio percakapan (${cachedAudioCount}/${session.dialogue.length}). Harap tunggu hingga 100% lengkap.`
-                            : 'Putar Seluruh Dialog'
+                          scenarioAudio === 'loading'
+                            ? 'Menyiapkan audio percakapan...'
+                            : scenarioAudio === 'failed'
+                              ? `Audio tidak tersedia (${scenarioError}). Baris tetap bisa diputar satu per satu.`
+                              : 'Putar Seluruh Dialog'
                         }
                       >
-                        {!audioPreloadReady ? (
+                        {scenarioAudio === 'loading' ? (
                           <>
                             <Loader2 size={13} className="animate-spin text-primary shrink-0" />
-                            <span>Memuat Audio ({cachedAudioCount}/{session.dialogue.length})</span>
+                            <span>Menyiapkan Audio...</span>
+                          </>
+                        ) : scenarioAudio === 'failed' ? (
+                          <>
+                            <Play size={13} className="fill-white" />
+                            <span>Audio Tidak Tersedia</span>
                           </>
                         ) : (
                           <>
@@ -769,6 +785,13 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                     )}
                   </div>
                 </div>
+
+                <audio
+                  ref={scenarioAudioRef}
+                  src={scenarioAudioUrl || undefined}
+                  preload="auto"
+                  className="hidden"
+                />
 
                 {session.dialogue.map((turn, i) => {
                   const isA = turn.speaker === speakerA
@@ -837,13 +860,11 @@ export default function ViewPage({ id, navigate }: { id: string; navigate: (path
                         <button
                           type="button"
                           onClick={() => handlePlayTurn(i, turn.germanText, turnGender, turn.personaId)}
-                          disabled={playingIndex === i || !audioPreloadReady}
-                          title={!audioPreloadReady ? 'Menunggu audio siap...' : 'Putar audio'}
+                          disabled={playingIndex === i}
+                          title="Putar baris ini"
                           className={
                             'inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md transition-colors ' +
-                            (!audioPreloadReady
-                              ? 'opacity-40 cursor-not-allowed ' + (isA ? 'bg-surface-muted text-text-muted' : 'bg-white/10 text-white/50')
-                              : isA
+                            (isA
                               ? 'bg-surface-muted hover:bg-border text-text cursor-pointer'
                               : 'bg-white/20 hover:bg-white/30 text-white cursor-pointer')
                           }
