@@ -178,18 +178,8 @@ export function speakGerman(text: string, optionsOrOnEnd?: SpeakOptions | (() =>
     storedPersonaId: getStoredPersonaId(),
   })
 
-  // JALUR 1 (Karakter Pria): Gunakan sintesis client-side native dengan timbre/pitch bariton pria.
-  // Menghindari fallback ke upstream audio cloud yang hanya menyediakan suara wanita default.
-  if (request.gender === 'male') {
-    fallbackSpeechSynthesis(text, {
-      ...options,
-      gender: 'male',
-      personaId: request.personaId,
-    })
-    return
-  }
-
-  // JALUR 2 (Karakter Wanita): Remote /api/tts HTTP Audio Stream (CDN-Cached, Ringan, 0ms WASM Lag)
+  // JALUR UTAMA (Pria & Wanita): Remote /api/tts HTTP Audio Stream (CDN-Cached, Ringan, 0ms WASM Lag)
+  // Backend menyintesis Pria via Kokoro Martin HuggingFace Space & Wanita via Google Translate Stream
   const audioUrl = `/api/tts?text=${encodeURIComponent(text)}&persona=${encodeURIComponent(request.personaId)}`
   const audio = new Audio(audioUrl)
   

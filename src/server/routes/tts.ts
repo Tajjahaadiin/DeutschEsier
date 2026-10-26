@@ -1,22 +1,21 @@
 import { Hono } from 'hono'
-import { EdgeTTS } from 'node-edge-tts'
-import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
-import { resolveEdgeVoiceId } from '../../shared/ttsPersonas'
+import { synthesizeKokoroMartin } from '../lib/kokoroHf'
+import { getTtsPersona } from '../../shared/ttsPersonas'
 
 const ttsRouter = new Hono()
 
 export const MAX_TTS_TEXT_LENGTH = 1000
 
 /**
- * Route TTS sisi server: mengalirkan audio Jerman MP3 via EdgeTTS neural multi-speaker
- * dengan fallback mulus ke Google TTS jika koneksi diblokir, serta header Vercel Edge CDN Cache.
+ * Route TTS sisi server:
+ * - Pria (male, männlich-1, männlich-2): Disintesis via HuggingFace Space Kokoro Martin neural
+ * - Wanita (female, weiblich): Disintesis via Google Translate TTS native stream
+ * - Header Vercel Edge CDN Cache 1 tahun untuk penghematan bandwidth maksimal
  */
 ttsRouter.get('/', async (c) => {
   const text = c.req.query('text')
   const persona = c.req.query('persona')
-  const gender = c.req.query('gender') as 'male' | 'female' | undefined
+  const genderQuery = c.req.query('gender') as 'male' | 'female' | undefined
 
   if (!text || text.trim() === '') {
     return c.json({ error: 'Text parameter is required' }, 400)
@@ -26,27 +25,28 @@ ttsRouter.get('/', async (c) => {
     return c.json({ error: `Text exceeds maximum allowed length of ${MAX_TTS_TEXT_LENGTH} characters` }, 400)
   }
 
-  const voiceId = resolveEdgeVoiceId(persona, gender || 'female')
+  const personaObj = getTtsPersona(persona)
+  const isMale = personaObj
+    ? personaObj.gender === 'male'
+    : (genderQuery === 'male' || (persona && (persona.includes('male') || persona.includes('männlich'))))
 
-  // 1. Prioritas Utama: EdgeTTS Neural Multi-Speaker (Amala, Conrad, Killian, dsb.)
-  try {
-    const edgeTts = new EdgeTTS({ voice: voiceId })
-    const tempFile = path.join(os.tmpdir(), `tts_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`)
-    
-    await edgeTts.ttsPromise(text.trim(), tempFile)
-    const audioBuffer = await fs.readFile(tempFile)
-    await fs.unlink(tempFile).catch(() => {})
-
-    c.header('Content-Type', 'audio/mpeg')
-    c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
-    c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
-    c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
-    return c.body(audioBuffer)
-  } catch (edgeErr: any) {
-    console.warn(`[EdgeTTS Fallback to Google]: voice ${voiceId} failed:`, edgeErr?.message || edgeErr)
+  // 1. Prioritas Suara Pria: Kokoro German Martin via HuggingFace Space
+  if (isMale) {
+    try {
+      const kokoroBuffer = await synthesizeKokoroMartin(text.trim())
+      if (kokoroBuffer) {
+        c.header('Content-Type', 'audio/wav')
+        c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
+        c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
+        c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
+        return c.body(kokoroBuffer as unknown as ArrayBuffer)
+      }
+    } catch (err: any) {
+      console.warn('[Kokoro HF Fallback to Google]:', err?.message || err)
+    }
   }
 
-  // 2. Fallback Jaring Pengaman: Google Translate TTS jika EdgeTTS terblokir WAF
+  // 2. Prioritas Suara Wanita / Fallback Jaring Pengaman: Google Translate TTS Stream
   try {
     const googleTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(
       text.trim()

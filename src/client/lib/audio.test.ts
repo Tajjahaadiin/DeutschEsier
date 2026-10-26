@@ -108,7 +108,7 @@ describe('resolveTtsRequest — persona selalu menang atas gender', () => {
   })
 })
 
-describe('speakGerman — audio Jerman lewat /api/tts atau client native pria', () => {
+describe('speakGerman — audio Jerman selalu lewat /api/tts HTTP Stream', () => {
   it('REGRESI: gender female tetap lewat /api/tts', () => {
     speakGerman('Hallo', { gender: 'female' })
 
@@ -118,24 +118,20 @@ describe('speakGerman — audio Jerman lewat /api/tts atau client native pria', 
     expect(FakeAudio.instances[0].played).toBe(true)
   })
 
-  it('gender pria langsung disintesis native client dengan modulasi pitch bariton', () => {
+  it('gender pria diteruskan ke /api/tts (Kokoro Martin di server)', () => {
     speakGerman('Guten Tag', { gender: 'male' })
 
-    // Pria langsung memicu Web Speech API tanpa request remote audio
-    expect(spoken).toHaveLength(1)
-    expect(spoken[0].text).toBe('Guten Tag')
-    expect(spoken[0].pitch).toBe(0.75) // male-1 bariton
+    expect(spoken).toHaveLength(0)
+    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Guten%20Tag&persona=male-1')
   })
 
-  it('personaId pria eksplisit memicu profil nada persona tersebut', () => {
+  it('personaId pria eksplisit diteruskan ke /api/tts', () => {
     speakGerman('Hallo', { personaId: 'männlich-2', gender: 'male' })
 
-    expect(spoken).toHaveLength(1)
-    expect(spoken[0].text).toBe('Hallo')
-    expect(spoken[0].pitch).toBe(0.9) // männlich-2 nada energik
+    expect(FakeAudio.instances[0].src).toBe('/api/tts?text=Hallo&persona=m%C3%A4nnlich-2')
   })
 
-  it('persona tersimpan wanita dipakai bila tidak ada opsi persona/gender', () => {
+  it('persona tersimpan dipakai bila tidak ada opsi persona/gender', () => {
     localStorage.setItem('preferredPersonaId', 'female-2')
     speakGerman('Hallo')
 
@@ -143,13 +139,13 @@ describe('speakGerman — audio Jerman lewat /api/tts atau client native pria', 
     localStorage.clear()
   })
 
-  it('rate diteruskan sebagai playbackRate untuk suara wanita', () => {
+  it('rate diteruskan sebagai playbackRate', () => {
     speakGerman('Hallo', { personaId: 'female-1', rate: 0.75 })
 
     expect(FakeAudio.instances[0].playbackRate).toBe(0.75)
   })
 
-  it('fallback wanita memetakan personaId ke profil akustik pitch & rate saat jaringan gagal', () => {
+  it('fallback memetakan personaId ke profil akustik pitch & rate saat jaringan gagal', () => {
     speakGerman('Hallo', { personaId: 'female-3' })
 
     const audio = FakeAudio.instances[0]
@@ -160,7 +156,7 @@ describe('speakGerman — audio Jerman lewat /api/tts atau client native pria', 
     expect(spoken[0].pitch).toBe(0.95)
   })
 
-  it('safeFallback wanita tidak dijalankan jika audio sudah di-stop via stopSpeech', () => {
+  it('safeFallback tidak dijalankan jika audio sudah di-stop via stopSpeech', () => {
     speakGerman('Hallo', { personaId: 'female-1' })
     const audio = FakeAudio.instances[0]
 
