@@ -108,6 +108,16 @@ export default function GeneratorPage({ editId, navigate }: { editId?: string; n
         setEditedDialogue(parsedDialogue)
         setEditedVocab(parsedVocab)
 
+        // Mode edit: dialog sudah ada tapi audionya belum. Tanpa ini tombol
+        // "Putar Semua Dialog" tetap kosong sampai pengguna mengklik manual.
+        const personaOf = (t: DialogTurn) =>
+          t.personaId ||
+          (t.gender === 'male' ? 'männlich-1' : t.gender === 'female' ? 'weiblich' : undefined) ||
+          'weiblich'
+        void buildScenarioAudio(
+          parsedDialogue.map((t) => ({ ...t, personaId: personaOf(t) })),
+        )
+
         const distinctSpeakers = [...new Set(parsedDialogue.map(t => t.speaker))]
         if (distinctSpeakers.length > 0) {
           setSpeakerCount(Math.min(6, Math.max(2, distinctSpeakers.length)))
