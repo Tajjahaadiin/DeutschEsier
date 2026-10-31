@@ -22,6 +22,7 @@ vi.mock('../lib/hfEdgeTts', async (importOriginal) => {
 })
 
 const { default: app } = await import('../app')
+const { __clearTtsCache } = await import('../lib/ttsChain')
 
 function fakeMp3(size = 4096): Buffer {
   const buf = Buffer.alloc(size)
@@ -37,6 +38,9 @@ function voiceCalled(): string {
 
 describe('GET /api/tts', () => {
   beforeEach(() => {
+    // Cache memori bersifat module-level; tanpa reset, hasil satu kasus uji
+    // bocor ke kasus berikutnya dan tiruan tidak pernah dipanggil.
+    __clearTtsCache()
     synthesizeMock.mockReset()
     synthesizeMock.mockResolvedValue(fakeMp3())
     googleMock.mockReset()
@@ -135,9 +139,15 @@ describe('GET /api/tts', () => {
   it('CACHE: ETag memuat engine, jadi audio cadangan tidak menyamar sebagai utama', async () => {
     const primary = await app.request('/api/tts?text=Hallo&persona=weiblich')
     const primaryEtag = primary.headers.get('etag')
+    expect(primary.headers.get('x-tts-engine')).toBe('edge-tts')
 
+    // Teks berbeda agar cache memori tidak menutupi perilaku ETag.
     directMock.mockRejectedValue(new Error('handshake 200'))
-    const fallback = await app.request('/api/tts?text=Hallo&persona=weiblich')
+    const fallback = await app.request('/api/tts?text=Guten%20Tag&persona=weiblich')
+    expect(fallback.headers.get('x-tts-engine')).toBe('hf-space')
+
+    // ETag kedua jelas berbeda; yang penting, engine utama tidak bisa
+    // direvalidasi memakai ETag hasil cadangan.
     expect(fallback.headers.get('etag')).not.toBe(primaryEtag)
   })
 

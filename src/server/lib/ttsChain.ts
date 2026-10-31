@@ -27,6 +27,53 @@ export interface LineAudio {
 
 const MIN_AUDIO_BYTES = 512
 
+/**
+ * Cache audio per (engine-agnostik) voiceId+teks.
+ *
+ * Kenapa perlu: setiap klik kartu yang sama menyintesis ulang (~1.5s ke
+ * Microsoft). CDN hanya menolong bila URL-nya sama dan cache-nya masih hidup;
+ * di dalam satu instance fungsi, klik berulang dan sintesis skenario penuh
+ * tetap membayar penuh.
+ *
+ * Yang TIDAK di-cache: kegagalan. Baris yang gagal harus dicoba lagi di
+ * panggilan berikutnya, bukan diingat sebagai gagal.
+ *
+ * Kegagalan juga tidak masuk hitungan; hanya hasil yang dikembalikan.
+ * Ukuran dibatasi agar memori fungsi tidak membengkak — skenario panjang
+ * menghasilkan ~20–50 KB per baris, jadi 300 entri ≈ 15 MB.
+ */
+const CACHE_TTL_MS = 30 * 60 * 1000
+const MAX_CACHE_ENTRIES = 300
+const cache = new Map<string, { audio: Buffer; engine: TtsEngine; at: number }>()
+
+function cacheKey(voiceId: string, text: string): string {
+  return `${voiceId}|${text}`
+}
+
+function readCache(key: string): LineAudio | null {
+  const hit = cache.get(key)
+  if (!hit) return null
+  if (Date.now() - hit.at > CACHE_TTL_MS) {
+    cache.delete(key)
+    return null
+  }
+  return { audio: hit.audio, engine: hit.engine }
+}
+
+function writeCache(key: string, value: LineAudio): void {
+  if (cache.size >= MAX_CACHE_ENTRIES) {
+    // Map menjaga urutan penyisipan: entri tertua ada di depan.
+    const oldest = cache.keys().next().value
+    if (oldest) cache.delete(oldest)
+  }
+  cache.set(key, { ...value, at: Date.now() })
+}
+
+/** Hanya untuk test: kosongkan cache antar kasus. */
+export function __clearTtsCache(): void {
+  cache.clear()
+}
+
 /** Space Gradio butuh label panjang; Edge direct butuh voiceId pendek. */
 function hfLabel(voiceId: string): string {
   const found = Object.entries(EDGE_VOICE_BY_PERSONA).find(([, v]) => v === voiceId)
@@ -44,6 +91,16 @@ export async function synthesizeLine(text: string, voiceId: string): Promise<Lin
   const clean = text.trim()
   if (!clean) throw new Error('text kosong')
 
+  const key = cacheKey(voiceId, clean)
+  const cached = readCache(key)
+  if (cached) return cached
+
+  const result = await synthesizeUncached(clean, voiceId)
+  writeCache(key, result)
+  return result
+}
+
+async function synthesizeUncached(clean: string, voiceId: string): Promise<LineAudio> {
   // 1. Edge-TTS langsung (prioritas).
   try {
     const audio = await synthesizeEdgeDirect(clean, voiceId)

@@ -16840,9 +16840,9 @@ var require_axios = __commonJS({
       }
       return result2;
     };
-    var kindOf = /* @__PURE__ */ ((cache2) => (thing) => {
+    var kindOf = /* @__PURE__ */ ((cache3) => (thing) => {
       const str = toString.call(thing);
-      return cache2[str] || (cache2[str] = str.slice(8, -1).toLowerCase());
+      return cache3[str] || (cache3[str] = str.slice(8, -1).toLowerCase());
     })(/* @__PURE__ */ Object.create(null));
     var kindOfTest = (type) => {
       type = type.toLowerCase();
@@ -19557,8 +19557,8 @@ var require_axios = __commonJS({
     }
     function getTunnelingAgent(agentOptions, userHttpsAgent) {
       const key = agentOptions.protocol + "//" + agentOptions.hostname + ":" + (agentOptions.port || "") + "#" + (agentOptions.auth || "");
-      const cache2 = userHttpsAgent ? tunnelingAgentCacheUser.get(userHttpsAgent) || tunnelingAgentCacheUser.set(userHttpsAgent, /* @__PURE__ */ new Map()).get(userHttpsAgent) : tunnelingAgentCache;
-      let agent = cache2.get(key);
+      const cache3 = userHttpsAgent ? tunnelingAgentCacheUser.get(userHttpsAgent) || tunnelingAgentCacheUser.set(userHttpsAgent, /* @__PURE__ */ new Map()).get(userHttpsAgent) : tunnelingAgentCache;
+      let agent = cache3.get(key);
       if (agent) return agent;
       const merged = userHttpsAgent && userHttpsAgent.options ? {
         ...userHttpsAgent.options,
@@ -19578,7 +19578,7 @@ var require_axios = __commonJS({
         };
       }
       agent[kAxiosInstalledTunnel] = true;
-      cache2.set(key, agent);
+      cache3.set(key, agent);
       return agent;
     }
     var supportedProtocols = platform.protocols.map((protocol) => {
@@ -22208,15 +22208,15 @@ var getPattern = (label, next4) => {
   }
   const match14 = label.match(/^\:([^\{\}]+)(?:\{(.+)\})?$/);
   if (match14) {
-    const cacheKey = `${label}#${next4}`;
-    if (!patternCache[cacheKey]) {
+    const cacheKey2 = `${label}#${next4}`;
+    if (!patternCache[cacheKey2]) {
       if (match14[2]) {
-        patternCache[cacheKey] = next4 && next4[0] !== ":" && next4[0] !== "*" ? [cacheKey, match14[1], new RegExp(`^${match14[2]}(?=/${next4})`)] : [label, match14[1], new RegExp(`^${match14[2]}$`)];
+        patternCache[cacheKey2] = next4 && next4[0] !== ":" && next4[0] !== "*" ? [cacheKey2, match14[1], new RegExp(`^${match14[2]}(?=/${next4})`)] : [label, match14[1], new RegExp(`^${match14[2]}$`)];
       } else {
-        patternCache[cacheKey] = [label, match14[1], true];
+        patternCache[cacheKey2] = [label, match14[1], true];
       }
     }
-    return patternCache[cacheKey];
+    return patternCache[cacheKey2];
   }
   return null;
 };
@@ -31244,6 +31244,28 @@ async function synthesizeGoogleTts(text3, lang2 = "de") {
 
 // src/server/lib/ttsChain.ts
 var MIN_AUDIO_BYTES = 512;
+var CACHE_TTL_MS2 = 30 * 60 * 1e3;
+var MAX_CACHE_ENTRIES = 300;
+var cache2 = /* @__PURE__ */ new Map();
+function cacheKey(voiceId, text3) {
+  return `${voiceId}|${text3}`;
+}
+function readCache(key) {
+  const hit = cache2.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > CACHE_TTL_MS2) {
+    cache2.delete(key);
+    return null;
+  }
+  return { audio: hit.audio, engine: hit.engine };
+}
+function writeCache(key, value3) {
+  if (cache2.size >= MAX_CACHE_ENTRIES) {
+    const oldest = cache2.keys().next().value;
+    if (oldest) cache2.delete(oldest);
+  }
+  cache2.set(key, { ...value3, at: Date.now() });
+}
 function hfLabel(voiceId) {
   const found = Object.entries(EDGE_VOICE_BY_PERSONA).find(([, v]) => v === voiceId);
   if (found) return VOICE_LABEL_BY_ID[found[0]] ?? `${voiceId} - de-DE (Male)`;
@@ -31252,6 +31274,14 @@ function hfLabel(voiceId) {
 async function synthesizeLine(text3, voiceId) {
   const clean = text3.trim();
   if (!clean) throw new Error("text kosong");
+  const key = cacheKey(voiceId, clean);
+  const cached4 = readCache(key);
+  if (cached4) return cached4;
+  const result2 = await synthesizeUncached(clean, voiceId);
+  writeCache(key, result2);
+  return result2;
+}
+async function synthesizeUncached(clean, voiceId) {
   try {
     const audio2 = await synthesizeEdgeDirect(clean, voiceId);
     return { audio: audio2, engine: "edge-tts" };
@@ -32072,9 +32102,9 @@ var toStringUnknown = (u, whitespace = 2) => {
   }
 };
 var stringifyCircular = (obj, whitespace) => {
-  let cache2 = [];
-  const retVal = JSON.stringify(obj, (_key, value3) => typeof value3 === "object" && value3 !== null ? cache2.includes(value3) ? void 0 : cache2.push(value3) && (redactableState.fiberRefs !== void 0 && isRedactable(value3) ? value3[symbolRedactable](redactableState.fiberRefs) : value3) : value3, whitespace);
-  cache2 = void 0;
+  let cache3 = [];
+  const retVal = JSON.stringify(obj, (_key, value3) => typeof value3 === "object" && value3 !== null ? cache3.includes(value3) ? void 0 : cache3.push(value3) && (redactableState.fiberRefs !== void 0 && isRedactable(value3) ? value3[symbolRedactable](redactableState.fiberRefs) : value3) : value3, whitespace);
+  cache3 = void 0;
   return retVal;
 };
 var symbolRedactable = /* @__PURE__ */ Symbol.for("effect/Inspectable/Redactable");
@@ -43269,18 +43299,18 @@ var addSpanStackTrace = (options) => {
   Error.stackTraceLimit = 3;
   const traceError = new Error();
   Error.stackTraceLimit = limit;
-  let cache2 = false;
+  let cache3 = false;
   return {
     ...options,
     captureStackTrace: () => {
-      if (cache2 !== false) {
-        return cache2;
+      if (cache3 !== false) {
+        return cache3;
       }
       if (traceError.stack !== void 0) {
         const stack = traceError.stack.split("\n");
         if (stack[3] !== void 0) {
-          cache2 = stack[3].trim();
-          return cache2;
+          cache3 = stack[3].trim();
+          return cache3;
         }
       }
     }
@@ -44341,15 +44371,15 @@ var functionWithSpan = (options) => function() {
     Error.stackTraceLimit = 2;
     const error = new Error();
     Error.stackTraceLimit = limit;
-    let cache2 = false;
+    let cache3 = false;
     captureStackTrace = () => {
-      if (cache2 !== false) {
-        return cache2;
+      if (cache3 !== false) {
+        return cache3;
       }
       if (error.stack) {
         const stack = error.stack.trim().split("\n");
-        cache2 = stack.slice(2).join("\n").trim();
-        return cache2;
+        cache3 = stack.slice(2).join("\n").trim();
+        return cache3;
       }
     };
   }
@@ -50515,13 +50545,13 @@ var awaitAllChildren = (self2) => ensuringChildren(self2, fiberAwaitAll);
 var cached2 = /* @__PURE__ */ dual(2, (self2, timeToLive) => map9(cachedInvalidateWithTTL(self2, timeToLive), (tuple2) => tuple2[0]));
 var cachedInvalidateWithTTL = /* @__PURE__ */ dual(2, (self2, timeToLive) => {
   const duration4 = decode(timeToLive);
-  return flatMap7(context2(), (env) => map9(makeSynchronized(none2()), (cache2) => [provideContext(getCachedValue(self2, duration4, cache2), env), invalidateCache(cache2)]));
+  return flatMap7(context2(), (env) => map9(makeSynchronized(none2()), (cache3) => [provideContext(getCachedValue(self2, duration4, cache3), env), invalidateCache(cache3)]));
 });
 var computeCachedValue = (self2, timeToLive, start3) => {
   const timeToLiveMillis = toMillis(decode(timeToLive));
   return pipe(deferredMake(), tap((deferred) => intoDeferred(self2, deferred)), map9((deferred) => some2([start3 + timeToLiveMillis, deferred])));
 };
-var getCachedValue = (self2, timeToLive, cache2) => uninterruptibleMask((restore) => pipe(clockWith3((clock3) => clock3.currentTimeMillis), flatMap7((time2) => updateSomeAndGetEffectSynchronized(cache2, (option5) => {
+var getCachedValue = (self2, timeToLive, cache3) => uninterruptibleMask((restore) => pipe(clockWith3((clock3) => clock3.currentTimeMillis), flatMap7((time2) => updateSomeAndGetEffectSynchronized(cache3, (option5) => {
   switch (option5._tag) {
     case "None": {
       return some2(computeCachedValue(self2, timeToLive, time2));
@@ -50532,7 +50562,7 @@ var getCachedValue = (self2, timeToLive, cache2) => uninterruptibleMask((restore
     }
   }
 })), flatMap7((option5) => isNone2(option5) ? dieMessage("BUG: Effect.cachedInvalidate - please report an issue at https://github.com/Effect-TS/effect/issues") : restore(deferredAwait(option5.value[1])))));
-var invalidateCache = (cache2) => set5(cache2, none2());
+var invalidateCache = (cache3) => set5(cache3, none2());
 var ensuringChild = /* @__PURE__ */ dual(2, (self2, f) => ensuringChildren(self2, (children) => f(fiberAll(children))));
 var ensuringChildren = /* @__PURE__ */ dual(2, (self2, children) => flatMap7(track, (supervisor) => pipe(supervised(self2, supervisor), ensuring(flatMap7(supervisor.value, children)))));
 var forkAll = /* @__PURE__ */ dual((args2) => isIterable(args2[0]), (effects, options) => options?.discard ? forEachSequentialDiscard(effects, fork) : map9(forEachSequential(effects, fork), fiberAll));
@@ -52852,11 +52882,11 @@ var fromRequest = (request2, dataSource) => flatMap7(isEffect(dataSource) ? data
   const proxy = new Proxy(request2, {});
   return fiberRefGetWith(currentCacheEnabled, (cacheEnabled) => {
     if (cacheEnabled) {
-      const cached4 = fiberRefGetWith(currentCache, (cache2) => flatMap7(cache2.getEither(proxy), (orNew) => {
+      const cached4 = fiberRefGetWith(currentCache, (cache3) => flatMap7(cache3.getEither(proxy), (orNew) => {
         switch (orNew._tag) {
           case "Left": {
             if (orNew.left.listeners.interrupted) {
-              return flatMap7(cache2.invalidateWhen(proxy, (entry) => entry.handle === orNew.left.handle), () => cached4);
+              return flatMap7(cache3.invalidateWhen(proxy, (entry) => entry.handle === orNew.left.handle), () => cached4);
             }
             orNew.left.listeners.increment();
             return uninterruptibleMask((restore) => flatMap7(exit(blocked(empty15, restore(deferredAwait(orNew.left.handle)))), (exit4) => {
@@ -52899,7 +52929,7 @@ var fromRequest = (request2, dataSource) => flatMap7(isEffect(dataSource) ? data
 var cacheRequest = (request2, result2) => {
   return fiberRefGetWith(currentCacheEnabled, (cacheEnabled) => {
     if (cacheEnabled) {
-      return fiberRefGetWith(currentCache, (cache2) => flatMap7(cache2.getEither(request2), (orNew) => {
+      return fiberRefGetWith(currentCache, (cache3) => flatMap7(cache3.getEither(request2), (orNew) => {
         switch (orNew._tag) {
           case "Left": {
             return void_;
@@ -52917,7 +52947,7 @@ var withRequestCaching = /* @__PURE__ */ dual(2, (self2, strategy) => fiberRefLo
 var withRequestCache = /* @__PURE__ */ dual(
   2,
   // @ts-expect-error
-  (self2, cache2) => fiberRefLocally(self2, currentCache, cache2)
+  (self2, cache3) => fiberRefLocally(self2, currentCache, cache3)
 );
 
 // node_modules/effect/dist/esm/Request.js
@@ -53251,21 +53281,21 @@ var transposeOption = (self2) => {
 };
 var transposeMapOption = /* @__PURE__ */ dual(2, (self2, f) => isNone(self2) ? succeedNone2 : map12(f(self2.value), some));
 var makeTagProxy = (TagClass) => {
-  const cache2 = /* @__PURE__ */ new Map();
+  const cache3 = /* @__PURE__ */ new Map();
   return new Proxy(TagClass, {
     get(target, prop, receiver) {
       if (prop in target) {
         return Reflect.get(target, prop, receiver);
       }
-      if (cache2.has(prop)) {
-        return cache2.get(prop);
+      if (cache3.has(prop)) {
+        return cache3.get(prop);
       }
       const fn2 = (...args2) => andThen2(target, (s) => {
         if (typeof s[prop] === "function") {
-          cache2.set(prop, (...args3) => andThen2(target, (s2) => s2[prop](...args3)));
+          cache3.set(prop, (...args3) => andThen2(target, (s2) => s2[prop](...args3)));
           return s[prop](...args2);
         }
-        cache2.set(prop, andThen2(target, (s2) => s2[prop]));
+        cache3.set(prop, andThen2(target, (s2) => s2[prop]));
         return s[prop];
       });
       const cn = andThen2(target, (s) => s[prop]);
@@ -53278,7 +53308,7 @@ var makeTagProxy = (TagClass) => {
       proto6.bind = bind4;
       proto6.call = call;
       Object.setPrototypeOf(fn2, proto6);
-      cache2.set(prop, fn2);
+      cache3.set(prop, fn2);
       return fn2;
     }
   });
@@ -53480,10 +53510,10 @@ function fnApply(options) {
       effect = fnError ? failCause5(sequential(die(fnError), die(error))) : die4(error);
     }
   }
-  let cache2 = false;
+  let cache3 = false;
   const captureStackTrace = () => {
-    if (cache2 !== false) {
-      return cache2;
+    if (cache3 !== false) {
+      return cache3;
     }
     if (options.errorCall.stack) {
       const stackDef = options.errorDef.stack.trim().split("\n");
@@ -53496,9 +53526,9 @@ function fnApply(options) {
       if (!endStackCall.includes(`(`)) {
         endStackCall = endStackCall.replace(/at (.*)/, "at ($1)");
       }
-      cache2 = `${endStackDef}
+      cache3 = `${endStackDef}
 ${endStackCall}`;
-      return cache2;
+      return cache3;
     }
   };
   const opts = options.spanOptions && "captureStackTrace" in options.spanOptions ? options.spanOptions : {
