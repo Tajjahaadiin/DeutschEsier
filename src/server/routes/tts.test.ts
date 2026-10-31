@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const synthesizeMock = vi.fn()
 
+const googleMock = vi.fn()
+
+vi.mock('../lib/googleTtsFallback', () => ({
+  synthesizeGoogleTts: googleMock,
+}))
+
 vi.mock('../lib/hfEdgeTts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/hfEdgeTts')>()
   return {
@@ -28,6 +34,8 @@ describe('GET /api/tts', () => {
   beforeEach(() => {
     synthesizeMock.mockReset()
     synthesizeMock.mockResolvedValue(fakeMp3())
+    googleMock.mockReset()
+    googleMock.mockResolvedValue(fakeMp3(2048))
   })
 
   it('menolak bila text kosong (400)', async () => {
@@ -83,8 +91,18 @@ describe('GET /api/tts', () => {
     expect(synthesizeMock).not.toHaveBeenCalled()
   })
 
-  it('mengembalikan 502 bila upstream gagal (klien pakai Web Speech)', async () => {
+  it('FALLBACK: jatuh ke Google TTS bila HF gagal (bukan 502)', async () => {
     synthesizeMock.mockRejectedValue(new Error('space down'))
+    const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('audio/mpeg')
+    expect(res.headers.get('x-tts-engine')).toBe('google-fallback')
+    expect(googleMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('mengembalikan 502 hanya bila HF dan Google sama-sama gagal', async () => {
+    synthesizeMock.mockRejectedValue(new Error('space down'))
+    googleMock.mockRejectedValue(new Error('google down'))
     const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
     expect(res.status).toBe(502)
     expect(res.headers.get('content-type')).toContain('application/json')

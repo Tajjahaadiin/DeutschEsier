@@ -227,6 +227,7 @@ sessionsRouter.get('/:id/audio', async (c) => {
 
     c.header('Content-Type', result.contentType)
     c.header('ETag', etag)
+    c.header('X-Scenario-Engine', result.engine)
     c.header('X-Scenario-Turns', String(result.turns))
     c.header('X-Scenario-Turns-Ok', String(result.perTurn.filter((t) => t.ok).length))
     c.header('X-Scenario-Timings', result.timings.join(','))

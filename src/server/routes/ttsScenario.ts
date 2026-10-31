@@ -55,7 +55,7 @@ scenarioRouter.post('/', async (c) => {
     const result = await synthesizeScenario(turns, edgeTtsSpace)
 
     c.header('Content-Type', result.contentType)
-    c.header('X-TTS-Engine', 'hf-edge-tts')
+    c.header('X-TTS-Engine', result.engine)
     c.header('X-TTS-Turns', String(result.turns))
     c.header('X-TTS-Turns-Ok', String(result.perTurn.filter((t) => t.ok).length))
     c.header('X-TTS-Timings', result.timings.join(','))
