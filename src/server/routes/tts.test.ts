@@ -1,12 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const synthesizeMock = vi.fn()
-
 const googleMock = vi.fn()
+const directMock = vi.fn()
 
 vi.mock('../lib/googleTtsFallback', () => ({
   synthesizeGoogleTts: googleMock,
 }))
+
+vi.mock('../lib/edgeTtsDirect', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/edgeTtsDirect')>()
+  return { ...actual, synthesizeEdgeDirect: directMock }
+})
 
 vi.mock('../lib/hfEdgeTts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/hfEdgeTts')>()
@@ -25,9 +30,9 @@ function fakeMp3(size = 4096): Buffer {
   return buf
 }
 
-/** Voice label yang diterima Space: "<voiceId> - de-DE (Male|Female)". */
+/** voiceId yang diterima edge-tts langsung, mis. "de-DE-ConradNeural". */
 function voiceCalled(): string {
-  return synthesizeMock.mock.calls.at(-1)?.[1] as string
+  return directMock.mock.calls.at(-1)?.[1] as string
 }
 
 describe('GET /api/tts', () => {
@@ -36,6 +41,9 @@ describe('GET /api/tts', () => {
     synthesizeMock.mockResolvedValue(fakeMp3())
     googleMock.mockReset()
     googleMock.mockResolvedValue(fakeMp3(2048))
+    // Default: edge-tts langsung sehat (prioritas pertama).
+    directMock.mockReset()
+    directMock.mockResolvedValue(fakeMp3(8192))
   })
 
   it('menolak bila text kosong (400)', async () => {
@@ -54,22 +62,23 @@ describe('GET /api/tts', () => {
     const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('audio/mpeg')
-    expect(voiceCalled()).toContain('de-DE-ConradNeural')
-    expect(voiceCalled()).toContain('(Male)')
+    expect(voiceCalled()).toBe('de-DE-ConradNeural')
+    expect(res.headers.get('x-tts-engine')).toBe('edge-tts')
+    expect(res.headers.get('x-tts-gender')).toBe('male')
   })
 
   it('REGRESI: männlich-2 memakai Killian, tidak pernah jatuh ke suara wanita', async () => {
     const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-2')
     expect(res.status).toBe(200)
-    expect(voiceCalled()).toContain('de-DE-KillianNeural')
-    expect(voiceCalled()).not.toContain('(Female)')
+    expect(voiceCalled()).toBe('de-DE-KillianNeural')
+    expect(res.headers.get('x-tts-gender')).toBe('male')
   })
 
   it('persona wanita memakai Amala', async () => {
     const res = await app.request('/api/tts?text=Hallo&persona=weiblich')
     expect(res.status).toBe(200)
-    expect(voiceCalled()).toContain('de-DE-AmalaNeural')
-    expect(voiceCalled()).toContain('(Female)')
+    expect(voiceCalled()).toBe('de-DE-AmalaNeural')
+    expect(res.headers.get('x-tts-gender')).toBe('female')
   })
 
   it('fallback gender=male memakai Conrad tanpa persona', async () => {
@@ -82,25 +91,67 @@ describe('GET /api/tts', () => {
     const etag = first.headers.get('etag')
     expect(etag).toBeTruthy()
 
+    directMock.mockClear()
     synthesizeMock.mockClear()
     const second = await app.request('/api/tts?text=Hallo&persona=weiblich', {
       headers: { 'if-none-match': etag! },
     })
     expect(second.status).toBe(304)
     // 304 tidak boleh memanggil upstream lagi
+    expect(directMock).not.toHaveBeenCalled()
     expect(synthesizeMock).not.toHaveBeenCalled()
   })
 
-  it('FALLBACK: jatuh ke Google TTS bila HF gagal (bukan 502)', async () => {
+  it('FALLBACK: edge gagal → HF Space menjawab (lapis 2)', async () => {
+    directMock.mockRejectedValue(new Error('handshake 200'))
+    const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('x-tts-engine')).toBe('hf-space')
+    expect(synthesizeMock).toHaveBeenCalledTimes(1)
+    // Space memakai label panjang, bukan voiceId pendek
+    expect(synthesizeMock.mock.calls[0][1]).toContain('de-DE-ConradNeural')
+    expect(synthesizeMock.mock.calls[0][1]).toContain('(Male)')
+  })
+
+  it('FALLBACK: edge + HF gagal → Google TTS (lapis 3)', async () => {
+    directMock.mockRejectedValue(new Error('handshake 200'))
     synthesizeMock.mockRejectedValue(new Error('space down'))
     const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
     expect(res.status).toBe(200)
-    expect(res.headers.get('content-type')).toBe('audio/mpeg')
     expect(res.headers.get('x-tts-engine')).toBe('google-fallback')
     expect(googleMock).toHaveBeenCalledTimes(1)
   })
 
-  it('mengembalikan 502 hanya bila HF dan Google sama-sama gagal', async () => {
+  it('CACHE: hasil edge immutable, hasil cadangan must-revalidate', async () => {
+    const ok = await app.request('/api/tts?text=Hallo&persona=weiblich')
+    expect(ok.headers.get('cache-control')).toContain('immutable')
+
+    directMock.mockRejectedValue(new Error('handshake 200'))
+    const fb = await app.request('/api/tts?text=Anders&persona=weiblich')
+    expect(fb.headers.get('x-tts-engine')).toBe('hf-space')
+    expect(fb.headers.get('cache-control')).toContain('must-revalidate')
+  })
+
+  it('CACHE: ETag memuat engine, jadi audio cadangan tidak menyamar sebagai utama', async () => {
+    const primary = await app.request('/api/tts?text=Hallo&persona=weiblich')
+    const primaryEtag = primary.headers.get('etag')
+
+    directMock.mockRejectedValue(new Error('handshake 200'))
+    const fallback = await app.request('/api/tts?text=Hallo&persona=weiblich')
+    expect(fallback.headers.get('etag')).not.toBe(primaryEtag)
+  })
+
+  it('CACHE: 502 tidak pernah disimpan CDN', async () => {
+    directMock.mockRejectedValue(new Error('down'))
+    synthesizeMock.mockRejectedValue(new Error('down'))
+    googleMock.mockRejectedValue(new Error('down'))
+    const res = await app.request('/api/tts?text=Hallo&persona=weiblich')
+    expect(res.status).toBe(502)
+    expect(res.headers.get('cache-control')).toBe('no-store')
+  })
+
+  it('mengembalikan 502 hanya bila ketiga engine gagal', async () => {
+    directMock.mockRejectedValue(new Error('edge down'))
     synthesizeMock.mockRejectedValue(new Error('space down'))
     googleMock.mockRejectedValue(new Error('google down'))
     const res = await app.request('/api/tts?text=Hallo&persona=m%C3%A4nnlich-1')
