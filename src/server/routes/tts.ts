@@ -13,6 +13,7 @@
 import { Hono } from 'hono'
 import { createHash } from 'node:crypto'
 import { edgeTtsSpace, VOICE_LABEL_BY_ID } from '../lib/hfEdgeTts'
+import { synthesizeGoogleTts } from '../lib/googleTtsFallback'
 import { getTtsPersona } from '../../shared/ttsPersonas'
 
 const ttsRouter = new Hono()
@@ -39,11 +40,21 @@ ttsRouter.get('/', async (c) => {
   if (c.req.header('if-none-match') === etag) return c.body(null, 304)
 
   try {
-    const audio = await edgeTtsSpace.synthesize(text.trim(), voiceLabel)
+    // HF dulu (suara pria asli). Bila Space macet, jatuh ke Google TTS supaya
+    // tombol per baris tetap bersuara daripada 502 tanpa audio.
+    let audio: Buffer
+    let engine = 'hf-edge-tts'
+    try {
+      audio = await edgeTtsSpace.synthesize(text.trim(), voiceLabel)
+    } catch (hfErr: any) {
+      console.warn('[tts] HF gagal, fallback Google:', hfErr?.message || hfErr)
+      audio = await synthesizeGoogleTts(text.trim())
+      engine = 'google-fallback'
+    }
 
     c.header('Content-Type', 'audio/mpeg')
     c.header('ETag', etag)
-    c.header('X-TTS-Engine', 'hf-edge-tts')
+    c.header('X-TTS-Engine', engine)
     c.header('X-TTS-Voice', voiceLabel.split(' - ')[0])
     c.header('X-TTS-Gender', persona?.gender ?? (gender === 'male' ? 'male' : 'female'))
     c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')

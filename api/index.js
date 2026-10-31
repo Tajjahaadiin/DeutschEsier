@@ -12298,9 +12298,9 @@ var require_axios = __commonJS({
       }
       return result2;
     };
-    var kindOf = /* @__PURE__ */ ((cache) => (thing) => {
+    var kindOf = /* @__PURE__ */ ((cache2) => (thing) => {
       const str = toString.call(thing);
-      return cache[str] || (cache[str] = str.slice(8, -1).toLowerCase());
+      return cache2[str] || (cache2[str] = str.slice(8, -1).toLowerCase());
     })(/* @__PURE__ */ Object.create(null));
     var kindOfTest = (type) => {
       type = type.toLowerCase();
@@ -15015,8 +15015,8 @@ var require_axios = __commonJS({
     }
     function getTunnelingAgent(agentOptions, userHttpsAgent) {
       const key = agentOptions.protocol + "//" + agentOptions.hostname + ":" + (agentOptions.port || "") + "#" + (agentOptions.auth || "");
-      const cache = userHttpsAgent ? tunnelingAgentCacheUser.get(userHttpsAgent) || tunnelingAgentCacheUser.set(userHttpsAgent, /* @__PURE__ */ new Map()).get(userHttpsAgent) : tunnelingAgentCache;
-      let agent = cache.get(key);
+      const cache2 = userHttpsAgent ? tunnelingAgentCacheUser.get(userHttpsAgent) || tunnelingAgentCacheUser.set(userHttpsAgent, /* @__PURE__ */ new Map()).get(userHttpsAgent) : tunnelingAgentCache;
+      let agent = cache2.get(key);
       if (agent) return agent;
       const merged = userHttpsAgent && userHttpsAgent.options ? {
         ...userHttpsAgent.options,
@@ -15036,7 +15036,7 @@ var require_axios = __commonJS({
         };
       }
       agent[kAxiosInstalledTunnel] = true;
-      cache.set(key, agent);
+      cache2.set(key, agent);
       return agent;
     }
     var supportedProtocols = platform.protocols.map((protocol) => {
@@ -26420,7 +26420,7 @@ wordsRouter.get("/", async (c) => {
 var words_default = wordsRouter;
 
 // src/server/routes/sessions.ts
-import { createHash } from "node:crypto";
+import { createHash as createHash2 } from "node:crypto";
 
 // src/server/routes/auth.ts
 import crypto2 from "crypto";
@@ -26564,8 +26564,13 @@ var EdgeTtsSpace = class _EdgeTtsSpace {
   constructor(spaceUrl = process.env.HF_EDGE_TTS_SPACE || DEFAULT_SPACE) {
     this.base = spaceUrl.replace(/\/+$/, "");
   }
-  /** Sintesis satu potongan teks. Melempar bila upstream gagal. */
-  async synthesize(text3, voiceLabel, timeoutMs = 3e4) {
+  /**
+   * Timeout default sengaja pendek (9s). Saat antrean Space macet, Gradio
+   * menerima job lalu tidak pernah menyelesaikannya — menunggu lama hanya
+   * memindahkan timeout ke fungsi serverless Vercel tanpa hasil. Gagal cepat
+   * jauh lebih berguna karena pemanggil bisa langsung jatuh ke fallback.
+   */
+  async synthesize(text3, voiceLabel, timeoutMs = 9e3) {
     const clean = text3.trim();
     if (!clean) throw new Error("text kosong");
     const call = await fetch(`${this.base}${CALL_PATH}`, {
@@ -26585,6 +26590,30 @@ var EdgeTtsSpace = class _EdgeTtsSpace {
     const buf = Buffer.from(await audioRes.arrayBuffer());
     if (buf.length < 512) throw new Error("audio kosong");
     return buf;
+  }
+  /**
+   * Apakah worker Space sehat?
+   *
+   * Gradio membalas `{"queue_size": N, "rank_eta": null}` saat worker-nya
+   * macet: job diterima tapi tidak pernah diproses. Terdeteksi pada
+   * innoai/Edge-TTS-Text-to-Speech (queue_size 6–8, rank_eta null, semua voice
+   * timeout). Pemeriksaan ini murah (~1s) dan mencegah seluruh dialog gagal
+   * setelah menunggu tiap baris timeout.
+   */
+  async isHealthy(timeoutMs = 4e3) {
+    try {
+      const res2 = await fetch(`${this.base}/gradio_api/queue/status`, {
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      if (!res2.ok) return false;
+      const body = await res2.json();
+      const size10 = typeof body.queue_size === "number" ? body.queue_size : 0;
+      const etaKnown = body.rank_eta !== null && body.rank_eta !== void 0;
+      if (size10 > 3 && !etaKnown) return false;
+      return true;
+    } catch {
+      return false;
+    }
   }
   /**
    * MP3 senyap untuk jeda antar baris.
@@ -26618,6 +26647,28 @@ var EdgeTtsSpace = class _EdgeTtsSpace {
 };
 var edgeTtsSpace = new EdgeTtsSpace();
 
+// src/server/lib/googleTtsFallback.ts
+var import_google_tts_api = __toESM(require_dist2(), 1);
+import { createHash } from "node:crypto";
+var cache = /* @__PURE__ */ new Map();
+var MAX_CACHE = 200;
+async function synthesizeGoogleTts(text3, lang2 = "de") {
+  const clean = text3.trim();
+  if (!clean) throw new Error("text kosong");
+  const key = createHash("sha1").update(`${lang2}|${clean}`).digest("hex");
+  const hit = cache.get(key);
+  if (hit) return hit;
+  const parts2 = await (0, import_google_tts_api.getAllAudioBase64)(clean, { lang: lang2 });
+  const audio = Buffer.concat(parts2.map((p) => Buffer.from(p.base64, "base64")));
+  if (audio.length < 512) throw new Error("audio kosong dari Google TTS");
+  if (cache.size >= MAX_CACHE) {
+    const oldest = cache.keys().next().value;
+    if (oldest) cache.delete(oldest);
+  }
+  cache.set(key, audio);
+  return audio;
+}
+
 // src/server/lib/scenarioTts.ts
 var TURN_GAP_MS = 450;
 var MP3_KBPS = 48;
@@ -26640,17 +26691,29 @@ async function mapLimit(items, limit, fn2) {
 }
 async function synthesizeScenario(turns, space) {
   const started = Date.now();
+  const spaceUsable = await space.isHealthy();
+  if (!spaceUsable) {
+    console.warn("[scenario] HF Space tidak sehat (antrean macet) \u2192 pakai fallback Google TTS");
+  }
   const results = await mapLimit(turns, CONCURRENCY, async (turn, i) => {
     const persona = turn.personaId ?? (i % 2 === 0 ? "weiblich" : "m\xE4nnlich-1");
     const voice = VOICE_LABEL_BY_ID[persona] ?? VOICE_LABEL_BY_ID["weiblich"];
     const t0 = Date.now();
+    if (spaceUsable) {
+      try {
+        const buf = await space.synthesize(turn.germanText, voice);
+        const ok = buf.length > 512;
+        if (ok) return { persona, ok, buf, bytes: buf.length, ms: Date.now() - t0, engine: "hf-edge-tts" };
+      } catch (err) {
+        console.warn(`[scenario] baris ${i + 1} gagal di HF, coba fallback:`, err?.message || err);
+      }
+    }
     try {
-      const buf = await space.synthesize(turn.germanText, voice);
-      const ok = buf.length > 512;
-      return { persona, ok, buf: ok ? buf : null, bytes: buf.length, ms: Date.now() - t0 };
+      const buf = await synthesizeGoogleTts(turn.germanText);
+      return { persona, ok: true, buf, bytes: buf.length, ms: Date.now() - t0, engine: "google-fallback" };
     } catch (err) {
-      console.warn(`[scenario] baris ${i + 1} gagal:`, err?.message || err);
-      return { persona, ok: false, buf: null, bytes: 0, ms: Date.now() - t0 };
+      console.warn(`[scenario] baris ${i + 1} gagal total:`, err?.message || err);
+      return { persona, ok: false, buf: null, bytes: 0, ms: Date.now() - t0, engine: "google-fallback" };
     }
   });
   const parts2 = results.map((r) => r.buf).filter((b) => b !== null);
@@ -26673,9 +26736,11 @@ async function synthesizeScenario(turns, space) {
     }
   });
   const audio = Buffer.concat(merged);
+  const usedFallback = results.some((r) => r.ok && r.engine === "google-fallback");
   return {
     audio,
     contentType: "audio/mpeg",
+    engine: usedFallback ? "google-fallback" : "hf-edge-tts",
     turns: turns.length,
     bytes: audio.length,
     elapsedMs: Date.now() - started,
@@ -27400,9 +27465,9 @@ var toStringUnknown = (u, whitespace = 2) => {
   }
 };
 var stringifyCircular = (obj, whitespace) => {
-  let cache = [];
-  const retVal = JSON.stringify(obj, (_key, value3) => typeof value3 === "object" && value3 !== null ? cache.includes(value3) ? void 0 : cache.push(value3) && (redactableState.fiberRefs !== void 0 && isRedactable(value3) ? value3[symbolRedactable](redactableState.fiberRefs) : value3) : value3, whitespace);
-  cache = void 0;
+  let cache2 = [];
+  const retVal = JSON.stringify(obj, (_key, value3) => typeof value3 === "object" && value3 !== null ? cache2.includes(value3) ? void 0 : cache2.push(value3) && (redactableState.fiberRefs !== void 0 && isRedactable(value3) ? value3[symbolRedactable](redactableState.fiberRefs) : value3) : value3, whitespace);
+  cache2 = void 0;
   return retVal;
 };
 var symbolRedactable = /* @__PURE__ */ Symbol.for("effect/Inspectable/Redactable");
@@ -38597,18 +38662,18 @@ var addSpanStackTrace = (options) => {
   Error.stackTraceLimit = 3;
   const traceError = new Error();
   Error.stackTraceLimit = limit;
-  let cache = false;
+  let cache2 = false;
   return {
     ...options,
     captureStackTrace: () => {
-      if (cache !== false) {
-        return cache;
+      if (cache2 !== false) {
+        return cache2;
       }
       if (traceError.stack !== void 0) {
         const stack = traceError.stack.split("\n");
         if (stack[3] !== void 0) {
-          cache = stack[3].trim();
-          return cache;
+          cache2 = stack[3].trim();
+          return cache2;
         }
       }
     }
@@ -39669,15 +39734,15 @@ var functionWithSpan = (options) => function() {
     Error.stackTraceLimit = 2;
     const error = new Error();
     Error.stackTraceLimit = limit;
-    let cache = false;
+    let cache2 = false;
     captureStackTrace = () => {
-      if (cache !== false) {
-        return cache;
+      if (cache2 !== false) {
+        return cache2;
       }
       if (error.stack) {
         const stack = error.stack.trim().split("\n");
-        cache = stack.slice(2).join("\n").trim();
-        return cache;
+        cache2 = stack.slice(2).join("\n").trim();
+        return cache2;
       }
     };
   }
@@ -45843,13 +45908,13 @@ var awaitAllChildren = (self2) => ensuringChildren(self2, fiberAwaitAll);
 var cached2 = /* @__PURE__ */ dual(2, (self2, timeToLive) => map9(cachedInvalidateWithTTL(self2, timeToLive), (tuple2) => tuple2[0]));
 var cachedInvalidateWithTTL = /* @__PURE__ */ dual(2, (self2, timeToLive) => {
   const duration4 = decode(timeToLive);
-  return flatMap7(context2(), (env) => map9(makeSynchronized(none2()), (cache) => [provideContext(getCachedValue(self2, duration4, cache), env), invalidateCache(cache)]));
+  return flatMap7(context2(), (env) => map9(makeSynchronized(none2()), (cache2) => [provideContext(getCachedValue(self2, duration4, cache2), env), invalidateCache(cache2)]));
 });
 var computeCachedValue = (self2, timeToLive, start3) => {
   const timeToLiveMillis = toMillis(decode(timeToLive));
   return pipe(deferredMake(), tap((deferred) => intoDeferred(self2, deferred)), map9((deferred) => some2([start3 + timeToLiveMillis, deferred])));
 };
-var getCachedValue = (self2, timeToLive, cache) => uninterruptibleMask((restore) => pipe(clockWith3((clock3) => clock3.currentTimeMillis), flatMap7((time2) => updateSomeAndGetEffectSynchronized(cache, (option5) => {
+var getCachedValue = (self2, timeToLive, cache2) => uninterruptibleMask((restore) => pipe(clockWith3((clock3) => clock3.currentTimeMillis), flatMap7((time2) => updateSomeAndGetEffectSynchronized(cache2, (option5) => {
   switch (option5._tag) {
     case "None": {
       return some2(computeCachedValue(self2, timeToLive, time2));
@@ -45860,7 +45925,7 @@ var getCachedValue = (self2, timeToLive, cache) => uninterruptibleMask((restore)
     }
   }
 })), flatMap7((option5) => isNone2(option5) ? dieMessage("BUG: Effect.cachedInvalidate - please report an issue at https://github.com/Effect-TS/effect/issues") : restore(deferredAwait(option5.value[1])))));
-var invalidateCache = (cache) => set5(cache, none2());
+var invalidateCache = (cache2) => set5(cache2, none2());
 var ensuringChild = /* @__PURE__ */ dual(2, (self2, f) => ensuringChildren(self2, (children) => f(fiberAll(children))));
 var ensuringChildren = /* @__PURE__ */ dual(2, (self2, children) => flatMap7(track, (supervisor) => pipe(supervised(self2, supervisor), ensuring(flatMap7(supervisor.value, children)))));
 var forkAll = /* @__PURE__ */ dual((args2) => isIterable(args2[0]), (effects, options) => options?.discard ? forEachSequentialDiscard(effects, fork) : map9(forEachSequential(effects, fork), fiberAll));
@@ -48180,11 +48245,11 @@ var fromRequest = (request2, dataSource) => flatMap7(isEffect(dataSource) ? data
   const proxy = new Proxy(request2, {});
   return fiberRefGetWith(currentCacheEnabled, (cacheEnabled) => {
     if (cacheEnabled) {
-      const cached4 = fiberRefGetWith(currentCache, (cache) => flatMap7(cache.getEither(proxy), (orNew) => {
+      const cached4 = fiberRefGetWith(currentCache, (cache2) => flatMap7(cache2.getEither(proxy), (orNew) => {
         switch (orNew._tag) {
           case "Left": {
             if (orNew.left.listeners.interrupted) {
-              return flatMap7(cache.invalidateWhen(proxy, (entry) => entry.handle === orNew.left.handle), () => cached4);
+              return flatMap7(cache2.invalidateWhen(proxy, (entry) => entry.handle === orNew.left.handle), () => cached4);
             }
             orNew.left.listeners.increment();
             return uninterruptibleMask((restore) => flatMap7(exit(blocked(empty15, restore(deferredAwait(orNew.left.handle)))), (exit4) => {
@@ -48227,7 +48292,7 @@ var fromRequest = (request2, dataSource) => flatMap7(isEffect(dataSource) ? data
 var cacheRequest = (request2, result2) => {
   return fiberRefGetWith(currentCacheEnabled, (cacheEnabled) => {
     if (cacheEnabled) {
-      return fiberRefGetWith(currentCache, (cache) => flatMap7(cache.getEither(request2), (orNew) => {
+      return fiberRefGetWith(currentCache, (cache2) => flatMap7(cache2.getEither(request2), (orNew) => {
         switch (orNew._tag) {
           case "Left": {
             return void_;
@@ -48245,7 +48310,7 @@ var withRequestCaching = /* @__PURE__ */ dual(2, (self2, strategy) => fiberRefLo
 var withRequestCache = /* @__PURE__ */ dual(
   2,
   // @ts-expect-error
-  (self2, cache) => fiberRefLocally(self2, currentCache, cache)
+  (self2, cache2) => fiberRefLocally(self2, currentCache, cache2)
 );
 
 // node_modules/effect/dist/esm/Request.js
@@ -48579,21 +48644,21 @@ var transposeOption = (self2) => {
 };
 var transposeMapOption = /* @__PURE__ */ dual(2, (self2, f) => isNone(self2) ? succeedNone2 : map12(f(self2.value), some));
 var makeTagProxy = (TagClass) => {
-  const cache = /* @__PURE__ */ new Map();
+  const cache2 = /* @__PURE__ */ new Map();
   return new Proxy(TagClass, {
     get(target, prop, receiver) {
       if (prop in target) {
         return Reflect.get(target, prop, receiver);
       }
-      if (cache.has(prop)) {
-        return cache.get(prop);
+      if (cache2.has(prop)) {
+        return cache2.get(prop);
       }
       const fn2 = (...args2) => andThen2(target, (s) => {
         if (typeof s[prop] === "function") {
-          cache.set(prop, (...args3) => andThen2(target, (s2) => s2[prop](...args3)));
+          cache2.set(prop, (...args3) => andThen2(target, (s2) => s2[prop](...args3)));
           return s[prop](...args2);
         }
-        cache.set(prop, andThen2(target, (s2) => s2[prop]));
+        cache2.set(prop, andThen2(target, (s2) => s2[prop]));
         return s[prop];
       });
       const cn = andThen2(target, (s) => s[prop]);
@@ -48606,7 +48671,7 @@ var makeTagProxy = (TagClass) => {
       proto6.bind = bind4;
       proto6.call = call;
       Object.setPrototypeOf(fn2, proto6);
-      cache.set(prop, fn2);
+      cache2.set(prop, fn2);
       return fn2;
     }
   });
@@ -48808,10 +48873,10 @@ function fnApply(options) {
       effect = fnError ? failCause5(sequential(die(fnError), die(error))) : die4(error);
     }
   }
-  let cache = false;
+  let cache2 = false;
   const captureStackTrace = () => {
-    if (cache !== false) {
-      return cache;
+    if (cache2 !== false) {
+      return cache2;
     }
     if (options.errorCall.stack) {
       const stackDef = options.errorDef.stack.trim().split("\n");
@@ -48824,9 +48889,9 @@ function fnApply(options) {
       if (!endStackCall.includes(`(`)) {
         endStackCall = endStackCall.replace(/at (.*)/, "at ($1)");
       }
-      cache = `${endStackDef}
+      cache2 = `${endStackDef}
 ${endStackCall}`;
-      return cache;
+      return cache2;
     }
   };
   const opts = options.spanOptions && "captureStackTrace" in options.spanOptions ? options.spanOptions : {
@@ -56048,7 +56113,7 @@ sessionsRouter.get("/:id/audio", async (c) => {
     if (!Array.isArray(turns) || turns.length === 0) {
       return c.json({ error: "Sesi tidak punya dialog" }, 404);
     }
-    const etag = '"' + createHash("sha1").update(
+    const etag = '"' + createHash2("sha1").update(
       session.dialogueJson + "|" + turns.map((t) => t.personaId ?? "").join(",")
     ).digest("hex").slice(0, 20) + '"';
     if (c.req.header("if-none-match") === etag) {
@@ -56057,6 +56122,7 @@ sessionsRouter.get("/:id/audio", async (c) => {
     const result2 = await synthesizeScenario(turns, edgeTtsSpace);
     c.header("Content-Type", result2.contentType);
     c.header("ETag", etag);
+    c.header("X-Scenario-Engine", result2.engine);
     c.header("X-Scenario-Turns", String(result2.turns));
     c.header("X-Scenario-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
     c.header("X-Scenario-Timings", result2.timings.join(","));
@@ -56074,7 +56140,7 @@ sessionsRouter.get("/:id/audio", async (c) => {
 var sessions_default = sessionsRouter;
 
 // src/server/routes/tts.ts
-import { createHash as createHash2 } from "node:crypto";
+import { createHash as createHash3 } from "node:crypto";
 
 // src/shared/ttsPersonas.ts
 var TTS_PERSONAS = [
@@ -56199,13 +56265,21 @@ ttsRouter.get("/", async (c) => {
   const persona = getTtsPersona(personaId);
   const resolvedId = persona?.id ?? (gender === "male" ? "m\xE4nnlich-1" : "weiblich");
   const voiceLabel = VOICE_LABEL_BY_ID[resolvedId] ?? VOICE_LABEL_BY_ID["weiblich"];
-  const etag = '"' + createHash2("sha1").update(resolvedId + "|" + text3.trim()).digest("hex").slice(0, 20) + '"';
+  const etag = '"' + createHash3("sha1").update(resolvedId + "|" + text3.trim()).digest("hex").slice(0, 20) + '"';
   if (c.req.header("if-none-match") === etag) return c.body(null, 304);
   try {
-    const audio = await edgeTtsSpace.synthesize(text3.trim(), voiceLabel);
+    let audio;
+    let engine = "hf-edge-tts";
+    try {
+      audio = await edgeTtsSpace.synthesize(text3.trim(), voiceLabel);
+    } catch (hfErr) {
+      console.warn("[tts] HF gagal, fallback Google:", hfErr?.message || hfErr);
+      audio = await synthesizeGoogleTts(text3.trim());
+      engine = "google-fallback";
+    }
     c.header("Content-Type", "audio/mpeg");
     c.header("ETag", etag);
-    c.header("X-TTS-Engine", "hf-edge-tts");
+    c.header("X-TTS-Engine", engine);
     c.header("X-TTS-Voice", voiceLabel.split(" - ")[0]);
     c.header("X-TTS-Gender", persona?.gender ?? (gender === "male" ? "male" : "female"));
     c.header("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable");
@@ -56221,11 +56295,11 @@ ttsRouter.get("/", async (c) => {
 var tts_default = ttsRouter;
 
 // src/server/lib/googleTts.ts
-var import_google_tts_api = __toESM(require_dist2(), 1);
+var import_google_tts_api2 = __toESM(require_dist2(), 1);
 async function synthesizePrototype(text3, lang2 = "de") {
   const clean = text3.trim();
   if (!clean) throw new Error("text kosong");
-  const parts2 = await (0, import_google_tts_api.getAllAudioBase64)(clean, { lang: lang2 });
+  const parts2 = await (0, import_google_tts_api2.getAllAudioBase64)(clean, { lang: lang2 });
   const buffers = parts2.map((p) => Buffer.from(p.base64, "base64"));
   const audio = Buffer.concat(buffers);
   if (audio.length < 512) throw new Error("audio kosong dari upstream");
@@ -56295,7 +56369,7 @@ scenarioRouter.post("/", async (c) => {
   try {
     const result2 = await synthesizeScenario(turns, edgeTtsSpace);
     c.header("Content-Type", result2.contentType);
-    c.header("X-TTS-Engine", "hf-edge-tts");
+    c.header("X-TTS-Engine", result2.engine);
     c.header("X-TTS-Turns", String(result2.turns));
     c.header("X-TTS-Turns-Ok", String(result2.perTurn.filter((t) => t.ok).length));
     c.header("X-TTS-Timings", result2.timings.join(","));

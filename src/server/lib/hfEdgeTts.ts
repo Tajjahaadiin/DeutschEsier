@@ -36,8 +36,13 @@ export class EdgeTtsSpace {
     this.base = spaceUrl.replace(/\/+$/, '')
   }
 
-  /** Sintesis satu potongan teks. Melempar bila upstream gagal. */
-  async synthesize(text: string, voiceLabel: string, timeoutMs = 30_000): Promise<Buffer> {
+  /**
+   * Timeout default sengaja pendek (9s). Saat antrean Space macet, Gradio
+   * menerima job lalu tidak pernah menyelesaikannya — menunggu lama hanya
+   * memindahkan timeout ke fungsi serverless Vercel tanpa hasil. Gagal cepat
+   * jauh lebih berguna karena pemanggil bisa langsung jatuh ke fallback.
+   */
+  async synthesize(text: string, voiceLabel: string, timeoutMs = 9_000): Promise<Buffer> {
     const clean = text.trim()
     if (!clean) throw new Error('text kosong')
 
@@ -65,6 +70,32 @@ export class EdgeTtsSpace {
     const buf = Buffer.from(await audioRes.arrayBuffer())
     if (buf.length < 512) throw new Error('audio kosong')
     return buf
+  }
+
+  /**
+   * Apakah worker Space sehat?
+   *
+   * Gradio membalas `{"queue_size": N, "rank_eta": null}` saat worker-nya
+   * macet: job diterima tapi tidak pernah diproses. Terdeteksi pada
+   * innoai/Edge-TTS-Text-to-Speech (queue_size 6–8, rank_eta null, semua voice
+   * timeout). Pemeriksaan ini murah (~1s) dan mencegah seluruh dialog gagal
+   * setelah menunggu tiap baris timeout.
+   */
+  async isHealthy(timeoutMs = 4_000): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.base}/gradio_api/queue/status`, {
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+      if (!res.ok) return false
+      const body = (await res.json()) as { queue_size?: number; rank_eta?: number | null }
+      const size = typeof body.queue_size === 'number' ? body.queue_size : 0
+      const etaKnown = body.rank_eta !== null && body.rank_eta !== undefined
+      // Antrean panjang tanpa ETA = worker macet, bukan sibuk.
+      if (size > 3 && !etaKnown) return false
+      return true
+    } catch {
+      return false
+    }
   }
 
   /**
