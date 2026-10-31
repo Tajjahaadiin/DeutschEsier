@@ -12,8 +12,9 @@
  *   jadi tidak terkena penolakan handshake yang membunuh /api/tts.
  * - Suara pria asli (Conrad/Killian/Florian), bukan pitch palsu.
  */
-import { EdgeTtsSpace, VOICE_LABEL_BY_ID } from './hfEdgeTts'
-import { synthesizeGoogleTts } from './googleTtsFallback'
+import type { EdgeTtsSpace } from './hfEdgeTts'
+import { synthesizeLine } from './ttsChain'
+import { EDGE_VOICE_BY_PERSONA } from './edgeTtsDirect'
 
 export interface ScenarioTurn {
   speaker: string
@@ -27,8 +28,8 @@ export interface ScenarioAudio {
   turns: number
   bytes: number
   elapsedMs: number
-  /** Mesin yang benar-benar dipakai: 'hf-edge-tts' atau 'google-fallback'. */
-  engine: 'hf-edge-tts' | 'google-fallback'
+  /** Mesin yang paling banyak dipakai pada audio gabungan ini. */
+  engine: 'edge-tts' | 'hf-space' | 'google-fallback'
   /** Per-baris hasil, untuk diagnostik. */
   perTurn: Array<{ index: number; persona: string; ok: boolean; bytes: number; ms: number }>
   /**
@@ -86,33 +87,21 @@ export async function synthesizeScenario(
 
   // Cek kesehatan Space sekali di depan. Saat worker-nya macet, setiap baris
   // akan menggantung sampai timeout; mengetahuinya lebih awal membuat seluruh
-  // skenario langsung dialihkan ke fallback tanpa membuang waktu.
-  const spaceUsable = await space.isHealthy()
-  if (!spaceUsable) {
-    console.warn('[scenario] HF Space tidak sehat (antrean macet) → pakai fallback Google TTS')
+  // skenario langsung memakai edge-tts/Google tanpa membuang waktu.
+  if (!(await space.isHealthy())) {
+    console.warn('[scenario] HF Space tidak sehat (antrean macet) → andalkan edge-tts + Google')
   }
 
   // Sintesis paralel terbatas; hasil dikumpulkan per-index agar urutan tetap.
+  // Urutan engine tidak ditulis di sini: `synthesizeLine` adalah satu-satunya
+  // tempat urutan itu hidup, dipakai juga oleh /api/tts per kartu.
   const results = await mapLimit(turns, CONCURRENCY, async (turn, i) => {
     const persona = turn.personaId ?? (i % 2 === 0 ? 'weiblich' : 'männlich-1')
-    const voice = VOICE_LABEL_BY_ID[persona] ?? VOICE_LABEL_BY_ID['weiblich']
+    const voiceId = EDGE_VOICE_BY_PERSONA[persona] ?? EDGE_VOICE_BY_PERSONA.weiblich
     const t0 = Date.now()
-
-    if (spaceUsable) {
-      try {
-        const buf = await space.synthesize(turn.germanText, voice)
-        const ok = buf.length > 512
-        if (ok) return { persona, ok, buf, bytes: buf.length, ms: Date.now() - t0, engine: 'hf-edge-tts' as const }
-      } catch (err: any) {
-        console.warn(`[scenario] baris ${i + 1} gagal di HF, coba fallback:`, err?.message || err)
-      }
-    }
-
-    // Fallback: tetap menghasilkan audio, walau timbre pria bergantung pada
-    // pitch di klien. Lebih baik daripada satu baris hilang dari dialog.
     try {
-      const buf = await synthesizeGoogleTts(turn.germanText)
-      return { persona, ok: true, buf, bytes: buf.length, ms: Date.now() - t0, engine: 'google-fallback' as const }
+      const { audio, engine } = await synthesizeLine(turn.germanText, voiceId)
+      return { persona, ok: true, buf: audio, bytes: audio.length, ms: Date.now() - t0, engine }
     } catch (err: any) {
       console.warn(`[scenario] baris ${i + 1} gagal total:`, err?.message || err)
       return { persona, ok: false, buf: null, bytes: 0, ms: Date.now() - t0, engine: 'google-fallback' as const }
@@ -153,11 +142,19 @@ export async function synthesizeScenario(
   })
 
   const audio = Buffer.concat(merged)
-  const usedFallback = results.some((r) => r.ok && r.engine === 'google-fallback')
+  // Laporkan engine yang paling banyak dipakai, bukan sekadar "ada fallback".
+  const tally = new Map<string, number>()
+  results.forEach((r) => {
+    if (r.ok) tally.set(r.engine, (tally.get(r.engine) ?? 0) + 1)
+  })
+  const engine = ([...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'google-fallback') as
+    | 'edge-tts'
+    | 'hf-space'
+    | 'google-fallback'
   return {
     audio,
     contentType: 'audio/mpeg',
-    engine: usedFallback ? 'google-fallback' : 'hf-edge-tts',
+    engine,
     turns: turns.length,
     bytes: audio.length,
     elapsedMs: Date.now() - started,

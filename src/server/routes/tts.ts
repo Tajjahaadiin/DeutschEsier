@@ -2,18 +2,16 @@
  * Route TTS satu kalimat — dipakai tombol ▶ per baris, vocab clue, dan
  * pratinjau di Generator.
  *
- * Suara diambil dari HuggingFace Space Edge-TTS (Conrad/Killian/Florian pria
- * asli), bukan lagi Kokoro + Google. Endpoint WebSocket Microsoft langsung
- * tidak bisa dipakai: handshake-nya dijawab HTTP 200 di semua lingkungan yang
- * diuji, sehingga node-edge-tts selalu gagal.
+ * Rantai engine ada di `lib/ttsChain.ts` (edge-tts → hf-space → google), bukan
+ * di sini, supaya jalur per-kartu dan jalur skenario penuh tidak bisa berbeda.
  *
  * Dipisah dari /api/sessions/:id/audio (skenario gabungan) karena per-kalimat
  * dipanggil acak dan hasilnya di-cache per kalimat oleh CDN.
  */
 import { Hono } from 'hono'
 import { createHash } from 'node:crypto'
-import { edgeTtsSpace, VOICE_LABEL_BY_ID } from '../lib/hfEdgeTts'
-import { synthesizeGoogleTts } from '../lib/googleTtsFallback'
+import { synthesizeLine, cacheHeadersFor } from '../lib/ttsChain'
+import { EDGE_VOICE_BY_PERSONA } from '../lib/edgeTtsDirect'
 import { getTtsPersona } from '../../shared/ttsPersonas'
 
 const ttsRouter = new Hono()
@@ -34,36 +32,39 @@ ttsRouter.get('/', async (c) => {
 
   const persona = getTtsPersona(personaId)
   const resolvedId = persona?.id ?? (gender === 'male' ? 'männlich-1' : 'weiblich')
-  const voiceLabel = VOICE_LABEL_BY_ID[resolvedId] ?? VOICE_LABEL_BY_ID['weiblich']
+  const voiceId = EDGE_VOICE_BY_PERSONA[resolvedId] ?? EDGE_VOICE_BY_PERSONA.weiblich
 
-  const etag = '"' + createHash('sha1').update(resolvedId + '|' + text.trim()).digest('hex').slice(0, 20) + '"'
-  if (c.req.header('if-none-match') === etag) return c.body(null, 304)
+  // ETag TIDAK memuat engine: audio hasil fallback tidak boleh berbagi
+  // identitas dengan audio edge-tts. Dengan begitu, ketika engine utama pulih,
+  // ETag berubah dan klien mengambil suara pria asli alih-alih menyimpan
+  // versi cadangan selamanya.
+  const etagKey = (engine: string) => '"' + createHash('sha1').update(engine + '|' + voiceId + '|' + text.trim()).digest('hex').slice(0, 20) + '"'
+
+  // Cek cepat: bila klien membawa ETag untuk engine utama dan itu cocok,
+  // tidak perlu menyintesis apa pun.
+  const primaryEtag = etagKey('edge-tts')
+  if (c.req.header('if-none-match') === primaryEtag) {
+    return c.body(null, 304)
+  }
 
   try {
-    // HF dulu (suara pria asli). Bila Space macet, jatuh ke Google TTS supaya
-    // tombol per baris tetap bersuara daripada 502 tanpa audio.
-    let audio: Buffer
-    let engine = 'hf-edge-tts'
-    try {
-      audio = await edgeTtsSpace.synthesize(text.trim(), voiceLabel)
-    } catch (hfErr: any) {
-      console.warn('[tts] HF gagal, fallback Google:', hfErr?.message || hfErr)
-      audio = await synthesizeGoogleTts(text.trim())
-      engine = 'google-fallback'
-    }
+    const { audio, engine } = await synthesizeLine(text.trim(), voiceId)
+    const etag = etagKey(engine)
+    if (c.req.header('if-none-match') === etag) return c.body(null, 304)
 
     c.header('Content-Type', 'audio/mpeg')
     c.header('ETag', etag)
     c.header('X-TTS-Engine', engine)
-    c.header('X-TTS-Voice', voiceLabel.split(' - ')[0])
+    c.header('X-TTS-Voice', voiceId)
     c.header('X-TTS-Gender', persona?.gender ?? (gender === 'male' ? 'male' : 'female'))
-    c.header('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
-    c.header('CDN-Cache-Control', 'public, s-maxage=31536000')
-    c.header('Vercel-CDN-Cache-Control', 'public, s-maxage=31536000')
+    for (const [k, v] of Object.entries(cacheHeadersFor(engine))) c.header(k, v)
     return c.body(audio as unknown as ArrayBuffer)
   } catch (err: any) {
-    console.warn('[tts] gagal:', err?.message || err)
+    console.warn('[tts] semua engine gagal:', err?.message || err)
     c.header('X-TTS-Error', 'upstream_failed')
+    // Jangan pernah biarkan CDN menyimpan kegagalan: setelah edge-tts pulih,
+    // siswa akan tetap menerima 502 dari cache.
+    c.header('Cache-Control', 'no-store')
     return c.json({ error: 'tts_unavailable' }, 502)
   }
 })

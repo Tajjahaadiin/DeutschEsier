@@ -6,6 +6,13 @@ vi.mock('../lib/googleTtsFallback', () => ({
   synthesizeGoogleTts: googleMock,
 }))
 
+// Skenario memakai `synthesizeLine` bersama; urutan engine diuji terpisah di
+// ttsChain.test.ts. Di sini tiruan disetel agar perilakunya bisa dikendalikan.
+const lineMock = vi.fn()
+vi.mock('../lib/ttsChain', () => ({
+  synthesizeLine: lineMock,
+}))
+
 const { synthesizeScenario } = await import('../lib/scenarioTts')
 
 /**
@@ -34,6 +41,12 @@ function fakeSpace(opts: { failOn?: number[]; healthy?: boolean } = {}) {
 beforeEach(() => {
   googleMock.mockReset()
   googleMock.mockResolvedValue(Buffer.alloc(1500, 9))
+  // Default: rantai menjawab lewat edge-tts dengan audio ukuran wajar.
+  lineMock.mockReset()
+  lineMock.mockImplementation(async () => ({
+    audio: Buffer.alloc(1024, 7),
+    engine: 'edge-tts' as const,
+  }))
 })
 
 const turns = [
@@ -43,20 +56,21 @@ const turns = [
 ]
 
 describe('synthesizeScenario', () => {
-  it('memetakan persona ke voice pria/wanita yang benar', async () => {
-    const { space, calls } = fakeSpace()
+  it('memetakan persona ke voiceId pria/wanita yang benar', async () => {
+    const { space } = fakeSpace()
     await synthesizeScenario(turns, space)
 
-    expect(calls).toHaveLength(3)
-    expect(calls[0].voice).toContain('AmalaNeural')
-    expect(calls[0].voice).toContain('(Female)')
-    // REGRESI: persona pria tidak boleh jatuh ke suara wanita
-    expect(calls[1].voice).toContain('ConradNeural')
-    expect(calls[2].voice).toContain('KillianNeural')
-    for (const c of calls.slice(1)) expect(c.voice).toContain('(Male)')
+    const voices = lineMock.mock.calls.map((c) => c[1])
+    expect(voices).toEqual(['de-DE-AmalaNeural', 'de-DE-ConradNeural', 'de-DE-KillianNeural'])
   })
 
   it('menggabungkan hasil sesuai urutan dialog walau sintesis paralel', async () => {
+    // Byte pertama tiap blok menandai index baris (1,2,3).
+    let n = 0
+    lineMock.mockImplementation(async () => ({
+      audio: Buffer.alloc(1024, ++n),
+      engine: 'edge-tts' as const,
+    }))
     const { space } = fakeSpace()
     const result = await synthesizeScenario(turns, space)
 
@@ -68,19 +82,24 @@ describe('synthesizeScenario', () => {
     expect(result.audio[1024 + 64]).toBe(2)
   })
 
-  it('baris yang gagal di HF ditutup fallback sehingga tidak ada yang hilang', async () => {
-    const { space } = fakeSpace({ failOn: [1] })
+  it('baris yang gagal di rantai tidak menghilangkan baris lain', async () => {
+    let call = 0
+    lineMock.mockImplementation(async () => {
+      if (++call === 2) throw new Error('semua engine gagal')
+      return { audio: Buffer.alloc(1024, 5), engine: 'edge-tts' as const }
+    })
+    const { space } = fakeSpace()
     const result = await synthesizeScenario(turns, space)
 
     expect(result.turns).toBe(3)
-    expect(result.perTurn.filter((t) => t.ok)).toHaveLength(3)
-    expect(result.perTurn[1].ok).toBe(true)
+    expect(result.perTurn.filter((t) => t.ok)).toHaveLength(2)
+    expect(result.perTurn[1].ok).toBe(false)
     expect(result.bytes).toBeGreaterThan(1024)
   })
 
-  it('melempar bila HF dan Google sama-sama gagal (tidak mengirim audio kosong)', async () => {
-    const { space } = fakeSpace({ failOn: [0, 1, 2] })
-    googleMock.mockRejectedValue(new Error('google down'))
+  it('melempar bila rantai gagal di semua baris (tidak mengirim audio kosong)', async () => {
+    lineMock.mockRejectedValue(new Error('semua engine gagal'))
+    const { space } = fakeSpace()
     await expect(synthesizeScenario(turns, space)).rejects.toThrow(/tidak ada baris/)
   })
 
@@ -110,8 +129,12 @@ describe('synthesizeScenario', () => {
   })
 
   it('REGRESI: baris gagal total ditandai -1 tapi timings tetap sejajar dialog', async () => {
-    const { space } = fakeSpace({ failOn: [1] })
-    googleMock.mockRejectedValueOnce(new Error('google down'))
+    let call = 0
+    lineMock.mockImplementation(async () => {
+      if (++call === 2) throw new Error('semua engine gagal')
+      return { audio: Buffer.alloc(1024, 3), engine: 'edge-tts' as const }
+    })
+    const { space } = fakeSpace()
     const result = await synthesizeScenario(turns, space)
 
     // Panjang harus sama dengan jumlah baris dialog, bukan jumlah baris sukses.
@@ -122,43 +145,47 @@ describe('synthesizeScenario', () => {
     expect(result.timings[2]).toBeGreaterThan(0)
   })
 
-  it('FALLBACK: saat Space tidak sehat, seluruh dialog lewat Google TTS', async () => {
-    const { space, calls } = fakeSpace({ healthy: false })
-    const result = await synthesizeScenario(turns, space)
-
-    expect(calls).toHaveLength(0)          // Space tidak dipanggil sama sekali
-    expect(googleMock).toHaveBeenCalledTimes(3)
-    expect(result.engine).toBe('google-fallback')
-    expect(result.perTurn.every((t) => t.ok)).toBe(true)
+  it('mendelegasikan ke rantai bersama untuk setiap baris', async () => {
+    const { space } = fakeSpace()
+    await synthesizeScenario(turns, space)
+    expect(lineMock).toHaveBeenCalledTimes(3)
   })
 
-  it('FALLBACK: baris yang gagal di HF dicoba ulang lewat Google TTS', async () => {
-    const { space } = fakeSpace({ failOn: [1] })
+  it('melaporkan engine dominan yang dipakai rantai', async () => {
+    // 2 baris lewat hf-space, 1 lewat edge-tts → hf-space dominan.
+    let n = 0
+    lineMock.mockImplementation(async () => {
+      const engine = ++n <= 2 ? ('hf-space' as const) : ('edge-tts' as const)
+      return { audio: Buffer.alloc(1024, n), engine }
+    })
+    const { space } = fakeSpace()
     const result = await synthesizeScenario(turns, space)
-
-    expect(googleMock).toHaveBeenCalledTimes(1)
-    expect(result.perTurn.filter((t) => t.ok)).toHaveLength(3)  // tidak ada yang hilang
-    expect(result.engine).toBe('google-fallback')
-    expect(result.timings.every((t) => t >= 0)).toBe(true)
+    expect(result.engine).toBe('hf-space')
   })
 
-  it('FALLBACK: baris tetap -1 bila Google TTS juga gagal', async () => {
-    const { space } = fakeSpace({ failOn: [1] })
-    googleMock.mockRejectedValue(new Error('google down'))
-    const result = await synthesizeScenario(turns, space)
-
-    expect(result.perTurn[1].ok).toBe(false)
-    expect(result.timings[1]).toBe(-1)
-    expect(result.timings).toHaveLength(3)
+  it('memeriksa kesehatan Space sekali di depan, bukan per baris', async () => {
+    let healthCalls = 0
+    const space = {
+      async isHealthy() {
+        healthCalls++
+        return false
+      },
+      async synthesize() {
+        throw new Error('tidak boleh dipanggil')
+      },
+      silence: () => Buffer.alloc(64, 0),
+    }
+    await synthesizeScenario(turns, space as unknown as EdgeTtsSpace)
+    expect(healthCalls).toBe(1)
   })
 
   it('memakai persona default selang-seling bila personaId tidak diberikan', async () => {
-    const { space, calls } = fakeSpace()
+    const { space } = fakeSpace()
     await synthesizeScenario(
       [{ speaker: 'A', germanText: 'eins' }, { speaker: 'B', germanText: 'zwei' }],
       space,
     )
-    expect(calls[0].voice).toContain('AmalaNeural')
-    expect(calls[1].voice).toContain('ConradNeural')
+    const voices = lineMock.mock.calls.map((c) => c[1])
+    expect(voices).toEqual(['de-DE-AmalaNeural', 'de-DE-ConradNeural'])
   })
 })

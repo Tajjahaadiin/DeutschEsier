@@ -13,7 +13,10 @@
 import { createHash } from 'node:crypto'
 import { getAllAudioBase64 } from '@sefinek/google-tts-api'
 
-const cache = new Map<string, Buffer>()
+// Cache ber-TTL: tanpa batas waktu, teks yang sudah tidak dipakai skenario
+// mana pun akan menetap sampai instance fungsi didaur ulang.
+const CACHE_TTL_MS = 60 * 60 * 1000
+const cache = new Map<string, { audio: Buffer; at: number }>()
 const MAX_CACHE = 200
 
 /**
@@ -27,7 +30,8 @@ export async function synthesizeGoogleTts(text: string, lang = 'de'): Promise<Bu
 
   const key = createHash('sha1').update(`${lang}|${clean}`).digest('hex')
   const hit = cache.get(key)
-  if (hit) return hit
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.audio
+  if (hit) cache.delete(key)
 
   const parts = await getAllAudioBase64(clean, { lang })
   const audio = Buffer.concat(parts.map((p) => Buffer.from(p.base64, 'base64')))
@@ -39,6 +43,6 @@ export async function synthesizeGoogleTts(text: string, lang = 'de'): Promise<Bu
     const oldest = cache.keys().next().value
     if (oldest) cache.delete(oldest)
   }
-  cache.set(key, audio)
+  cache.set(key, { audio, at: Date.now() })
   return audio
 }
